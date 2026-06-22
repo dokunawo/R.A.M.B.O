@@ -122,8 +122,8 @@ function RoundTable() {
             <AgentConstellation statusMap={statusMap} />
             <OrbitRing />
             <EffectComposer>
-              <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
-                intensity={0.8} radius={0.6} />
+              <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
+                intensity={0.6} radius={0.5} />
               <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
                 radialModulation={false} modulationOffset={0} />
             </EffectComposer>

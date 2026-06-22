@@ -57,7 +57,7 @@ function WireframeOrb({ audioLevelRef }) {
           uNoiseStrength: { value: 0.12 },
           uBreathSpeed: { value: 1.0 },
           uColor: { value: GOLD.clone() },
-          uOpacity: { value: 0.55 },
+          uOpacity: { value: 0.45 },
           uFresnelPower: { value: 1.8 },
           uFresnelBias: { value: 0.1 },
           uAudioLevel: { value: 0 },
@@ -68,6 +68,7 @@ function WireframeOrb({ audioLevelRef }) {
         depthTest: false,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
+        toneMapped: false,
       }),
     []
   );
@@ -98,6 +99,7 @@ function GlowHalo({ audioLevelRef }) {
         depthTest: false,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
+        toneMapped: false,
       }),
     []
   );
