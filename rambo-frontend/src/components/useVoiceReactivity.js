@@ -26,13 +26,17 @@ function speak(text, onStart, onEnd) {
 
   // Pick the most robotic/neutral voice available
   const voices = synth.getVoices();
+  // Prefer natural/premium voices for human-like speech
   const preferred = voices.find(v =>
-    /google us english|microsoft david|microsoft zira|microsoft mark/i.test(v.name)
+    /google uk english female|microsoft zira|samantha|karen|victoria|fiona/i.test(v.name)
+  ) || voices.find(v =>
+    /google us english/i.test(v.name)
+  ) || voices.find(v => v.lang.startsWith("en") && /female|natural|premium/i.test(v.name)
   ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
   if (preferred) utter.voice = preferred;
 
-  utter.rate  = 0.92;   // slightly slower than natural
-  utter.pitch = 0.75;   // lower pitch for robotic depth
+  utter.rate  = 1.0;    // natural speaking speed
+  utter.pitch = 1.05;   // slightly higher for clarity and warmth
   utter.volume = 1.0;
 
   utter.onstart = () => onStart?.();

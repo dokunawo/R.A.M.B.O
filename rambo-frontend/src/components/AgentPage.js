@@ -5,6 +5,7 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
+import { usePageVoice, VoiceControls } from "./VoiceControls";
 import "./AgentPage.css";
 
 class OrbErrorBoundary extends Component {
@@ -144,6 +145,7 @@ function AgentPage() {
   const { agentKey } = useParams();
   const navigate = useNavigate();
   const meta = AGENT_META[agentKey];
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef } = usePageVoice();
 
   const [status, setStatus] = useState("idle");
   const [agentDetail, setAgentDetail] = useState(null);
@@ -240,7 +242,7 @@ function AgentPage() {
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
             dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
             <CosmicBackground />
-            <CosmicOrb mouseRef={mouseRef} />
+            <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
             <EffectComposer>
               <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
                 intensity={0.8} radius={0.6} />
@@ -484,6 +486,8 @@ function AgentPage() {
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>
         <span>© {new Date().getFullYear()}</span>
       </footer>
+
+      <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>
   );
 }

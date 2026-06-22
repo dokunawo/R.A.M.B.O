@@ -5,6 +5,8 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
+import AgentConstellation from "./AgentConstellation";
+import { usePageVoice, VoiceControls } from "./VoiceControls";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -66,6 +68,7 @@ function LiveClock() {
 function RoundTable() {
   const navigate = useNavigate();
   const [statusMap, setStatusMap] = useState({});
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef } = usePageVoice();
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -115,7 +118,8 @@ function RoundTable() {
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
             dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
             <CosmicBackground />
-            <CosmicOrb mouseRef={mouseRef} />
+            <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
+            <AgentConstellation statusMap={statusMap} />
             <OrbitRing />
             <EffectComposer>
               <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
@@ -179,6 +183,8 @@ function RoundTable() {
       <footer className="rt-footer">
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>
       </footer>
+
+      <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>
   );
 }

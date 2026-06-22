@@ -80,7 +80,7 @@
   color: var(--accent, #e8b15a);
   cursor: pointer;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
+  animation: neonGoldPulseLL 2.5s ease-in-out infinite;
 }
 .ll-council-link:hover {
   color: var(--accent-glow, #ffd98a);
@@ -91,7 +91,11 @@
   font-size: 11px;
   letter-spacing: 1px;
   color: var(--accent, #e8b15a);
-  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
+  animation: neonGoldPulseLL 2.5s ease-in-out infinite;
+}
+@keyframes neonGoldPulseLL {
+  0%, 100% { text-shadow: 0 0 6px rgba(232, 177, 90, 0.6), 0 0 15px rgba(232, 177, 90, 0.2); }
+  50% { text-shadow: 0 0 10px rgba(232, 177, 90, 0.9), 0 0 25px rgba(232, 177, 90, 0.4); }
 }
 
 .ll-center-content {
