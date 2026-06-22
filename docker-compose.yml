@@ -1,0 +1,39 @@
+services:
+  rambo-backend:
+    build:
+      context: ./rambo-backend
+      dockerfile: Dockerfile
+    container_name: rambo-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./rambo-backend:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  rambo-frontend:
+    build:
+      context: ./rambo-frontend
+      dockerfile: Dockerfile
+    container_name: rambo-frontend
+    ports:
+      - "3000:80"        # Production frontend
+    restart: unless-stopped
+
+  rambo-frontend-dev:
+    build:
+      context: ./rambo-frontend
+      dockerfile: Dockerfile.dev
+    container_name: rambo-frontend-dev
+    ports:
+      - "3001:3000"      # Dev frontend (hot reload) → now on 3001
+    volumes:
+      - ./rambo-frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped

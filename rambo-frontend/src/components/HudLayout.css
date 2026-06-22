@@ -1,0 +1,48 @@
+/* FULL SCREEN HUD CONTAINER */
+.hud-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(0, 0, 0, 0.85); /* dark holographic backdrop */
+  backdrop-filter: blur(6px);
+
+  overflow: hidden;
+}
+
+/* EACH ROW TAKES 1/3 OF THE SCREEN */
+.hud-row {
+  display: flex;
+  width: 100%;
+  height: 33.33vh;
+}
+
+/* EACH COLUMN TAKES EQUAL SPACE */
+.hud-col {
+  flex: 1;
+  height: 100%;
+
+  border: 1px solid rgba(79, 195, 255, 0.2);
+  box-shadow: inset 0 0 20px rgba(79, 195, 255, 0.15);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #4fc3ff;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #4fc3ff;
+}
+
+/* OPTIONAL: HOVER EFFECT FOR PANELS */
+.hud-col:hover {
+  background: rgba(79, 195, 255, 0.05);
+  box-shadow: inset 0 0 30px rgba(79, 195, 255, 0.3);
+}

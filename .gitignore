@@ -1,0 +1,57 @@
+# ───────────────────────────── Node / Frontend ─────────────────────────────
+node_modules/
+**/node_modules/
+/rambo-frontend/build/
+/rambo-frontend/.env
+/rambo-frontend/.env.local
+/rambo-frontend/.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ───────────────────────────── Python / Backend ────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+
+# Databases (local memory store)
+*.sqlite
+*.sqlite3
+*.db
+
+# ───────────────────────────── Docker ──────────────────────────────────────
+*.pid
+
+# ───────────────────────────── IDE / Editor ────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ───────────────────────────── OS ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ───────────────────────────── Logs / Temp ─────────────────────────────────
+*.log
+logs/
+tmp/
+.cache/
+
+# ───────────────────────────── Project local ───────────────────────────────
+.claude/
+audio_base64/

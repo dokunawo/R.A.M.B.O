@@ -1,0 +1,13 @@
+FROM node:20
+
+WORKDIR /app
+
+# Install dependencies first (cached)
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Bind mount will override this folder in dev mode
+COPY . .
+
+# Start React dev server with hot reload
+CMD ["npm", "start"]

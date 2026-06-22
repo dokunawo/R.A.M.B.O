@@ -1,0 +1,13 @@
+# Normalize line endings — keep LF in the repo, auto-convert on checkout
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1 text eol=crlf
+
+# Treat these as binary (no diff / no EOL conversion)
+*.wav   binary
+*.ico   binary
+*.png   binary
+*.b64   binary
+*.sqlite binary
+*.db    binary

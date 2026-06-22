@@ -1,0 +1,998 @@
+/* SplashScreen.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root {
+  --bg: #08090b;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text-hi: #ffffff;
+  --text-mid: #d0d0d0;
+  --text-dim: #7a7a7a;
+  --accent: #e8b15a;
+  --accent-glow: #ffd98a;
+  --mono: "JetBrains Mono", "Share Tech Mono", monospace;
+}
+
+/* full-screen container */
+.splash-root {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: radial-gradient(ellipse at 50% 50%, #0e1116 0%, var(--bg) 65%);
+  color: var(--text-hi);
+  font-family: var(--mono);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* full-screen orb canvas behind everything */
+.orb-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* faint grid overlay */
+.splash-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.12;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  z-index: 1;
+}
+
+/* ---------- glitch intro animation ---------- */
+@keyframes glitchFade {
+  0% { opacity: 0; transform: translateY(10px) scale(1.02); filter: blur(6px); }
+  20% { opacity: 0.4; transform: translateY(-4px) scale(1.01); filter: blur(3px); }
+  40% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  45% { opacity: 0.8; transform: translateX(-2px); }
+  50% { opacity: 1; transform: translateX(0); }
+  55% { opacity: 0.85; transform: translateX(2px); }
+  60% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; }
+}
+
+.glitch-in {
+  animation: glitchFade 1.4s ease-out forwards;
+}
+
+/* ---------- top bar ---------- */
+.splash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border-bottom: none;
+  z-index: 3;
+  position: relative;
+  background: transparent;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-mid);
+}
+
+.brand-mark {
+  color: var(--text-hi);
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(232, 177, 90, 0.45);
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--line-strong);
+}
+
+.topbar-tab {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-dim);
+}
+
+.byline {
+  position: absolute;
+  top: 38px;
+  left: 20px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  z-index: 3;
+}
+
+/* ---------- title stack — centered on the FULL viewport, not the grid
+   column, so it lands in the true center of the orb regardless of the
+   left panel's width ---------- */
+.orb-title-stack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.project-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.title-banner {
+  font-size: 32px;
+  letter-spacing: 0.18em;
+  color: var(--text-hi);
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* layered neon: tight hot core + wide soft halo + a dark pass underneath
+     for contrast against the bright gold orb behind it */
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.6),
+    0 0 8px var(--accent-glow),
+    0 0 18px var(--accent-glow),
+    0 0 38px var(--accent),
+    0 0 64px var(--accent);
+}
+
+.subtitle {
+  margin-top: 14px;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: var(--text-hi);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.6),
+    0 0 6px var(--accent-glow),
+    0 0 14px var(--accent),
+    0 0 28px var(--accent);
+}
+
+/* ---------- main layout — left readout panel only now; the title moved
+   out to .orb-title-stack so it can center on the real viewport ---------- */
+.splash-main {
+  position: relative;
+  flex: 1;
+  z-index: 2;
+}
+
+.splash-left {
+  max-width: 420px;
+  padding: 60px 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+}
+
+/* drastically smaller per request, kept legible */
+.headline {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.body-copy {
+  font-size: 9.5px;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 36ch;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- bottom footer ---------- */
+.splash-footer {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 16px 24px 22px;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.stat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 9.5px;
+  color: var(--text-dim);
+  min-width: 160px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 30px 64px 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-bar {
+  display: block;
+  height: 2px;
+  background: var(--line);
+}
+
+.stat-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* dock */
+.dock {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(8, 9, 11, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.dock-btn {
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.dock-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dock-btn:hover {
+  color: var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+/* Neon green "System Online" — boosted at bottom of file */
+
+/* Initialization text, gold-tinted to match the orb */
+.init-text {
+  color: var(--text-dim);
+  text-shadow: 0 0 8px rgba(232, 177, 90, 0.3);
+}
+
+/* ---------- agent status panel ---------- */
+.agent-panel {
+  position: absolute;
+  top: 50%;
+  right: 28px;
+  transform: translateY(-50%);
+  z-index: 3;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.agent-overseer-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+}
+
+.agent-section-label {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.agent-overseer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-overseer-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-hi);
+  text-shadow: 0 0 8px var(--accent-glow), 0 0 18px var(--accent);
+  flex: 1;
+}
+
+.agent-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--line-strong);
+  margin: 2px 0 8px;
+}
+
+.agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.agent-name {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-mid);
+  flex: 1;
+}
+
+.agent-status-badge {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+@media (max-width: 860px) {
+  .title-banner { font-size: 22px; white-space: normal; }
+  .subtitle { font-size: 10px; white-space: normal; max-width: 80vw; }
+  .splash-left { max-width: none; padding: 24px 20px 0; }
+}
+
+/* ================================================================== */
+/*  PHASE TRANSITIONS                                                  */
+/* ================================================================== */
+
+.phase-fading {
+  animation: phaseFadeOut 0.48s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes phaseFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.phase-screen {
+  animation: phaseIn 0.55s ease forwards;
+}
+
+@keyframes phaseIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ================================================================== */
+/*  NEON UTILITY CLASSES (used across all phases + Phase 3)           */
+/* ================================================================== */
+
+/* Gold neon label headers */
+.neon-label {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 6px var(--accent), 0 0 14px var(--accent) !important;
+}
+
+/* Gold neon agent names */
+.neon-agent {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 5px var(--accent), 0 0 12px rgba(232, 177, 90, 0.5) !important;
+}
+
+/* Neon glow on status badges — color set inline, glow added here */
+.neon-badge {
+  text-shadow: 0 0 6px currentColor !important;
+}
+
+/* Gold neon brand mark in topbar */
+.neon-brand {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 6px var(--accent), 0 0 16px var(--accent), 0 0 32px rgba(232, 177, 90, 0.4) !important;
+}
+
+/* Gold-tinted body copy with readable glow */
+.neon-body {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 8px rgba(232, 177, 90, 0.35) !important;
+}
+
+/* ================================================================== */
+/*  SHARED HUD ELEMENTS                                                */
+/* ================================================================== */
+
+/* dot-grid background used in phases 1 & 2 */
+.hud-dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(232, 177, 90, 0.14) 1px, transparent 1px);
+  background-size: 26px 26px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* corner bracket decorations */
+.hud-corner {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  z-index: 4;
+  animation: cornerDraw 0.7s ease forwards;
+}
+
+@keyframes cornerDraw {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.hud-corner::before,
+.hud-corner::after {
+  content: '';
+  position: absolute;
+  background: var(--accent);
+  opacity: 0.65;
+}
+
+/* horizontal bars */
+.hud-corner::before { width: 100%; height: 1.5px; }
+/* vertical bars */
+.hud-corner::after  { width: 1.5px; height: 100%; }
+
+.hud-tl { top: 38px; left: 38px; }
+.hud-tl::before { top: 0; left: 0; }
+.hud-tl::after  { top: 0; left: 0; }
+
+.hud-tr { top: 38px; right: 38px; }
+.hud-tr::before { top: 0; right: 0; left: auto; }
+.hud-tr::after  { top: 0; right: 0; left: auto; }
+
+.hud-bl { bottom: 38px; left: 38px; }
+.hud-bl::before { bottom: 0; top: auto; left: 0; }
+.hud-bl::after  { bottom: 0; top: auto; left: 0; }
+
+.hud-br { bottom: 38px; right: 38px; }
+.hud-br::before { bottom: 0; top: auto; right: 0; left: auto; }
+.hud-br::after  { bottom: 0; top: auto; right: 0; left: auto; }
+
+/* ================================================================== */
+/*  PHASE 1 — TRANSMISSION SCREEN                                      */
+/* ================================================================== */
+
+.tx-screen {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #060708;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.tx-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Emblem container — SVG + plasma overlay stacked */
+.tx-emblem-wrap {
+  position: relative;
+  width: 256px;
+  height: 308px;
+}
+
+.tx-emblem-svg {
+  width: 256px;
+  height: 308px;
+  filter: drop-shadow(0 0 12px rgba(232, 177, 90, 0.35));
+}
+
+/* Plasma positioned at the SVG geometric center */
+.tx-plasma-overlay {
+  position: absolute;
+  width: 128px;
+  height: 128px;
+  top: 47%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tx-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.tx-subtitle {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--accent-glow);
+  text-shadow: 0 0 8px var(--accent), 0 0 22px var(--accent);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* Scan progress block */
+.tx-scan-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 320px;
+}
+
+.tx-scan-step {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--accent-glow);
+  text-shadow: 0 0 8px var(--accent);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.tx-progress-track {
+  width: 100%;
+  height: 1.5px;
+  background: rgba(232, 177, 90, 0.12);
+  overflow: hidden;
+}
+
+.tx-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 20px var(--accent);
+  transition: width 0.06s linear;
+}
+
+.tx-progress-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* Agent roster that appears as scans complete */
+.tx-agent-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.tx-roster-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.tx-agent-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  max-width: 400px;
+}
+
+.tx-agent-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: txAgentIn 0.3s ease forwards;
+}
+
+@keyframes txAgentIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tx-agent-name {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+}
+
+.tx-hint {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(122, 122, 122, 0.35);
+  margin: 0;
+}
+
+/* ================================================================== */
+/*  PHASE 2 — MISSION BRIEFING                                         */
+/* ================================================================== */
+
+.brief-screen {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #060708;
+  display: grid;
+  /* Symmetric: left and right equal, center slightly narrower */
+  grid-template-columns: 1fr 0.82fr 1fr;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* --- LEFT panel --- */
+.brief-left {
+  position: relative;
+  z-index: 2;
+  padding: 70px 18px 20px 40px;
+  border-right: 1px solid rgba(232, 177, 90, 0.08);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.brief-left::-webkit-scrollbar { display: none; }
+
+.brief-section-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.brief-agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.brief-agent-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.06);
+}
+
+.brief-agent-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.brief-agent-name {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--text-hi);
+  min-width: 60px;
+}
+
+.brief-agent-role {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  flex: 1;
+  opacity: 0.8;
+}
+
+.brief-agent-badge {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.brief-agent-desc {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  padding-left: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- CENTER column --- */
+.brief-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  gap: 6px;
+}
+
+.brief-overseer-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.brief-overseer-name {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--text-hi);
+  text-shadow: 0 0 10px var(--accent-glow), 0 0 24px var(--accent);
+}
+
+.brief-overseer-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brief-divider {
+  width: 80%;
+  height: 1px;
+  background: rgba(232, 177, 90, 0.15);
+  margin: 8px 0;
+}
+
+.brief-clock {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--text-hi);
+  text-shadow: 0 0 16px var(--accent);
+  line-height: 1;
+}
+
+.brief-date {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.brief-log {
+  margin-top: 18px;
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  line-height: 2;
+  min-height: 130px;
+  text-align: left;
+}
+
+.brief-log-line {
+  opacity: 0;
+  animation: briefLogIn 0.3s ease forwards;
+}
+
+@keyframes briefLogIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.brief-cursor {
+  color: var(--accent);
+  font-size: 9px;
+  animation: cursorBlink 0.8s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  50% { opacity: 0; }
+}
+
+/* --- RIGHT panel --- */
+.brief-right {
+  position: relative;
+  z-index: 2;
+  padding: 70px 40px 20px 18px;
+  border-left: 1px solid rgba(232, 177, 90, 0.08);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.brief-right::-webkit-scrollbar { display: none; }
+
+.brief-params {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.brief-param-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brief-param-key {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.brief-param-val {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  color: var(--accent-glow);
+}
+
+/* --- FOOTER progress (spans all columns) --- */
+.brief-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 40px 34px;
+  z-index: 2;
+  position: relative;
+}
+
+.brief-progress-track {
+  width: 55%;
+  height: 1px;
+  background: rgba(232, 177, 90, 0.12);
+  overflow: hidden;
+}
+
+.brief-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transition: width 0.08s linear;
+}
+
+.brief-progress-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.brief-hint {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  color: rgba(122, 122, 122, 0.35);
+  margin: 0;
+}
+
+/* "Booting Up Agents" sub-label under AGENT ROSTER */
+.brief-boot-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-bottom: 8px;
+  margin-top: -10px;
+}
+
+/* Plasma in brief center — adds spacing */
+.brief-plasma {
+  margin-bottom: 6px;
+}
+
+/* ================================================================== */
+/*  MINI PLASMA CANVAS WRAPPER                                         */
+/* ================================================================== */
+
+.mini-plasma {
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.mini-plasma canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ================================================================== */
+/*  PHASE 3 — NETWORK WEB SVG OVERLAY                                  */
+/* ================================================================== */
+
+.network-web {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ================================================================== */
+/*  PHASE 3 — UPDATED AGENT PANEL NEON STYLES                         */
+/* ================================================================== */
+
+/* Override default text-mid for agent names → neon gold */
+.agent-name {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 5px var(--accent), 0 0 10px rgba(232, 177, 90, 0.4);
+}
+
+/* System Online headline — boost glow */
+.system-online {
+  color: #00ff88;
+  text-shadow: 0 0 6px #00ff88, 0 0 16px #00ff88, 0 0 28px rgba(0, 255, 136, 0.4);
+}
