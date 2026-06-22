@@ -22,26 +22,32 @@ export const ramboOrbVertexShader = /* glsl */ `
 
   void main() {
     vec3 pos = position;
+    float rad = length(position); // original radius — stable for the fade
 
     pos = rotateY(uTime * uRotationSpeed) * pos;
     pos = rotateX(uTime * uRotationSpeed * 0.35) * pos;
 
-    float wobble = sin(uTime * 0.6 + aPhase * 6.2831) * 0.035;
-    pos += normalize(pos) * wobble;
+    // Layered drift: a slow radial breath plus a tangential swirl so the cloud
+    // churns like plasma instead of sitting as a rigid shell.
+    float breath = sin(uTime * 0.6 + aPhase * 6.2831) * 0.045;
+    float swirl  = sin(uTime * 0.9 + rad * 3.0 + aPhase * 6.2831) * 0.03;
+    pos += normalize(pos) * breath;
+    pos += vec3(-pos.y, pos.x, pos.z * 0.2) * swirl * 0.15;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
     float dist = -mvPosition.z;
 
-    // FIXED: previously this was (220.0 / dist), which at dist ~4.2 multiplies
-    // point size by ~52x — every particle ballooned to 100-700px and the whole
-    // cloud merged into one solid blurred disc (that's the red blob you saw).
-    // uPerspective keeps the multiplier ~1.0 at the camera's actual working
+    // uPerspective keeps the size multiplier ~1.0 at the camera's working
     // distance, so uBaseSize is close to the real on-screen pixel size.
     gl_PointSize = uBaseSize * uPixelRatio * (uPerspective / dist) * (0.3 + aRandom * 0.9);
 
-    vAlpha = 0.25 + 0.75 * aRandom;
+    // Fade particles by radius so the outer cloud dissolves into wisps and
+    // there is no crisp circular boundary (ORB_RADIUS ~ 1.8).
+    float radialFade = 1.0 - smoothstep(1.7, 2.7, rad);
+
+    vAlpha = (0.22 + 0.78 * aRandom) * radialFade;
     vRandom = aRandom;
   }
 `;

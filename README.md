@@ -31,6 +31,7 @@
 - [Configuration](#configuration)
 - [Visual System](#visual-system)
 - [Roadmap](#roadmap)
+- [Changelog](#changelog)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -129,15 +130,14 @@ agent's status.
 
 ## The Splash Sequence
 
-The front end boots through three scripted phases before reaching the live console:
+The front end boots through **two** scripted phases:
 
 | Phase | Name | What it shows |
 |-------|---------------------|------------------------------------------------------------------|
-| **1** | **Transmission** | HUD emblem with a living plasma core; three sequential scans each filling to 100%; agent roster revealed in batches as scans complete. |
-| **2** | **Mission Briefing** | Symmetric 3-column layout — agent roster + descriptions (left), Overseer + live clock + boot log (center), system parameters (right). Progress bar fills only after the boot log finishes. |
-| **3** | **Live Console** | Full plasma orb with bloom, R.A.M.B.O title stack, live agent status panel, system stat bars, dock, and an interconnecting network-web overlay. |
+| **1** | **Transmission** | The living orb (particles + plasma core + bloom), R.A.M.B.O title, operator line, a **"BOOTING UP"** status, a single scan bar (0→100%, no loop), and the boot log typing in beneath it. When the log finishes it shows **"NOW BOOTING UP"** and transitions. |
+| **2** | **Live Console** | Full plasma orb with bloom + interconnecting network-web overlay, R.A.M.B.O title stack, dock, and system stat bars. **Left:** Agent Roster table (names, roles, descriptions, live status). **Right:** System Parameters table. |
 
-Each phase auto-advances and can be skipped with a click. All three share the gold/amber neon color scheme.
+Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber neon scheme on near-black.
 
 ---
 
@@ -342,6 +342,42 @@ See [`ROADMAP_R.A.M.B.O_06-21-2026_18-34.md`](ROADMAP_R.A.M.B.O_06-21-2026_18-34
 - **Short term:** chromatic aberration, boot typing animation, accessibility pass, mobile LOD tuning.
 - **Mid term:** audio (ambient hum + boot chimes), interactive controls, AI personality presets, unit tests.
 - **Long term:** multi-orb network mode, real-time data integration, video export, reusable component library.
+
+---
+
+## Changelog
+
+Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-22 — Organic orb + panel polish
+
+- **[Orb · particles]** Softened the hard circular edge. Particle distribution changed from a thin shell (0.72R→1.0R) to a volumetric body (0.45R→1.0R) plus a sparse cubed-falloff tail (~1.45R). Affects both phases (shared orb).
+- **[Orb · shader]** Added a radial alpha fade (`smoothstep(1.7, 2.7)`) so the outer cloud dissolves into wisps, and a tangential swirl + radial breath so it churns like plasma instead of a rigid shell.
+- **[Phase 2 · labels]** Underlined the **AGENT ROSTER** and **SYSTEM PARAMETERS** table headers.
+- **[Phase 2 · cleanup]** Removed the dashed network-web overlay (lines + node dots) entirely.
+
+### 2026-06-22 — Phase 1 orb square fix
+
+- **[Phase 1 · orb]** Removed the visible square around the Phase 1 orb. It was the WebGL canvas edge clipping the orb's radial glow. Fixed with a radial `mask-image` on `.tx-plasma-big` that fades the canvas edges to transparent (box bumped 480→520px for fade room).
+
+### 2026-06-22 — Splash consolidated to 2 phases + Phase 1 orb
+
+- **[Phase count]** Reduced from 3 phases to 2. Deleted the standalone Mission Briefing (old Phase 2); its panels were folded into the live console. Phase state is now `transmission → main`.
+- **[Phase 1 · orb]** Replaced the flat plasma billboard with the **exact orb from Phase 2** (`RamboOrb3D` — particles + plasma core + bloom), contained in the emblem slot, **without** the network-web overlay.
+- **[Phase 1 · boot log]** Moved the 8-line boot log under the scan bar; it types in line-by-line.
+- **[Phase 1 · status]** Added a pulsing **"● BOOTING UP"** indicator (relabeled from "ONLINE").
+- **[Phase 1 · sequence]** Single scan bar fills 0→100% once (loop bug fixed at the source — stable `useCallback` advance + ref'd callback). After the log's last line, a highlighted **"> NOW BOOTING UP"** appears, then it transitions.
+- **[Phase 1 · roster]** Removed the agent roster from Phase 1 entirely.
+- **[Phase 2 · left]** Added the **Agent Roster** table — names, roles, descriptions, and live ONLINE/IDLE status — framed as a bordered table, with bumped font sizes for 80%-zoom readability.
+- **[Phase 2 · right]** Added the **System Parameters** table (replacing the old status panel), rendered as a bordered key/value table.
+- **[Phase 1 · text]** Bumped all Phase-1 text +2px; operator line promoted from SVG micro-text to readable HTML.
+- **[Cleanup]** Removed `BriefingScreen`, `AgentStatusPanel`, `MiniPlasma`/`MiniPlasmaScene`, `useLiveClock`, and now-unused imports (`THREE`, `useFrame`, `useMemo`, plasma shaders).
+
+### 2026-06-21 — Initial three-phase splash + repo
+
+- **[Repo]** Initialized git, README, `.gitignore`, `LICENSE`, `.gitattributes`; pushed to GitHub (private).
+- **[Backend]** Renamed `brains/` → `agents/`; added `/agents/status` + live WebSocket status broadcasts.
+- **[Orb]** Plasma nucleus shader, billboarded core, synced breathing, cursor parallax, single equatorial ring, bloom.
 
 ---
 

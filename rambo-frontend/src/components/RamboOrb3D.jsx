@@ -41,7 +41,14 @@ function buildParticleGeometry() {
   const phases = new Float32Array(PARTICLE_COUNT);
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
-    const r = ORB_RADIUS * (0.72 + 0.28 * Math.random());
+    // Soft volumetric distribution instead of a thin hard-edged shell:
+    //  - a main body that fills 0.45R→1.0R (no hollow center, no sharp ring)
+    //  - a sparse, cubed-falloff tail reaching ~1.45R so the edge dissolves
+    //    into wisps rather than terminating in a crisp circle.
+    const body = 0.45 + 0.55 * Math.pow(Math.random(), 0.7);
+    const tail = Math.pow(Math.random(), 3.0) * 0.45;
+    const r = ORB_RADIUS * (body + tail);
+
     const theta = Math.acos(2 * Math.random() - 1.0);
     const phi = Math.random() * Math.PI * 2.0;
 

@@ -530,33 +530,60 @@
   gap: 14px;
 }
 
-/* Emblem container — SVG + plasma overlay stacked */
+/* Emblem container — big plasma + titles stacked, no ring/spokes */
 .tx-emblem-wrap {
   position: relative;
-  width: 256px;
-  height: 308px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.tx-emblem-svg {
-  width: 256px;
-  height: 308px;
-  filter: drop-shadow(0 0 12px rgba(232, 177, 90, 0.35));
-}
-
-/* Plasma positioned at the SVG geometric center */
-.tx-plasma-overlay {
-  position: absolute;
-  width: 128px;
-  height: 128px;
-  top: 47%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* Large living plasma — ~6x the old 128px, no emblem ring/spokes */
+.tx-plasma-big {
+  width: 520px;
+  height: 520px;
+  margin-bottom: -64px;
   pointer-events: none;
+  /* Fade the canvas edges to transparent so the orb's glow blends into the
+     black background instead of being clipped into a hard square. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%);
+          mask-image: radial-gradient(circle at 50% 50%, #000 48%, transparent 70%);
+}
+
+.tx-plasma-big canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+/* R.A.M.B.O title under the plasma */
+.tx-emblem-title {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--text-hi);
+  text-shadow:
+    0 0 6px var(--accent-glow),
+    0 0 18px var(--accent),
+    0 0 38px var(--accent);
+}
+
+/* Operator line — enlarged for readability at 80% zoom */
+.tx-emblem-operator {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.26em;
+  color: var(--accent-glow);
+  text-shadow: 0 0 8px var(--accent);
+  text-transform: uppercase;
 }
 
 .tx-label {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   color: var(--text-dim);
   margin: 0;
@@ -565,7 +592,7 @@
 
 .tx-subtitle {
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.22em;
   color: var(--accent-glow);
@@ -580,12 +607,12 @@
   flex-direction: column;
   align-items: center;
   gap: 7px;
-  width: 320px;
+  width: 360px;
 }
 
 .tx-scan-step {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--accent-glow);
   text-shadow: 0 0 8px var(--accent);
@@ -609,7 +636,7 @@
 
 .tx-progress-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   color: var(--text-dim);
   margin: 0;
@@ -620,13 +647,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 60px;
 }
 
 .tx-roster-label {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -654,16 +681,8 @@
 
 .tx-agent-name {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.07em;
-}
-
-.tx-hint {
-  font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: 0.1em;
-  color: rgba(122, 122, 122, 0.35);
-  margin: 0;
 }
 
 /* ================================================================== */
@@ -995,4 +1014,186 @@
 .system-online {
   color: #00ff88;
   text-shadow: 0 0 6px #00ff88, 0 0 16px #00ff88, 0 0 28px rgba(0, 255, 136, 0.4);
+}
+
+/* ================================================================== */
+/*  PHASE 1 — "BOOTING UP" STATUS + BOOT LOG (merged from old Phase 2) */
+/* ================================================================== */
+
+.tx-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: -4px;
+}
+
+.tx-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent), 0 0 12px var(--accent);
+  animation: txStatusPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes txStatusPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.tx-status-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent-glow);
+  text-shadow: 0 0 6px var(--accent);
+  text-transform: uppercase;
+}
+
+/* boot log under the scan bar */
+.tx-boot-log {
+  width: 420px;
+  max-width: 90vw;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  line-height: 1.85;
+  color: var(--accent);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.35);
+  min-height: 150px;
+  margin-top: 4px;
+}
+
+.tx-boot-line {
+  opacity: 0;
+  animation: txBootIn 0.28s ease forwards;
+}
+
+@keyframes txBootIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.tx-boot-cursor {
+  color: var(--accent);
+  font-size: 10px;
+  animation: txCursorBlink 0.8s step-end infinite;
+}
+
+@keyframes txCursorBlink {
+  50% { opacity: 0; }
+}
+
+/* ================================================================== */
+/*  PHASE 2 — LEFT AGENT ROSTER PANEL (descriptions + live status)    */
+/* ================================================================== */
+
+.roster-panel {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 430px;
+  max-width: 38vw;
+  max-height: 86vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.roster-panel::-webkit-scrollbar { display: none; }
+
+.roster-panel .headline {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+/* Framed "table" look for the roster */
+.roster-panel .brief-agent-list {
+  border: 1px solid rgba(232, 177, 90, 0.16);
+  border-radius: 4px;
+  padding: 12px 14px;
+  background: rgba(232, 177, 90, 0.02);
+  gap: 11px;
+}
+
+/* Bumped roster typography for readability at 80% zoom */
+.roster-panel .brief-section-label {
+  font-size: 10px;
+  display: inline-block;
+  align-self: flex-start;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--accent);
+}
+.roster-panel .brief-agent-name    { font-size: 13px; min-width: 80px; }
+.roster-panel .brief-agent-role    { font-size: 10px; }
+.roster-panel .brief-agent-badge   { font-size: 9px; }
+.roster-panel .brief-agent-desc    { font-size: 9.5px; }
+.roster-panel .agent-dot           { width: 7px; height: 7px; }
+
+/* ================================================================== */
+/*  PHASE 2 — RIGHT SYSTEM PARAMETERS (as a table)                    */
+/* ================================================================== */
+
+/* SystemParamsPanel sits in .agent-panel (right) */
+.agent-panel {
+  min-width: 300px;
+}
+
+.agent-panel .agent-section-label {
+  margin-bottom: 10px;
+  font-size: 10px;
+  display: inline-block;
+  align-self: flex-start;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--accent);
+}
+
+/* Tabular frame matching the roster */
+.agent-panel .brief-params {
+  border: 1px solid rgba(232, 177, 90, 0.16);
+  border-radius: 4px;
+  background: rgba(232, 177, 90, 0.02);
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Each parameter is a table row: KEY left, VALUE right, divider below */
+.agent-panel .brief-param-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.10);
+}
+.agent-panel .brief-param-row:last-child {
+  border-bottom: none;
+}
+
+.agent-panel .brief-param-key {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+.agent-panel .brief-param-val {
+  font-size: 11px;
+  text-align: right;
+}
+
+/* ================================================================== */
+/*  PHASE 1 — "NOW BOOTING UP" final line                             */
+/* ================================================================== */
+
+.tx-now-booting {
+  color: var(--accent-glow);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
+  margin-top: 4px;
 }
