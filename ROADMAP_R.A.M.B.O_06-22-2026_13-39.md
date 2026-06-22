@@ -76,8 +76,8 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 | Tier | Name | Status | Description |
 |------|------|--------|-------------|
 | **1** | The Orb Itself | **Done** (06/22/2026) | Wireframe icosahedron, simplex noise, fresnel glow, billboarded halo, gold, tumble + parallax. |
-| **2** | The Cosmos | **Next** | Deep-space nebula background: twinkling stars, nebula clouds (layered noise), distant glowing node web, colored glow pooled behind the orb. Separate background renderer. |
-| **3** | The Voice | Planned | 5 conversational states (idle/listening/processing/speaking/error). Real microphone audio reactivity (Web Audio API). Asymmetric smoothing, synthetic fallback. |
+| **2** | The Cosmos | **Done** (06/22/2026 14:15) | Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb. All layers use billboarded quads with circular radial fade. |
+| **3** | The Voice | **Done** (06/22/2026 14:15) | Mic capture via Web Audio API, FFT analysis, asymmetric smoothing (fast attack/slow decay). 5 states: idle/listening/processing/speaking/error. Audio drives orb displacement (3x boost) + glow brightness. Mic toggle button in Phase 2 UI. |
 | **4** | The Constellation | Planned | 10 sub-agents orbiting as floating constellation. Avatar sprites, depth-fading labels, status-driven glow. |
 | **5** | Dispatch & Docking | Planned | Dispatch beams from orb to agent, working pulse, docking near roster rows, processing rings ("helix"). |
 | **6** | Wire to Reality | Planned | Real WebSocket events, performance mode, reduced motion, battery/focus handling. |
@@ -197,6 +197,7 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 
 | Date | Time (ET) | Changes |
 |------|-----------|---------|
+| 06/22/2026 | 14:15 | Tier 2 (cosmic background) + Tier 3 (voice reactivity) shipped. Fixed amber square on nebula/glow quads. |
 | 06/22/2026 | 13:39 | Created new roadmap. Fixed black flickers (Bloom threshold + premultipliedAlpha). Skip typing cascade on Command Center click. All shipped items consolidated. |
 | 06/22/2026 | ~12:00 | CosmicOrb (Tier 1) built and deployed across all pages. Black square fix (billboarded sprite). Per-agent pages, Round Table, Learning Log, SYSTEMS nav, response controls, skipIntro routing, agent_tracker, sentinel_queue. |
 | 06/21/2026 | 18:34 | Original roadmap created. Initial three-phase splash, PowerShell control panel, Docker orchestration, plasma orb with particles. |
