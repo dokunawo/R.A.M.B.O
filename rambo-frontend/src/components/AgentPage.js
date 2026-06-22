@@ -285,6 +285,25 @@ function AgentPage() {
         </div>
       </div>
 
+      {/* QUICK SWITCH — bottom agent bar */}
+      <nav className="ap-quick-switch">
+        {Object.entries(AGENT_META).map(([key, a]) => (
+          <button
+            key={key}
+            className={`ap-qs-btn${key === agentKey ? " ap-qs-active" : ""}`}
+            style={{
+              "--agent-color": a.color,
+              borderColor: key === agentKey ? a.color : "rgba(255,255,255,0.1)",
+            }}
+            onClick={() => key !== agentKey && navigate(`/agent/${key}`)}
+            title={a.name}
+          >
+            <span className="ap-qs-avatar">{a.avatar}</span>
+            <span className="ap-qs-name">{a.name}</span>
+          </button>
+        ))}
+      </nav>
+
       <CommandLog commandLog={commandLog} agentColor={meta.color} />
 
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
