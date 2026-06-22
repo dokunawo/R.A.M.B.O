@@ -1065,14 +1065,9 @@
   margin-top: 4px;
 }
 
+/* No slide — boot lines just appear, then type in char-by-char (like Phase 2). */
 .tx-boot-line {
-  opacity: 0;
-  animation: txBootIn 0.28s ease forwards;
-}
-
-@keyframes txBootIn {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: translateX(0); }
+  opacity: 1;
 }
 
 .tx-boot-cursor {
@@ -1391,85 +1386,22 @@
 /*  PHASE 1 — VORTEX INTRO (opens center → outward, matched to sfx)    */
 /* ================================================================== */
 
-/* Soft magenta nebula vortex: heavily-blurred conic "arms" swirl slowly around
-   a glowing core on a deep-purple field, then the whole thing fades to reveal
-   the booting screen. Matched to the ~11s HUD intro sound. */
-.vortex {
+/* Lightspeed warp — full-screen canvas of gold star streaks. Fades out when
+   the timeline clears it. */
+.warp {
   position: fixed;
   inset: 0;
   z-index: 50;
+  width: 100%;
+  height: 100%;
+  display: block;
   pointer-events: none;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 50%, #3a1640 0%, #1a0a26 46%, #08040f 100%);
-  animation: vxReveal var(--vdur, 11s) ease-in forwards;
+  background: radial-gradient(circle at 50% 50%, #0e1116 0%, #08090b 70%);
+  opacity: 1;
+  transition: opacity 0.7s ease;
 }
 
-@keyframes vxReveal {
-  0%   { opacity: 1; }
-  82%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* two soft swirling arm layers */
-.vortex::before,
-.vortex::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 200vmax;
-  height: 200vmax;
-  margin-left: -100vmax;
-  margin-top: -100vmax;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg,
-    rgba(255, 120, 220, 0)   0deg,
-    rgba(255, 130, 225, 0.5) 55deg,
-    rgba(200, 80, 255, 0)    120deg,
-    rgba(255, 120, 220, 0)   165deg,
-    rgba(255, 150, 235, 0.45) 230deg,
-    rgba(210, 90, 255, 0)    300deg,
-    rgba(255, 120, 220, 0)   360deg);
-  -webkit-mask-image: radial-gradient(circle, #000 0%, #000 28%, transparent 62%);
-          mask-image: radial-gradient(circle, #000 0%, #000 28%, transparent 62%);
-  filter: blur(20px);
-  mix-blend-mode: screen;
-  will-change: transform;
-}
-
-.vortex::before { animation: vxArmsA var(--vdur, 11s) linear forwards; }
-.vortex::after  { animation: vxArmsB var(--vdur, 11s) linear forwards; opacity: 0.7; }
-
-/* glowing white-pink core */
-.vortex-swirl {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 34vmax;
-  height: 34vmax;
-  margin-left: -17vmax;
-  margin-top: -17vmax;
-  border-radius: 50%;
-  background: radial-gradient(circle,
-    #ffffff 0%, #ff9be9 16%, rgba(214, 90, 255, 0.55) 38%, transparent 68%);
-  filter: blur(10px);
-  mix-blend-mode: screen;
-  animation: vxCore var(--vdur, 11s) ease-in-out forwards;
-}
-
-@keyframes vxArmsA {
-  from { transform: rotate(0deg)   scale(0.45); }
-  to   { transform: rotate(320deg) scale(1.3); }
-}
-@keyframes vxArmsB {
-  from { transform: rotate(0deg)    scale(0.55); }
-  to   { transform: rotate(-260deg) scale(1.2); }
-}
-@keyframes vxCore {
-  0%   { transform: scale(0.65); }
-  55%  { transform: scale(1.15); }
-  100% { transform: scale(1.5); }
-}
+.warp.warp-closing { opacity: 0; }
 
 /* ================================================================== */
 /*  SOUND TOGGLE (also the "enable audio" gesture)                    */
@@ -1502,7 +1434,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vortex { display: none !important; }
+  .warp { display: none !important; }
 }
 
 /* ================================================================== */
@@ -1532,4 +1464,158 @@
 @keyframes txFadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================== */
+/*  PHASE 2 — ORB WEB (filaments from the orb to the UI)              */
+/* ================================================================== */
+
+.orb-web {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;                 /* above the orb, below the panels/text */
+  pointer-events: none;
+  opacity: 0;
+  animation: orbWebIn 1.4s ease 0.4s forwards;
+}
+
+@keyframes orbWebIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* each pulse point — centred at its left/top % anchor */
+.emp {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+/* the synapse core — a small glowing dot that breathes */
+.emp-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+  opacity: var(--cop, 0.6);
+  animation-name: empCore;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes empCore {
+  0%, 100% { opacity: calc(var(--cop, 0.6) * 0.4); }
+  50%      { opacity: var(--cop, 0.6); }
+}
+
+/* the EM ripple — a small circle that expands and fades, like a cell firing */
+.emp-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  box-shadow: 0 0 5px currentColor;
+  opacity: 0;
+  animation-name: empRing;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+@keyframes empRing {
+  0%   { transform: scale(0.2); opacity: 0; }
+  12%  { opacity: 0.75; }
+  100% { transform: scale(var(--rs, 7)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-web { animation: none; opacity: 0.9; }
+  .emp-core { animation: none; }
+  .emp-ring { display: none; }
+}
+
+/* ================================================================== */
+/*  PHASE TRANSITION — on-theme gold flash (not a black cut)          */
+/* ================================================================== */
+
+.phase-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(255, 217, 138, 0.5) 0%,
+    rgba(232, 177, 90, 0.22) 38%,
+    transparent 72%);
+  animation: phaseFlash 0.5s ease forwards;
+}
+
+@keyframes phaseFlash {
+  0%   { opacity: 0; }
+  35%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-flash { animation: none; opacity: 0; }
+}
+
+/* ================================================================== */
+/*  PHASE 2 — AGENT RESPONSE PANEL (extends from a replying agent)    */
+/* ================================================================== */
+
+.agent-response {
+  display: flex;
+  gap: 6px;
+  margin: 5px 0 8px 12px;
+}
+
+.agent-response-arm {
+  width: 12px;
+  flex-shrink: 0;
+  margin-top: -3px;
+  border-left: 1px solid var(--accent);
+  border-bottom: 1px solid var(--accent);
+  border-bottom-left-radius: 4px;
+  opacity: 0.55;
+}
+
+.agent-response-body {
+  flex: 1;
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  border-radius: 4px;
+  background: rgba(232, 177, 90, 0.05);
+  box-shadow: 0 0 14px rgba(232, 177, 90, 0.12);
+  padding: 6px 9px;
+  animation: respIn 0.32s ease;
+}
+
+@keyframes respIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.agent-response-head {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  color: var(--accent-glow);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.4);
+}
+
+.agent-response-text {
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.55;
+  color: var(--text-mid);
+  white-space: pre-wrap;
+  word-break: break-word;
 }

@@ -367,6 +367,34 @@ Running log of splash-screen / UI changes, newest first. Each entry is labeled b
 - **[Mobile]** `PARTICLE_COUNT` 4000→1800 under 768px, Bloom `mipmapBlur` off on mobile, canvas `dpr` capped at 1.5.
 - **[Audio]** Boot chime on the Phase 1→2 transition + a low ambient hum (synthesized via Web Audio, no asset files). Audio context resumes on first user gesture (browser autoplay policy).
 
+### 2026-06-22 — EM pulses replace the lines
+
+- **[Phase 2 · web]** Removed the radiating filament lines (too busy). Replaced with **small circular EM pulses** — scattered glowing synapse dots that emit expanding ripple rings (HTML/CSS so they stay perfectly round on any aspect), like cells firing bioelectric signals.
+
+### 2026-06-22 — Fix Task crash, agent responses, contacting, neuron web
+
+- **[Backend · fix]** Fixed `TypeError: Task.__init__() got an unexpected keyword argument 'id'` — the `Task` model now accepts `id`, `assigned_to`, `status`, `metadata` (Pilot was passing them). `POST /rambo/execute` no longer 500s.
+- **[Backend · messaging]** Orchestrator now broadcasts structured JSON: `{t:"contact",agent}` (+ a "Contacting X agent to finish the job." log line) when a task is routed, and `{t:"response",agent,text}` with each agent's output (and Echo's final summary).
+- **[Phase 2 · responses]** Each agent's reply now opens a **response panel that extends from that agent** in the roster (connector arm + bordered body with the text). "Contacting X agent…" shows in the live feed.
+- **[Phase 2 · neuron web]** Reworked the orb web into a **brain-neuron net**: branching dendrites, depth (near/foreground neurons are thicker, brighter, bloom more — fake 3D), and several filaments now **extend past the screen edges**. EM surges + pulsing retained.
+
+### 2026-06-22 — Lightspeed warp intro, typing fix, gold transition
+
+- **[Phase 1 · warp]** Removed the vortex; replaced with a **lightspeed particle warp** — a canvas of gold star streaks accelerating outward from the centre (hyperspace-style), in the project's gold scheme. Fades out when the timeline clears it.
+- **[Phase 1 · timing]** The transition now holds ~1.9s after **"CONNECTION ESTABLISHED"** shows, so it's fully readable before advancing (was cut off).
+- **[Phase 1 · typing]** Removed the boot-log slide-in animation — boot lines now type in char-by-char (matching Phase 2) instead of sliding.
+- **[Transition]** Added an on-theme **gold flash** during the Phase 1→2 transition (instead of a plain fade-through-black).
+
+### 2026-06-22 — Vortex v4 (fiery spiral), audio-synced Phase 1, pulsing web
+
+- **[Phase 1 · vortex v4]** Recolored the vortex to a fiery red/orange/magenta spiral with a hot white core (per the new reference). It now **spins continuously** (no fixed end) and fades out when the timeline clears it.
+- **[Phase 1 · audio sync]** The whole Phase 1 (vortex → boot → completion) is now driven by the intro sound's length: attempts autoplay, **retries on the first user gesture** (so the sound is actually heard), and falls back after 4.5s so it never gets stuck. Beats are scheduled as fractions of the clip so the sequence ends as the audio ends.
+- **[Phase 1 · labels]** Brought back **"> NOW BOOTING UP"** above **"> CONNECTION ESTABLISHED"** — both show at the end.
+- **[Phase 1 · audio]** Removed the keyboard key-click sound from Phase 1's boot log (Phase 2 typing still clicks).
+- **[Phase 2 · orb web]** Filaments now **pulsate** (breathing opacity) and carry **electromagnetic surges** — a bright dash travels outward along each line (`stroke-dashoffset`), with pulsing nodes. Each line/node has randomized timing for an organic, living feel.
+
+- **[Phase 2 · orb web]** Added an SVG **filament web** radiating from the orb out across the screen (procedural, seeded). ~12 anchored lines connect to the UI zones — top-left brand, top-right clock, Agent Roster (left), System Parameters (right), and the command line (bottom) — plus ~24 decorative filaments in all directions, each ending in a glowing node. Layered above the orb but below the panels/text, so the plasma sphere is untouched and lines read as connecting into each panel. Fades in with the console.
+
 ### 2026-06-22 — Vortex v3 (magenta nebula), 11s gated Phase 1 intro
 
 - **[Phase 1 · vortex v3]** Replaced the spoke wormhole with a **soft magenta nebula swirl** (blurred conic "arms" rotating around a glowing white-pink core on deep purple), matching the reference image. Duration is driven by the new intro sound (~11s).

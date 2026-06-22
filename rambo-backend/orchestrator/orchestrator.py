@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 from models.task import Task
 from router import choose_brain
@@ -58,6 +59,14 @@ class Orchestrator:
         self.agent_status[name] = status
         await self.broadcast(f"STATUS:{name}:{status}")
 
+    async def _contact(self, name: str):
+        # structured (for the UI) + a human-readable log line
+        await self.broadcast(json.dumps({"t": "contact", "agent": name}))
+        await self.broadcast(f"[Pilot] Contacting {name.capitalize()} agent to finish the job.")
+
+    async def _response(self, name: str, text: str):
+        await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
+
     async def handle(self, goal: str):
         architect = self.agents["architect"]
         pilot     = self.agents["pilot"]
@@ -81,6 +90,7 @@ class Orchestrator:
             agent_name = choose_brain(task)
             agent      = self.agents[agent_name]
 
+            await self._contact(agent_name)
             await self._set_status(agent_name, "working")
             await self.broadcast(f"[{agent_name.capitalize()}] Starting: {task.description}")
 
@@ -111,6 +121,7 @@ class Orchestrator:
             output = agent.execute(task)
             results.append(output)
 
+            await self._response(agent_name, output)
             await self.broadcast(f"[{agent_name.capitalize()}] Finished: {task.description}")
             await self._set_status(agent_name, "idle")
             await asyncio.sleep(0.15)
@@ -118,6 +129,7 @@ class Orchestrator:
         await self._set_status("echo", "working")
         await self.broadcast("[Echo] Finalizing response...")
         summary = echo.summarize(goal, plan, results)
+        await self._response("echo", summary)
         await self.broadcast("[Echo] Response ready.")
         await self._set_status("echo", "idle")
 

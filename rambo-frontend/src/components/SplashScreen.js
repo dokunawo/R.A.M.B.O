@@ -1,12 +1,12 @@
 // SplashScreen.js
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import RamboOrb3D from "./RamboOrb3D";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
-  loadIntro, playIntro, playKeyClick,
+  loadIntro, playKeyClick,
   isMuted, setMuted,
 } from "./audioEngine";
 import "./SplashScreen.css";
@@ -96,6 +96,7 @@ function useRamboLive() {
   const [stats,      setStats]      = useState(null);
   const [activity,   setActivity]   = useState([]);
   const [connected,  setConnected]  = useState(false);
+  const [responses,  setResponses]  = useState({}); // { agentKey: responseText }
 
   // REST polling
   useEffect(() => {
@@ -127,6 +128,19 @@ function useRamboLive() {
       ws.onerror = () => { try { ws.close(); } catch {} };
       ws.onmessage = (e) => {
         const msg = String(e.data);
+
+        // Structured JSON messages: { t: "response"|"contact", agent, text }
+        if (msg.charAt(0) === "{") {
+          try {
+            const j = JSON.parse(msg);
+            if (j.t === "response" && j.agent) {
+              setResponses(prev => ({ ...prev, [j.agent.toLowerCase()]: j.text }));
+            }
+            // contact is also surfaced via its companion log line below
+          } catch { /* ignore malformed */ }
+          return;
+        }
+
         const m = /^STATUS:([a-zA-Z]+):([a-zA-Z]+)$/.exec(msg);
         if (m) {
           setStatusData(prev => applyLiveStatus(prev, m[1].toLowerCase(), m[2].toLowerCase()));
@@ -145,13 +159,13 @@ function useRamboLive() {
     return () => { closed = true; clearTimeout(retry); if (ws) try { ws.close(); } catch {} };
   }, []);
 
-  return { statusData, stats, activity, connected };
+  return { statusData, stats, activity, connected, responses };
 }
 
 // Typewriter that waits `startMs` before typing `text` one char at a time.
 // Re-runs on mount, so the whole cascade restarts when the console appears.
 // Honors prefers-reduced-motion by revealing the full text immediately.
-function useDelayedTypewriter(text, speed, startMs) {
+function useDelayedTypewriter(text, speed, startMs, silent = false) {
   const [out, setOut] = useState("");
   useEffect(() => {
     if (prefersReducedMotion()) { setOut(text); return; }
@@ -162,12 +176,12 @@ function useDelayedTypewriter(text, speed, startMs) {
       intId = setInterval(() => {
         i += 1;
         setOut(text.slice(0, i));
-        if (text[i - 1] && text[i - 1] !== " ") playKeyClick(); // click per keystroke
+        if (!silent && text[i - 1] && text[i - 1] !== " ") playKeyClick(); // click per keystroke
         if (i >= text.length) clearInterval(intId);
       }, speed);
     }, Math.max(0, startMs));
     return () => { clearTimeout(startTimer); clearInterval(intId); };
-  }, [text, speed, startMs]);
+  }, [text, speed, startMs, silent]);
   return out;
 }
 
@@ -330,54 +344,73 @@ function SoundToggle() {
   );
 }
 
-// Phase 1 intro: a swirling magenta vortex that fills the screen while the HUD
-// intro sound plays, then fades to reveal the booting screen. Duration is taken
-// from the sound (~11s); calls onDone when finished.
-function Vortex({ onDone }) {
-  const [dur, setDur]   = useState(11);
-  const [done, setDone] = useState(false);
-  const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
-
+// Lightspeed warp — gold star streaks accelerating outward from the centre,
+// like jumping to hyperspace. Fades out when told to close.
+function Warp({ closing }) {
+  const ref = useRef();
   useEffect(() => {
-    if (prefersReducedMotion()) { setDone(true); onDoneRef.current && onDoneRef.current(); return; }
-    const a = loadIntro();
-    const onMeta = () => {
-      const d = a.duration;
-      if (d && isFinite(d)) setDur(Math.min(15, Math.max(3, d)));
+    if (prefersReducedMotion()) return undefined;
+    const canvas = ref.current;
+    if (!canvas) return undefined;
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let w, h, cx, cy;
+    const resize = () => {
+      w = canvas.width = Math.floor(window.innerWidth * dpr);
+      h = canvas.height = Math.floor(window.innerHeight * dpr);
+      cx = w / 2; cy = h / 2;
     };
-    if (a.duration && isFinite(a.duration)) onMeta();
-    else a.addEventListener("loadedmetadata", onMeta, { once: true });
-    playIntro();                   // gesture permitting
-    return () => a.removeEventListener("loadedmetadata", onMeta);
+    resize();
+    window.addEventListener("resize", resize);
+
+    const N = 340;
+    const reset = (s) => { s.x = Math.random() * 2 - 1; s.y = Math.random() * 2 - 1; s.z = 1; s.pz = 1; };
+    const stars = Array.from({ length: N }, () => { const s = {}; reset(s); s.z = Math.random(); s.pz = s.z; return s; });
+
+    const t0 = performance.now();
+    let raf;
+    const draw = (now) => {
+      const elapsed = (now - t0) / 1000;
+      const speed = 0.006 + Math.min(0.055, elapsed * 0.012); // ramps up → lightspeed
+      const scale = Math.min(w, h) * 0.7;
+
+      ctx.fillStyle = "rgba(8, 9, 11, 0.32)"; // trail fade
+      ctx.fillRect(0, 0, w, h);
+
+      for (const s of stars) {
+        s.pz = s.z;
+        s.z -= speed;
+        if (s.z <= 0.012) reset(s);
+        const sx = cx + (s.x / s.z) * scale;
+        const sy = cy + (s.y / s.z) * scale;
+        const px = cx + (s.x / s.pz) * scale;
+        const py = cy + (s.y / s.pz) * scale;
+        const k = 1 - s.z;
+        ctx.strokeStyle = `rgba(${232 + k * 23}, ${177 + k * 40}, ${90 + k * 48}, ${Math.min(1, k * 1.3)})`;
+        ctx.lineWidth = Math.max(0.6, k * 2.6) * dpr;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
-  useEffect(() => {
-    if (done) return undefined;
-    const t = setTimeout(() => {
-      setDone(true);
-      onDoneRef.current && onDoneRef.current();
-    }, dur * 1000);
-    return () => clearTimeout(t);
-  }, [dur, done]);
-
-  if (done) return null;
-  return (
-    <div className="vortex" style={{ "--vdur": `${dur}s` }}>
-      <div className="vortex-swirl" />
-    </div>
-  );
+  return <canvas ref={ref} className={`warp${closing ? " warp-closing" : ""}`} />;
 }
 
 /* ------------------------------------------------------------------ */
 /*  PHASE 1 — TRANSMISSION SCREEN                                       */
 /* ------------------------------------------------------------------ */
 
-// A single boot-log line that types in (char by char, with key clicks) once
-// its start time is reached.
-function BootLine({ text, speed, startMs }) {
+// A single boot-log line that types in (char by char) once its start is reached.
+function BootLine({ text, speed, startMs, silent }) {
   const shown = useRevealAt(startMs);
-  const typed = useDelayedTypewriter(text, speed, startMs);
+  const typed = useDelayedTypewriter(text, speed, startMs, silent);
   if (!shown) return null;
   const done = typed === text;
   return (
@@ -387,54 +420,90 @@ function BootLine({ text, speed, startMs }) {
   );
 }
 
-const BOOT_SPEED = 14; // ms/char for the boot log
-
-// Precomputed start offsets for the boot log (relative to when loading begins).
-const BOOT_STARTS = (() => {
-  let t = 0;
-  return BOOT_LOG.map((l) => { const s = t; t += l.length * BOOT_SPEED + 180; return s; });
-})();
-const BOOT_TOTAL_MS = (() => {
-  if (!BOOT_LOG.length) return 0;
-  const last = BOOT_LOG.length - 1;
-  return BOOT_STARTS[last] + BOOT_LOG[last].length * BOOT_SPEED + 180;
-})();
+const BOOT_TYPE_SPEED = 12; // ms/char for the boot log (silent in Phase 1)
 
 function TransmissionScreen({ onAdvance }) {
-  const [introDone,   setIntroDone]   = useState(false); // vortex finished
+  const [introDone,   setIntroDone]   = useState(false); // warp begins clearing
+  const [warpGone,    setWarpGone]    = useState(false); // warp removed
   const [loadStarted, setLoadStarted] = useState(false); // %bar + boot log begin
   const [progress,    setProgress]    = useState(0);
+  const [nowBooting,  setNowBooting]  = useState(false); // "NOW BOOTING UP"
   const [connected,   setConnected]   = useState(false); // "CONNECTION ESTABLISHED"
+  const [lineGap,     setLineGap]     = useState(520);    // ms between boot lines
+  const [scanDur,     setScanDur]     = useState(4200);
   const onAdvanceRef = useRef(onAdvance);
   onAdvanceRef.current = onAdvance;
 
-  // After the vortex: a beat, then start the %bar + boot-log typewriter.
+  // The whole Phase 1 is synced to the intro sound: the warp + boot sequence
+  // span its length. We attempt autoplay, retry on the first user gesture, and
+  // fall back after a few seconds so it never gets stuck. The transition waits
+  // for "CONNECTION ESTABLISHED" to be readable (≈1.9s) before advancing.
   useEffect(() => {
-    if (!introDone) return undefined;
-    const t = setTimeout(() => setLoadStarted(true), 800);
-    return () => clearTimeout(t);
-  }, [introDone]);
+    const a = loadIntro();
+    let durMs = 11000;
+    let started = false;
+    const timers = [];
 
-  // Scan bar fills while the boot log types.
+    const startTimeline = () => {
+      if (started) return;
+      started = true;
+
+      const introAt = durMs * 0.42;
+      const loadAt  = durMs * 0.47;
+      const bootWin = durMs * 0.36;
+      const gap = Math.max(320, bootWin / BOOT_LOG.length);
+      setLineGap(gap);
+      setScanDur(gap * BOOT_LOG.length);
+
+      const connectedAt = durMs * 0.88;
+      timers.push(setTimeout(() => setIntroDone(true),  introAt));
+      timers.push(setTimeout(() => setWarpGone(true),   introAt + 750));
+      timers.push(setTimeout(() => setLoadStarted(true), loadAt));
+      timers.push(setTimeout(() => setNowBooting(true), durMs * 0.84));
+      timers.push(setTimeout(() => setConnected(true),  connectedAt));
+      // hold so "CONNECTION ESTABLISHED" is fully shown before we transition
+      timers.push(setTimeout(() => onAdvanceRef.current(), connectedAt + 1900));
+    };
+
+    const onMeta = () => { if (a.duration && isFinite(a.duration)) durMs = a.duration * 1000; };
+    if (a.duration && isFinite(a.duration)) onMeta();
+    else a.addEventListener("loadedmetadata", onMeta, { once: true });
+
+    const onPlay = () => startTimeline();
+    a.addEventListener("play", onPlay);
+
+    const tryPlay = () => {
+      resumeAudio();
+      try { a.currentTime = 0; const p = a.play(); if (p) p.catch(() => {}); } catch { /* ignore */ }
+    };
+    tryPlay();                                   // autoplay attempt
+    const onGesture = () => tryPlay();           // retry on first interaction
+    const evs = ["pointerdown", "keydown", "touchstart", "click"];
+    evs.forEach(ev => window.addEventListener(ev, onGesture, { once: true }));
+
+    const fallback = setTimeout(startTimeline, 4500); // run silently if still blocked
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(fallback);
+      a.removeEventListener("loadedmetadata", onMeta);
+      a.removeEventListener("play", onPlay);
+      evs.forEach(ev => window.removeEventListener(ev, onGesture));
+      try { a.pause(); } catch { /* ignore */ }
+    };
+  }, []);
+
+  // Scan bar fills across the boot window.
   useEffect(() => {
     if (!loadStarted) return undefined;
     const start = Date.now();
-    const SCAN_DURATION = Math.max(2600, BOOT_TOTAL_MS);
     const id = setInterval(() => {
-      const pct = Math.min(100, ((Date.now() - start) / SCAN_DURATION) * 100);
+      const pct = Math.min(100, ((Date.now() - start) / scanDur) * 100);
       setProgress(pct);
       if (pct >= 100) clearInterval(id);
     }, 30);
     return () => clearInterval(id);
-  }, [loadStarted]);
-
-  // When the boot log finishes: show "CONNECTION ESTABLISHED", then advance.
-  useEffect(() => {
-    if (!loadStarted) return undefined;
-    const t1 = setTimeout(() => setConnected(true), BOOT_TOTAL_MS + 200);
-    const t2 = setTimeout(() => onAdvanceRef.current(), BOOT_TOTAL_MS + 1900);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [loadStarted]);
+  }, [loadStarted, scanDur]);
 
   const scanLabel = progress < 40 ? SCAN_STEPS[0] : progress < 75 ? SCAN_STEPS[1] : SCAN_STEPS[2];
 
@@ -453,7 +522,7 @@ function TransmissionScreen({ onAdvance }) {
         </Canvas>
       </div>
 
-      {/* Upper text appears only after the vortex finishes */}
+      {/* Upper text appears once the vortex starts clearing */}
       {introDone && (
         <div className="tx-content tx-content-overlay tx-fade-in">
           <div className="tx-emblem-title">R.A.M.B.O</div>
@@ -467,7 +536,6 @@ function TransmissionScreen({ onAdvance }) {
             <span className="tx-status-text">BOOTING UP</span>
           </div>
 
-          {/* %bar + boot log type in only after the upper text has loaded */}
           {loadStarted && (
             <>
               <div className="tx-scan-block">
@@ -480,8 +548,11 @@ function TransmissionScreen({ onAdvance }) {
 
               <div className="tx-boot-log">
                 {BOOT_LOG.map((line, i) => (
-                  <BootLine key={i} text={line} speed={BOOT_SPEED} startMs={BOOT_STARTS[i]} />
+                  <BootLine key={i} text={line} speed={BOOT_TYPE_SPEED} startMs={i * lineGap} silent />
                 ))}
+                {nowBooting && (
+                  <div className="tx-boot-line tx-now-booting">&gt; NOW BOOTING UP</div>
+                )}
                 {connected && (
                   <div className="tx-boot-line tx-connection-ok">&gt; CONNECTION ESTABLISHED</div>
                 )}
@@ -491,8 +562,8 @@ function TransmissionScreen({ onAdvance }) {
         </div>
       )}
 
-      {/* swirling magenta vortex intro — drives introDone when it finishes */}
-      <Vortex onDone={() => setIntroDone(true)} />
+      {/* lightspeed warp — runs until the timeline tells it to clear */}
+      {!warpGone && <Warp closing={introDone} />}
     </div>
   );
 }
@@ -501,7 +572,7 @@ function TransmissionScreen({ onAdvance }) {
 /*  PHASE 2 — LEFT: AGENT ROSTER (names, roles, descriptions, status) */
 /* ------------------------------------------------------------------ */
 
-function RosterRow({ agent, status, startMs, speed }) {
+function RosterRow({ agent, status, startMs, speed, response }) {
   const revealed  = useRevealAt(startMs);
   const typedName = useDelayedTypewriter(agent.name, speed, startMs);
   const done = typedName === agent.name;
@@ -522,11 +593,21 @@ function RosterRow({ agent, status, startMs, speed }) {
         )}
       </div>
       {done && <p className="brief-agent-desc">{agent.desc}</p>}
+      {/* response panel extends out from this agent when it replies */}
+      {done && response && (
+        <div className="agent-response">
+          <div className="agent-response-arm" />
+          <div className="agent-response-body">
+            <div className="agent-response-head">{agent.name} · RESPONSE</div>
+            <div className="agent-response-text">{response}</div>
+          </div>
+        </div>
+      )}
     </li>
   );
 }
 
-function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed }) {
+function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, responses = {} }) {
   const agents   = statusData?.agents ?? AGENT_ROSTER.map(a => ({ name: a.name, status: "offline" }));
   const agentMap = Object.fromEntries(agents.map(a => [a.name.toLowerCase(), a.status]));
   const typed    = useDelayedTypewriter(headline, speed, headlineAt);
@@ -541,7 +622,7 @@ function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed })
       <ul className="brief-agent-list">
         {AGENT_ROSTER.map((a, i) => (
           <RosterRow key={a.key} agent={a} status={agentMap[a.key] ?? "offline"}
-            startMs={agentsAt[i]} speed={speed} />
+            startMs={agentsAt[i]} speed={speed} response={responses[a.key]} />
         ))}
       </ul>
     </aside>
@@ -601,6 +682,55 @@ function OrbTitleStack({ projectLabel, agentName, centerAt, speed }) {
       <div className="subtitle">
         {s}{s !== CENTER_SUBTITLE && s !== "" && <span className="type-caret">▌</span>}
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PHASE 2 — EM PULSES (small circular ripples, like cells firing)   */
+/* ------------------------------------------------------------------ */
+
+function OrbWeb() {
+  const points = useMemo(() => {
+    let seed = 1337;
+    const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const N = 60;
+    return Array.from({ length: N }, () => {
+      const bright = rand() > 0.7;
+      return {
+        x: 2 + rand() * 96,
+        y: 4 + rand() * 92,
+        bright,
+        coreR: (2.5 + rand() * 3).toFixed(1),       // px
+        ringScale: (5 + rand() * 8).toFixed(1),     // how far the ripple grows
+        ringDur: (2.2 + rand() * 2.8).toFixed(2),
+        ringDelay: (rand() * 4).toFixed(2),
+        twoRings: rand() > 0.5,
+        coreDur: (1.6 + rand() * 1.8).toFixed(2),
+        coreDelay: (-rand() * 3).toFixed(2),
+      };
+    });
+  }, []);
+
+  return (
+    <div className="orb-web">
+      {points.map((p, i) => {
+        const color = p.bright ? "var(--accent-glow)" : "var(--accent)";
+        return (
+          <div key={i} className="emp" style={{ left: `${p.x}%`, top: `${p.y}%`, color }}>
+            <span className="emp-ring"
+              style={{ "--rs": p.ringScale, animationDuration: `${p.ringDur}s`, animationDelay: `${p.ringDelay}s` }} />
+            {p.twoRings && (
+              <span className="emp-ring"
+                style={{ "--rs": p.ringScale, animationDuration: `${p.ringDur}s`,
+                  animationDelay: `${(Number(p.ringDelay) + Number(p.ringDur) / 2).toFixed(2)}s` }} />
+            )}
+            <span className="emp-core"
+              style={{ width: `${p.coreR}px`, height: `${p.coreR}px`,
+                "--cop": p.bright ? 0.9 : 0.55, animationDuration: `${p.coreDur}s`, animationDelay: `${p.coreDelay}s` }} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -706,7 +836,7 @@ export default function SplashScreen({
   const goMain = useCallback(() => advance("main"), [advance]);
 
   // Live backend link: status + system stats + WebSocket activity feed.
-  const { statusData, stats, activity, connected } = useRamboLive();
+  const { statusData, stats, activity, connected, responses } = useRamboLive();
 
   // Real system stats → stat bars (falls back to em-dash when unavailable).
   const statBars = stats?.available
@@ -787,6 +917,9 @@ export default function SplashScreen({
   return (
     <div className={`splash-root${fading ? " phase-fading" : ""}`}>
 
+      {/* gold flash during the phase transition (on-theme, not a black cut) */}
+      {fading && <div className="phase-flash" />}
+
       <SoundToggle />
 
       {phase === "transmission" && (
@@ -809,6 +942,9 @@ export default function SplashScreen({
             </Canvas>
           </div>
 
+          {/* filament web radiating from the orb out to the UI zones */}
+          <OrbWeb />
+
           <div className="splash-grid-overlay" />
 
           <Topbar brandText={brandText} clockStr={clockStr}
@@ -822,7 +958,7 @@ export default function SplashScreen({
 
           <main className="splash-main">
             {/* LEFT: agent roster — types in FIRST, top-down */}
-            <AgentRosterPanel statusData={statusData} headline={headline}
+            <AgentRosterPanel statusData={statusData} headline={headline} responses={responses}
               headlineAt={reveal.headlineAt} agentsAt={reveal.agentsAt} speed={reveal.speed} />
             {/* RIGHT: system parameters — types in SECOND, top-down */}
             <SystemParamsPanel statusData={statusData}

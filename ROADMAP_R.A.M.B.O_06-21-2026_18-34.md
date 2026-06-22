@@ -116,6 +116,62 @@ These are the highest-impact remaining items. Most can be slotted into any sessi
 
 ---
 
+## Copilot Brain-Dump → Prioritized Backlog (added 06/22/2026)
+
+Source: Daniel's saved Copilot notes, **re-scoped to what R.A.M.B.O actually is**
+(a Dockerized FastAPI multi-agent orchestrator + a React/Three.js console). Many
+Copilot items already exist here — listed first so we don't rebuild them.
+
+### ✅ Already shipped (Copilot asked for these — we have them)
+- **Operator Console** → the command console (input → `POST /rambo/execute`).
+- **AI Brain Activity Feed** → live WebSocket activity feed + per-agent response panels.
+- **Live System Telemetry** → real CPU/RAM/DSK stat bars (`/system/stats`).
+- **The "brains"** → Pilot, Sentinel, Analyst, Archivist (Keeper), Navigator (Architect), Echo, Seeker, Steward, Link all exist as agents with status + activity pulses.
+- **Ambient Reactor Hum** → synthesized Web-Audio hum on the console.
+- **Real-Time pulses showing which brain is thinking** → live `working`/`idle` dots.
+
+### 🥇 Tier 1 — Do next (operator-focused; high impact, fits scope)
+- [ ] **HUD boot transition** — splash console → a persistent, dockable HUD workspace (cinematic wipe). *Unlocks everything "modular HUD" below.*
+- [ ] **Operator greeting** — "Welcome back, Daniel." after CONNECTION ESTABLISHED.
+- [ ] **Shutdown sequence** — collapsing orb, fading grid, power-down sound (power button / hotkey).
+- [ ] **Persistent memory + Task history panel** — surface the existing SQLite/Keeper store: a panel listing past goals, the agents used, and Echo's summary. Backend: `GET /history`.
+- [ ] **Command palette** — `Ctrl/⌘+K` quick launcher for directives, presets, and actions.
+- [ ] **Mobile-friendly HUD** — responsive console layout (stacks panels under ~860px).
+- [ ] **Skip control for Phase 1** — any key/click fast-forwards the intro on repeat views.
+
+### 🥈 Tier 2 — Soon (depth + polish)
+- [ ] **Real-time notifications** — toast alerts for errors/warnings/agent insights (drive off the WS feed; Sentinel surfaces threats).
+- [ ] **Modular HUD panels** — draggable / resizable / dockable roster, params, feed, telemetry.
+- [ ] **Brain glitch on switch** — distortion flash when the active agent changes.
+- [ ] **Color presets / "AI personalities"** — Gold (current), Sentinel Red, Ghost — swap CSS vars + shader uniforms (already in Mid-Term above).
+- [ ] **Mission dashboard** — current goal, sub-tasks, progress, timers, logs (extends Task Orchestrator).
+- [ ] **Data stream visualizer** — subtle scrolling matrix/telemetry strip + holographic scanline overlay.
+
+### 🥉 Tier 3 — Later (needs new infra or external services)
+- [ ] **Voice activation** — "R.A.M.B.O, execute…" (Web Speech API; gesture-gated like audio).
+- [ ] **Secure operator login** — PIN / passphrase with a biometric-style unlock animation.
+- [ ] **Encrypted local storage** — vault for sensitive notes (Web Crypto).
+- [ ] **File / clipboard / screenshot interpreters** — operator tools; require a real LLM backend (agents are currently rule-based stubs).
+- [ ] **R.A.M.B.O CLI tool** — `rambo "<goal>"` hitting `/rambo/execute` from the terminal.
+
+### 🌌 Tier 4 — "God mode" (long-horizon, optional)
+- [ ] Plugin system, public API layer, automation/rules engine, cloud sync, mobile companion app.
+
+### 🎁 Quick wins (cheap, standalone — grab anytime)
+- [ ] Custom Windows icon for the `.ps1` shortcuts.
+- [ ] R.A.M.B.O splash sound pack (curated SFX set).
+
+> **Honest scope note:** the agents are currently deterministic rule-based stubs.
+> Anything that needs *real* understanding (File Analyzer, voice intent, AI
+> insights) implies wiring an actual LLM into the orchestrator — a meaningful
+> backend project on its own. Flagged on the relevant items above.
+
+> **Recommended direction:** *operator-focused* — Tier 1 turns R.A.M.B.O from a
+> stunning demo into a daily driver. Suggested order: **HUD boot transition →
+> task history/memory → command palette → notifications → shutdown sequence.**
+
+---
+
 ## Risks & Mitigations
 
 | Risk | Impact | Mitigation |
