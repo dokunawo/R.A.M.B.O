@@ -77,15 +77,24 @@
 }
 
 .rt-subtitle {
-  position: relative;
+  position: fixed;
   z-index: 10;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
-  padding: 20px 40px 0;
+  padding: 20px 40px;
   font-size: 11px;
   color: #5a6575;
   letter-spacing: 1px;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.rt-clock {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent, #e8b15a);
 }
 
 /* ---- orbiting agents ---- */

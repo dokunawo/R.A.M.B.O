@@ -323,7 +323,11 @@ function TopbarClock({ liveValue, startMs, speed }) {
 }
 
 // Topbar — brand + tabs (left) and clock (right) all type in after settle.
-function Topbar({ brandText, clockStr, startBrand, startClock, speed }) {
+function dateFmt() {
+  return new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+}
+
+function Topbar({ brandText, clockStr, startBrand, startClock, speed, onCouncil }) {
   const tabsOn = useRevealAt(startBrand + brandText.length * speed + 140);
   return (
     <header className="splash-topbar glitch-in">
@@ -336,6 +340,8 @@ function Topbar({ brandText, clockStr, startBrand, startClock, speed }) {
         </span>
       </div>
       <div className="topbar-right">
+        <span className="topbar-council" onClick={onCouncil}>◆ COUNCIL VIEW</span>
+        <span className="topbar-date">{dateFmt()}</span>
         <TopbarClock liveValue={clockStr} startMs={startClock} speed={speed} />
       </div>
     </header>
@@ -1135,7 +1141,8 @@ export default function SplashScreen({
           <div className="splash-grid-overlay" />
 
           <Topbar brandText={brandText} clockStr={clockStr}
-            startBrand={reveal.brandAt} startClock={reveal.clockAt} speed={reveal.speed} />
+            startBrand={reveal.brandAt} startClock={reveal.clockAt} speed={reveal.speed}
+            onCouncil={() => nav("/council")} />
 
           <div className="byline">{byline}</div>
 

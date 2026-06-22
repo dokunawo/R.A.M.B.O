@@ -81,11 +81,29 @@
 }
 .ll-council-link:hover { color: var(--accent-glow, #ffd98a); }
 
+.ll-center-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 40px 24px;
+}
+
+.ll-clock {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent, #e8b15a);
+}
+
 .ll-info-card {
   position: relative;
   z-index: 2;
-  max-width: 900px;
-  margin: -30px auto 0;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto 16px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -114,7 +132,8 @@
 .ll-section {
   position: relative;
   z-index: 2;
-  max-width: 900px;
+  max-width: 700px;
+  width: 100%;
   margin: 24px auto;
   padding: 0 24px;
 }

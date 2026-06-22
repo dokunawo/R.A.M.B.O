@@ -4,9 +4,21 @@ import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
+import CosmicBackground from "./CosmicBackground";
 import "./LearningLog.css";
 
 const API = "http://localhost:8000";
+
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const date = time.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+  const clock = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return <span className="ll-clock">{date} — {clock}</span>;
+}
 
 function LearningLog() {
   const navigate = useNavigate();
@@ -43,6 +55,7 @@ function LearningLog() {
       <div className="ll-orb-bg">
         <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
           dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+          <CosmicBackground />
           <CosmicOrb mouseRef={mouseRef} />
           <EffectComposer>
             <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
@@ -64,58 +77,59 @@ function LearningLog() {
           <span className="ll-council-link" onClick={() => navigate("/council")}>
             ◆ COUNCIL VIEW
           </span>
+          <LiveClock />
         </div>
       </header>
 
-      {/* info card */}
-      <section className="ll-info-card">
-        <div className="ll-info-icon">🧬</div>
-        <div className="ll-info-text">
-          <h2 className="ll-title">R.A.M.B.O LEARNING LOG</h2>
-          <p className="ll-subtitle">
-            A running record of patterns, corrections, and adaptations across
-            all operational cycles.
-          </p>
-        </div>
-      </section>
-
-      {/* recent learnings */}
-      <section className="ll-section">
-        <h3 className="ll-section-title">◆ RECENT LEARNINGS</h3>
-        {learnings.length === 0 ? (
-          <div className="ll-empty">
-            <p>No learnings recorded yet.</p>
-            <p className="ll-empty-sub">
-              Learnings are captured automatically as R.A.M.B.O processes tasks
-              and receives operator feedback.
+      {/* content centered over the orb */}
+      <div className="ll-center-content">
+        <section className="ll-info-card">
+          <div className="ll-info-icon">🧬</div>
+          <div className="ll-info-text">
+            <h2 className="ll-title">R.A.M.B.O LEARNING LOG</h2>
+            <p className="ll-subtitle">
+              A running record of patterns, corrections, and adaptations across
+              all operational cycles.
             </p>
           </div>
-        ) : (
-          <ul className="ll-list">
-            {learnings.map((l, i) => (
-              <li key={i} className="ll-item">
-                <div className="ll-item-head">
-                  <span className="ll-item-source">{l.source || "System"}</span>
-                  <span className="ll-item-time">{l.time || "—"}</span>
-                </div>
-                <p className="ll-item-text">{l.text}</p>
-                {l.category && (
-                  <span className="ll-item-cat">{l.category}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        </section>
 
-      {/* operational learning */}
-      <section className="ll-section">
-        <h3 className="ll-section-title">◆ OPERATIONAL LEARNING</h3>
-        <p className="ll-op-desc">
-          R.A.M.B.O continuously adapts through operator corrections,
-          task outcomes, and pattern recognition across all agent interactions.
-        </p>
-      </section>
+        <section className="ll-section">
+          <h3 className="ll-section-title">◆ RECENT LEARNINGS</h3>
+          {learnings.length === 0 ? (
+            <div className="ll-empty">
+              <p>No learnings recorded yet.</p>
+              <p className="ll-empty-sub">
+                Learnings are captured automatically as R.A.M.B.O processes tasks
+                and receives operator feedback.
+              </p>
+            </div>
+          ) : (
+            <ul className="ll-list">
+              {learnings.map((l, i) => (
+                <li key={i} className="ll-item">
+                  <div className="ll-item-head">
+                    <span className="ll-item-source">{l.source || "System"}</span>
+                    <span className="ll-item-time">{l.time || "—"}</span>
+                  </div>
+                  <p className="ll-item-text">{l.text}</p>
+                  {l.category && (
+                    <span className="ll-item-cat">{l.category}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="ll-section">
+          <h3 className="ll-section-title">◆ OPERATIONAL LEARNING</h3>
+          <p className="ll-op-desc">
+            R.A.M.B.O continuously adapts through operator corrections,
+            task outcomes, and pattern recognition across all agent interactions.
+          </p>
+        </section>
+      </div>
 
       <footer className="ll-footer">
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>

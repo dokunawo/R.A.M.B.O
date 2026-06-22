@@ -4,6 +4,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
+import CosmicBackground from "./CosmicBackground";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -49,6 +50,17 @@ function OrbitRing() {
       <lineBasicMaterial color="#e8b15a" transparent opacity={0.12} />
     </line>
   );
+}
+
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const date = time.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+  const clock = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return <span className="rt-clock">{date} — {clock}</span>;
 }
 
 function RoundTable() {
@@ -102,6 +114,7 @@ function RoundTable() {
         <OrbErrorBoundary>
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
             dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+            <CosmicBackground />
             <CosmicOrb mouseRef={mouseRef} />
             <OrbitRing />
             <EffectComposer>
@@ -122,11 +135,7 @@ function RoundTable() {
         </button>
         <div className="rt-topbar-title">ROUND TABLE</div>
         <div className="rt-topbar-right">
-          <span className="rt-clock">
-            {new Date().toLocaleDateString("en-US", {
-              month: "2-digit", day: "2-digit", year: "numeric",
-            })}
-          </span>
+          <LiveClock />
         </div>
       </header>
 

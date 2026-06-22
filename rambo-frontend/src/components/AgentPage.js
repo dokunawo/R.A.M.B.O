@@ -16,6 +16,17 @@ class OrbErrorBoundary extends Component {
 
 const API = "http://localhost:8000";
 
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const date = time.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+  const clock = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return <span className="ap-clock">{date} — {clock}</span>;
+}
+
 const AGENT_META = {
   architect: {
     name: "Architect", role: "Strategic Planning",
@@ -252,11 +263,7 @@ function AgentPage() {
           <span className="ap-council-link" onClick={() => navigate("/council")}>
             ◆ COUNCIL VIEW
           </span>
-          <span className="ap-clock">
-            {new Date().toLocaleDateString("en-US", {
-              month: "2-digit", day: "2-digit", year: "numeric",
-            })}
-          </span>
+          <LiveClock />
         </div>
       </header>
 

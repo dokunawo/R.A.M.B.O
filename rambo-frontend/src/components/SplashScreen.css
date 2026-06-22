@@ -112,6 +112,19 @@
   gap: 16px;
   color: var(--text-dim);
 }
+.topbar-council {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--accent, #e8b15a);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.topbar-council:hover { color: var(--accent-glow, #ffd98a); }
+.topbar-date {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
 
 .byline {
   position: absolute;
