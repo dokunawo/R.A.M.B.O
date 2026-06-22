@@ -9,8 +9,14 @@ import re
 
 try:
     import httpx
-except ImportError:  # graceful if not installed yet
+except ImportError:
     httpx = None
+
+try:
+    from google_calendar import calendar_skill as _calendar_skill
+    _HAS_GCAL = True
+except ImportError:
+    _HAS_GCAL = False
 
 
 WEATHER_CODES = {
@@ -103,6 +109,18 @@ SKILLS = [
         "run": weather_skill,
     },
 ]
+
+if _HAS_GCAL:
+    SKILLS.append({
+        "name": "calendar",
+        "agent": "pilot",
+        "match": lambda g: any(w in g.lower() for w in (
+            "calendar", "schedule", "event", "meeting", "appointment",
+            "what's on my", "what do i have", "my day", "my week",
+            "book a", "set up a meeting", "add to my calendar",
+        )),
+        "run": _calendar_skill,
+    })
 
 
 def match_skill(goal: str):

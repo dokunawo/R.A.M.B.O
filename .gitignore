@@ -52,6 +52,11 @@ logs/
 tmp/
 .cache/
 
+# ───────────────────────────── Secrets ─────────────────────────────────────
+credentials.json
+token.json
+*.env
+
 # ───────────────────────────── Project local ───────────────────────────────
 .claude/
 audio_base64/

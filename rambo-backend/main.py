@@ -11,6 +11,12 @@ try:
 except ImportError:
     psutil = None
 
+try:
+    from google_auth import is_authenticated, run_auth_flow
+    _HAS_GAUTH = True
+except ImportError:
+    _HAS_GAUTH = False
+
 app = FastAPI()
 rambo = Orchestrator()
 
@@ -84,6 +90,24 @@ async def get_approvals():
 async def post_decision(decision: SentinelDecision):
     updated = sentinel_queue.decide(decision.id, decision.decision)
     return {"updated": updated}
+
+
+@app.get("/google/status")
+async def google_status():
+    if not _HAS_GAUTH:
+        return {"authenticated": False, "reason": "Google libraries not installed"}
+    return {"authenticated": is_authenticated()}
+
+
+@app.post("/google/auth")
+async def google_auth():
+    if not _HAS_GAUTH:
+        return {"error": "Google libraries not installed"}
+    try:
+        run_auth_flow()
+        return {"authenticated": True}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/learning/log")
