@@ -82,13 +82,18 @@
   color: var(--accent, #e8b15a);
   cursor: pointer;
   letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
-.ap-council-link:hover { color: var(--accent-glow, #ffd98a); }
+.ap-council-link:hover {
+  color: var(--accent-glow, #ffd98a);
+  text-shadow: 0 0 10px rgba(255, 217, 138, 0.8);
+}
 
 .ap-clock {
   font-size: 11px;
   letter-spacing: 1px;
   color: var(--accent, #e8b15a);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
 
 /* ---- orb hero ---- */
@@ -135,8 +140,9 @@
   position: absolute;
   font-size: 9px;
   letter-spacing: 2px;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
   text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(255,255,255,0.3);
 }
 .ap-orb-label-top    { top: 40px; left: 50%; transform: translateX(-50%); }
 .ap-orb-label-right  { top: 50%; right: 15%; transform: translateY(-50%); }

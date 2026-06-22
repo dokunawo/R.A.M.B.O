@@ -65,12 +65,14 @@
 .ll-topbar-title {
   font-size: 14px;
   letter-spacing: 3px;
-  color: #d0d0d0;
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 8px rgba(232, 177, 90, 0.6), 0 0 20px rgba(232, 177, 90, 0.3);
 }
 
 .ll-topbar-right {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .ll-council-link {
@@ -78,8 +80,19 @@
   color: var(--accent, #e8b15a);
   cursor: pointer;
   letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
-.ll-council-link:hover { color: var(--accent-glow, #ffd98a); }
+.ll-council-link:hover {
+  color: var(--accent-glow, #ffd98a);
+  text-shadow: 0 0 10px rgba(255, 217, 138, 0.8);
+}
+
+.ll-clock {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
+}
 
 .ll-center-content {
   position: relative;

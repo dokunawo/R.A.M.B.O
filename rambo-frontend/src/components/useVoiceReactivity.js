@@ -88,17 +88,26 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   }, []);
 
   // Speak a response aloud with the cosmic voice
-  const speakResponse = useCallback((text) => {
+  // If followUp=true, ask "Is there anything else?" and go to LISTENING (no wake word)
+  const speakResponse = useCallback((text, followUp = false) => {
     setState(CONV_STATES.SPEAKING);
     onSpeakStartRef.current?.();
 
-    speak(text, null, () => {
+    const fullText = followUp ? text + " ... Is there anything else?" : text;
+
+    speak(fullText, null, () => {
       onSpeakEndRef.current?.();
-      // Return to idle (passive wake-word listening)
-      setState(CONV_STATES.IDLE);
-      wakeDetectedRef.current = false;
       commandBufferRef.current = "";
       setTranscript("");
+
+      if (followUp) {
+        // Go straight to listening — no wake word needed for follow-up
+        wakeDetectedRef.current = true;
+        setState(CONV_STATES.LISTENING);
+      } else {
+        wakeDetectedRef.current = false;
+        setState(CONV_STATES.IDLE);
+      }
     });
   }, []);
 

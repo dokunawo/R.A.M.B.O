@@ -149,12 +149,12 @@ export function startHum() {
   const lfoGain = c.createGain();
   lfo.type = "sine";
   lfo.frequency.value = 0.08;
-  lfoGain.gain.value = 0.006;
+  lfoGain.gain.value = 0.001;
   lfo.connect(lfoGain);
   lfoGain.connect(gain.gain);
   lfo.start();
 
-  gain.gain.linearRampToValueAtTime(0.02, c.currentTime + 3.0);
+  gain.gain.linearRampToValueAtTime(0.006, c.currentTime + 3.0);
 
   hum = { oscs, lfo, gain };
 }

@@ -987,18 +987,29 @@ export default function SplashScreen({
   }, []);
   const {
     levelRef: audioLevelRef, state: convState, setState: voiceSetState,
-    micActive, toggleMic, speakResponse,
+    micActive, toggleMic, startMic, speakResponse,
   } = useVoiceReactivity({
     onTranscript: setVoiceText,
     onFinalTranscript: handleFinalTranscript,
   });
   voiceSetStateRef.current = voiceSetState;
   speakRef.current = speakResponse;
+
+  // Auto-start mic in IDLE mode when Phase 2 loads
+  const micAutoStarted = useRef(false);
+  useEffect(() => {
+    if (phase === "main" && !micAutoStarted.current) {
+      micAutoStarted.current = true;
+      // Small delay to let the page settle before requesting mic
+      setTimeout(() => { startMic(); }, 1200);
+    }
+  }, [phase, startMic]);
+
   const handleVoiceExecuted = useCallback((responseText) => {
     setVoiceText("");
-    // Read the response back aloud
     if (responseText && speakRef.current) {
-      speakRef.current(responseText);
+      // Read the response, then ask if there's anything else
+      speakRef.current(responseText, true); // true = conversational follow-up
     } else {
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
     }

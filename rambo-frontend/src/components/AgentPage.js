@@ -258,7 +258,7 @@ function AgentPage() {
         <button className="ap-back-btn" onClick={() => navigate("/console")}>
           ← COMMAND CENTER
         </button>
-        <div className="ap-topbar-title">{meta.name.toUpperCase()}</div>
+        <div className="ap-topbar-title" style={{ color: meta.color, textShadow: `0 0 8px ${meta.color}, 0 0 20px ${meta.color}44` }}>{meta.name.toUpperCase()}</div>
         <div className="ap-topbar-right">
           <span className="ap-council-link" onClick={() => navigate("/council")}>
             ◆ COUNCIL VIEW

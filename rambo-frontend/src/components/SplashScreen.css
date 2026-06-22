@@ -117,13 +117,18 @@
   letter-spacing: 1.5px;
   color: var(--accent, #e8b15a);
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.15s, text-shadow 0.15s;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
-.topbar-council:hover { color: var(--accent-glow, #ffd98a); }
+.topbar-council:hover {
+  color: var(--accent-glow, #ffd98a);
+  text-shadow: 0 0 10px rgba(255, 217, 138, 0.8);
+}
 .topbar-date {
   font-size: 11px;
   letter-spacing: 1px;
-  color: var(--text-dim);
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
 
 .byline {

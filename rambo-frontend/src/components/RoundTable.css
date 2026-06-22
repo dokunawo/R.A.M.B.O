@@ -64,6 +64,7 @@
   font-size: 16px;
   letter-spacing: 4px;
   color: var(--accent, #e8b15a);
+  text-shadow: 0 0 8px rgba(232, 177, 90, 0.6), 0 0 20px rgba(232, 177, 90, 0.3);
 }
 
 .rt-topbar-right {
@@ -73,7 +74,9 @@
 
 .rt-clock {
   font-size: 11px;
-  color: #7a7a7a;
+  letter-spacing: 1px;
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.6);
 }
 
 .rt-subtitle {

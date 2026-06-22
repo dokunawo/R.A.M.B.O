@@ -14,7 +14,7 @@ const AGENTS = [
   { key: "link",       label: "LINK",        color: "#a78bfa" },
   { key: "sentinel",   label: "SENTINEL",    color: "#ef4444" },
   { key: "steward",    label: "STEWARD",     color: "#22c55e" },
-  { key: "cortisol",   label: "CORTISOL",    color: "#3b82f6" },
+  { key: "echo",       label: "ECHO",         color: "#3b82f6" },
 ];
 
 const ORBIT_RADIUS = 2.8;
