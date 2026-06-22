@@ -18,6 +18,12 @@ try:
 except ImportError:
     _HAS_GCAL = False
 
+try:
+    from google_drive import drive_skill as _drive_skill
+    _HAS_GDRIVE = True
+except ImportError:
+    _HAS_GDRIVE = False
+
 
 WEATHER_CODES = {
     0: "clear sky", 1: "mainly clear", 2: "partly cloudy", 3: "overcast",
@@ -120,6 +126,18 @@ if _HAS_GCAL:
             "book a", "set up a meeting", "add to my calendar",
         )),
         "run": _calendar_skill,
+    })
+
+if _HAS_GDRIVE:
+    SKILLS.append({
+        "name": "drive",
+        "agent": "keeper",
+        "match": lambda g: any(w in g.lower() for w in (
+            "drive", "my files", "my documents", "google doc",
+            "find file", "search file", "find doc", "search doc",
+            "recent files", "my drive",
+        )),
+        "run": _drive_skill,
     })
 
 
