@@ -367,6 +367,45 @@ Running log of splash-screen / UI changes, newest first. Each entry is labeled b
 - **[Mobile]** `PARTICLE_COUNT` 4000→1800 under 768px, Bloom `mipmapBlur` off on mobile, canvas `dpr` capped at 1.5.
 - **[Audio]** Boot chime on the Phase 1→2 transition + a low ambient hum (synthesized via Web Audio, no asset files). Audio context resumes on first user gesture (browser autoplay policy).
 
+### 2026-06-22 — Vortex v3 (magenta nebula), 11s gated Phase 1 intro
+
+- **[Phase 1 · vortex v3]** Replaced the spoke wormhole with a **soft magenta nebula swirl** (blurred conic "arms" rotating around a glowing white-pink core on deep purple), matching the reference image. Duration is driven by the new intro sound (~11s).
+- **[Audio · intro]** Swapped the intro sound to `intro.mp3` (futuristic HUD), used for the vortex. Removed `void-portal.mp3`.
+- **[Phase 1 · gated sequence]** Restructured: **vortex (11s) → upper text fades in → then** the %bar + boot log type in (char-by-char, Phase-2 style, with key clicks). Nothing below the upper text starts until the vortex finishes.
+- **[Phase 1 · label]** The completion line is now **"> CONNECTION ESTABLISHED"** (was "ACCESS APPROVED"); the access-approved voice was dropped from the flow (file kept for future use).
+
+### 2026-06-22 — New access voice, synth keystrokes, true typing, vortex v2
+
+- **[Audio · access]** Swapped in the new `access-approved.mp3`; transition to Phase 2 waits for the clip to finish (length read at runtime).
+- **[Audio · keystrokes]** Removed the keyboard-loop mp3. Replaced with a **synthesized per-keystroke click** (`playKeyClick`, a short band-passed noise burst, throttled) fired once per character typed (and per boot-log line).
+- **[Typing · feel]** Text now reads as *typed*, not slid: removed the row slide-in transform, added a blinking caret to every typing field (roster names, param keys, center title), and roles/descriptions/values now appear only **after** their name/key finishes typing.
+- **[Phase 1 · vortex v2]** Reworked the intro into a swirling wormhole — three counter-rotating spiral arms that spin up from the center and zoom outward, then fade to reveal the screen (duration still matched to the portal sfx). *(Couldn't view the referenced YouTube short directly — this is an interpretation; easy to tune.)*
+
+### 2026-06-22 — "Access approved" gate before Phase 2
+
+- **[Phase 1 · access]** After the boot sequence completes, an **"Access approved"** robot-voice clip (`public/sounds/access-approved.mp3`) plays, and the transition to Phase 2 now waits for the clip to finish (length read at runtime). A green pulsing **"> ACCESS APPROVED"** line shows on screen alongside it so the beat lands even when audio is muted/locked.
+
+### 2026-06-22 — Real sound files, vortex intro, sound toggle, agent reset
+
+- **[Audio · files]** Added two sound files under `public/sounds/`: `void-portal.mp3` (Phase 1 intro) and `keyboard-typing.mp3` (typewriter loop). Engine now manages HTMLAudio files alongside the synth hum, with a persisted mute flag.
+- **[Phase 1 · vortex]** New intro: a vortex that opens from the center outward (expanding disc + spinning gold sweep), with its duration **matched to the void-portal sound's length** (read at runtime). The portal sfx plays with it.
+- **[Typewriter · sound]** The keyboard-typing loop plays during the typewriter cascades — Phase 1 boot log and the Phase 2 reveal — and stops when each finishes.
+- **[Phase 2 · agent reset]** When the feed shows a completion (`[Agent] Finished:` / `Response ready`), that agent's dot returns to **Idle** (front-end safety on top of the backend's `STATUS:…:idle` broadcast).
+- **[Audio · toggle]** Added a 🔊/🔇 **sound toggle** (bottom-right). Clicking it both flips mute (persisted) and serves as the user gesture that unlocks audio.
+
+### 2026-06-22 — Audio: smoother, quieter, gesture-aware start
+
+- **[Audio · mix]** Global master gain at 0.5 (~50%). Hum reworked into a warm low pad (A2 + E3 sines through a lowpass with a slow ~12s swell LFO) instead of the buzzy static drone, at a much lower base gain (~0.02). Chime softened to a gentle G–C–E triad with slow attack/long tail.
+- **[Audio · start]** Instead of firing the chime at the gesture-less auto-transition (where the browser blocks it and it's lost), audio now starts at the FIRST moment it's both unlocked by a user gesture AND on the console. Listens for pointerdown/keydown/touchstart/click. (True zero-interaction autoplay is not possible — browsers require a user gesture to start an AudioContext.)
+
+### 2026-06-22 — Fix compile error (dead orb code)
+
+- **[Build fix]** Removed leftover dead code in `RamboOrb3D.jsx` that broke the build: `RamboOrbSpokes` referenced an undefined `SPOKE_COUNT` (`no-undef` error), plus unused `EquatorialRing`, `SHOW_RINGS`/`SHOW_SPOKES`, and their geometry builders. Also fixed a `react/jsx-no-comment-textnodes` warning (the `//` placeholder in the command feed).
+
+### 2026-06-22 — Tightened intro pacing
+
+- **[Pacing]** Dialed the reveal back down after it dragged: `CHAR_SPEED` 26→20, `SECTION_GAP` 560→340, `INITIAL_DELAY` 1550→1100, `ITEM_GAP` 80→70. Also shortened the `glitch-in` settle from 1.4s→1.0s so the shorter initial delay still lands after the panels settle. Roster now starts ~2.1s in (was ~3s), and the whole cascade is ~25% faster per character — still slower than the original 15ms.
+
 ### 2026-06-22 — Typewriter pacing + settle timing + topbar
 
 - **[Pacing]** Slower per-character speed (15→26ms) and a longer pause between sections (560ms vs 80ms between rows within a section).

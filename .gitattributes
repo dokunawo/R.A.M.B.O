@@ -6,6 +6,7 @@
 
 # Treat these as binary (no diff / no EOL conversion)
 *.wav   binary
+*.mp3   binary
 *.ico   binary
 *.png   binary
 *.b64   binary

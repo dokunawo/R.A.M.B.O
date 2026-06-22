@@ -20,10 +20,6 @@ const ORB_RADIUS = 1.8;
 // Nudge this by eye — world units for the plasma nucleus radius
 const CORE_SIZE = ORB_RADIUS * 0.78; // ~1.4
 
-const SHOW_RINGS = false;
-
-const SHOW_SPOKES = false;
-
 const SHOW_CORE = true;
 const SHOW_CONNECTIONS = false;
 
@@ -109,41 +105,6 @@ function buildConnectionGeometry(particleGeometry) {
   return geometry;
 }
 
-function buildCleanRingGeometry(radius, tiltX = 0, tiltZ = 0, segments = 128) {
-  const m = new THREE.Matrix4()
-    .makeRotationX(tiltX)
-    .multiply(new THREE.Matrix4().makeRotationZ(tiltZ));
-
-  const positions = [];
-  for (let i = 0; i < segments; i++) {
-    const a1 = (i / segments) * Math.PI * 2;
-    const a2 = ((i + 1) / segments) * Math.PI * 2;
-    const p1 = new THREE.Vector3(Math.cos(a1) * radius, Math.sin(a1) * radius, 0).applyMatrix4(m);
-    const p2 = new THREE.Vector3(Math.cos(a2) * radius, Math.sin(a2) * radius, 0).applyMatrix4(m);
-    positions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(positions), 3));
-  return geometry;
-}
-
-function buildSpokeGeometry(count, innerR, outerR) {
-  const positions = [];
-  for (let i = 0; i < count; i++) {
-    const theta = Math.acos(2 * Math.random() - 1.0);
-    const phi = Math.random() * Math.PI * 2.0;
-    const dx = Math.sin(theta) * Math.cos(phi);
-    const dy = Math.sin(theta) * Math.sin(phi);
-    const dz = Math.cos(theta);
-    positions.push(dx * innerR, dy * innerR, dz * innerR, dx * outerR, dy * outerR, dz * outerR);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(positions), 3));
-  return geometry;
-}
-
 /* ---------------- sub-components ---------------- */
 
 // Particles — no per-mesh mouse parallax; group handles it now
@@ -205,44 +166,6 @@ function RamboOrbLines({ geometry, color, opacity }) {
   return <lineSegments geometry={geometry} material={material} />;
 }
 
-// Single clean equatorial ring — rotates slowly on its own axis,
-// independent of the particle cloud, giving a "machine tracking" feel.
-function EquatorialRing({ color }) {
-  const groupRef = useRef();
-  const geometry = useMemo(() => buildCleanRingGeometry(ORB_RADIUS * 1.06, 0, 0, 192), []);
-  const material = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(color),
-        transparent: true,
-        opacity: 0.28,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-    [color]
-  );
-
-  useFrame(({ clock }) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = clock.getElapsedTime() * 0.055;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      <lineSegments geometry={geometry} material={material} />
-    </group>
-  );
-}
-
-function RamboOrbSpokes({ colorSpoke }) {
-  const geometry = useMemo(
-    () => buildSpokeGeometry(SPOKE_COUNT, ORB_RADIUS * 0.12, ORB_RADIUS * 1.5),
-    []
-  );
-  return <RamboOrbLines geometry={geometry} color={colorSpoke} opacity={0.22} />;
-}
-
 // Plasma nucleus — billboarded quad with fbm noise.
 // Lives OUTSIDE the parallax group so it stays centered as a stable anchor.
 function PlasmaCore({ colorCore }) {
@@ -287,7 +210,6 @@ export default function RamboOrb3D({
   colorOuter = "#caa46b",
   colorCore = "#fff4da",
   colorRing = "#d9a857",
-  colorSpoke = "#ffe9c2",
   mouseRef = null,
 }) {
   const particleGeometry = useMemo(() => buildParticleGeometry(), []);
@@ -317,8 +239,6 @@ export default function RamboOrb3D({
         {SHOW_CONNECTIONS && connectionGeometry && (
           <RamboOrbLines geometry={connectionGeometry} color={colorRing} opacity={0.16} />
         )}
-
-        {SHOW_SPOKES && <RamboOrbSpokes colorSpoke={colorSpoke} />}
       </group>
     </>
   );
