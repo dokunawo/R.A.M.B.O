@@ -1,5 +1,8 @@
 import asyncio
 import json
+import os
+
+import anthropic
 
 from models.task import Task
 from router import choose_brain
@@ -19,6 +22,8 @@ from agents.echo import Echo
 from agents.pilot import Pilot
 
 from websocket.manager import ConnectionManager
+from conversation import ConversationManager
+from personality import load_personality, build_system_prompt, append_voice_cue
 import sentinel_queue
 
 
@@ -26,6 +31,11 @@ class Orchestrator:
     def __init__(self):
         self.store = SQLiteStore()
         self.ws = ConnectionManager()
+        self.conversation = ConversationManager()
+        self.personality_text = load_personality()
+        self.llm = anthropic.AsyncAnthropic(
+            api_key=os.environ.get("ANTHROPIC_API_KEY"),
+        )
 
         self.agents = {
             "architect": Architect(),
@@ -90,10 +100,11 @@ class Orchestrator:
             except Exception as e:
                 result = f"[{skill['name']}] error: {e}"
                 agent_tracker.record_task_end(agent_name, goal, success=False)
-            await self._response(agent_name, result)
             await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
             await self._set_status(agent_name, "idle")
-            return {"response": result, "agent": agent_name}
+
+            voiced = await self._speak(goal, [f"Skill: {skill['name']}"], [result])
+            return {"response": voiced, "agent": "rambo"}
 
         architect = self.agents["architect"]
         pilot     = self.agents["pilot"]
@@ -155,17 +166,40 @@ class Orchestrator:
             await self._set_status(agent_name, "idle")
             await asyncio.sleep(0.15)
 
-        await self._set_status("echo", "working")
-        agent_tracker.record_task_start("echo", f"Summarize: {goal}")
-        await self.broadcast("[Echo] Finalizing response...")
-        summary = echo.summarize(goal, plan, results)
-        agent_tracker.record_task_end("echo", f"Summarize: {goal}", success=True)
         agent_tracker.add_learning(
             f"Orchestrated {len(tasks)} tasks for: {goal}",
             source="Pilot", category="orchestration",
         )
-        await self._response("echo", summary)
-        await self.broadcast("[Echo] Response ready.")
-        await self._set_status("echo", "idle")
 
-        return {"response": summary, "agent": "echo"}
+        summary = await self._speak(goal, plan, results)
+        return {"response": summary, "agent": "rambo"}
+
+    async def _speak(self, goal: str, plan: list[str], results: list[str]) -> str:
+        execution_report = (
+            f"Operator goal: {goal}\n\n"
+            f"Plan:\n" + "\n".join(f"  - {s}" for s in plan) + "\n\n"
+            f"Agent results:\n" + "\n".join(f"  - {r}" for r in results)
+        )
+
+        self.conversation.add_user_message(execution_report)
+        messages = self.conversation.get_messages_for_api()
+        append_voice_cue(messages)
+        system = build_system_prompt(self.personality_text)
+
+        try:
+            response = await self.llm.messages.create(
+                model="claude-sonnet-4-20250514",
+                system=system,
+                messages=messages,
+                max_tokens=1024,
+            )
+            text = "".join(
+                b.text for b in response.content if b.type == "text"
+            )
+        except Exception as e:
+            text = f"[R.A.M.B.O] LLM error: {e}. Raw report:\n{execution_report}"
+
+        self.conversation.add_assistant_message(text)
+        await self._response("rambo", text)
+        await self.broadcast("[R.A.M.B.O] Response delivered.")
+        return text
