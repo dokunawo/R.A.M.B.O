@@ -349,6 +349,25 @@ See [`ROADMAP_R.A.M.B.O_06-21-2026_18-34.md`](ROADMAP_R.A.M.B.O_06-21-2026_18-34
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
 
+### 2026-06-22 — Full-screen Phase 1 orb + neon clock
+
+- **[Phase 1 · orb]** Promoted the orb to a **full-screen** canvas, identical in size and look to the Phase 2 orb (same camera + bloom). Removed the contained `RamboEmblem` box.
+- **[Phase 1 · layout]** All loading text (title, operator, system label, standby, BOOTING UP, scan bar, boot log) is now **housed centered over the orb** via `.tx-content-overlay`.
+- **[Phase 2 · clock]** Top-right clock is now **neon gold** (`.neon-clock`) and **shows seconds** (`HH:MM:SS`), ticking every second.
+
+### 2026-06-22 — Sequenced typewriter reveal across the console
+
+- **[Phase 2 · sequence]** Replaced the parallel row stagger with a single **top-down typewriter cascade**: Agent Roster (headline → each agent, top-down) → System Parameters (each row, top-down) → center orb title (PROJECT label → R.A.M.B.O → operator subtitle). One shared timeline (`buildReveal`) computes each item's start from the cumulative length of everything before it.
+- **[Mechanics]** Added `useDelayedTypewriter` (waits, then types char-by-char) and `useRevealAt` (fades a row in at its turn). Roster agent **names** and parameter **keys** type out; roles/descriptions/values fade in alongside. Live status values are not retyped when they change.
+- **[Center title]** R.A.M.B.O title stack now types in last (removed its glitch-in so the typewriter is the entrance).
+
+### 2026-06-22 — Roadmap: postprocessing + entrance animations
+
+- **[Orb · postprocessing]** Added **chromatic aberration** (`ChromaticAberration`, offset `0.0012`) alongside Bloom on both orb composers — subtle color fringe on orb edges.
+- **[Phase 2 · headline]** Added a **typewriter** reveal on the "System Online" headline (30ms/char, fires on the phase transition) with a blinking green caret.
+- **[Phase 2 · roster]** Agent rows now **slide in staggered** (40ms offset per row) when the console appears.
+- **[Roadmap note]** "Phase 1 emblem spin-up (`.tx-emblem-svg`)" is **obsolete** — the emblem SVG was removed when Phase 1 switched to the live orb, so there is no tick ring to spin up. The orb's particle rotation + phase fade-in already cover the entrance feel.
+
 ### 2026-06-22 — Organic orb + panel polish
 
 - **[Orb · particles]** Softened the hard circular edge. Particle distribution changed from a thin shell (0.72R→1.0R) to a volumetric body (0.45R→1.0R) plus a sparse cubed-falloff tail (~1.45R). Affects both phases (shared orb).

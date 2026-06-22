@@ -40,10 +40,10 @@ These are fully implemented and running:
 These are the highest-impact remaining items. Most can be slotted into any session.
 
 ### Visuals & UX
-- [ ] **Chromatic aberration postprocessing** — add `ChromaticAberration` from `@react-three/postprocessing` alongside existing Bloom (`intensity` ~0.003, subtle fringe on orb edges)
-- [ ] **Boot typing animation for transcript** — typewriter effect on Phase 3 "System Online" / body copy, 30ms/char delay, triggers on phase transition
-- [ ] **Phase 2 staggered agent row animations** — each row slides in with a 40ms offset (CSS `animation-delay`)
-- [ ] **Phase 1 emblem spin-up** — SVG outer tick ring slowly rotates in on mount (CSS `@keyframes` on the `.tx-emblem-svg`)
+- [x] **Chromatic aberration postprocessing** — ✅ added `ChromaticAberration` (offset 0.0012) alongside Bloom on both orb composers (2026-06-22)
+- [x] **Boot typing animation for transcript** — ✅ typewriter on the "System Online" headline, 30ms/char, fires on the transition into the console (2026-06-22)
+- [x] **Phase 2 staggered agent row animations** — ✅ roster rows slide in with a 40ms offset (2026-06-22)
+- [~] **Phase 1 emblem spin-up** — ⛔ OBSOLETE: the `.tx-emblem-svg` tick-ring emblem was removed when Phase 1 switched to the live orb; nothing to spin up (orb rotation + phase fade-in cover the entrance)
 
 ### Accessibility
 - [ ] ARIA labels on dock buttons (`aria-label="Power"`, etc.)

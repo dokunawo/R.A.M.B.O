@@ -1,7 +1,8 @@
 // SplashScreen.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
+import { Vector2 } from "three";
 import RamboOrb3D from "./RamboOrb3D";
 import "./SplashScreen.css";
 
@@ -76,6 +77,75 @@ function useAgentStatus() {
   return data;
 }
 
+// Typewriter that waits `startMs` before typing `text` one char at a time.
+// Re-runs on mount, so the whole cascade restarts when the console appears.
+function useDelayedTypewriter(text, speed, startMs) {
+  const [out, setOut] = useState("");
+  useEffect(() => {
+    setOut("");
+    let i = 0;
+    let intId;
+    const startTimer = setTimeout(() => {
+      intId = setInterval(() => {
+        i += 1;
+        setOut(text.slice(0, i));
+        if (i >= text.length) clearInterval(intId);
+      }, speed);
+    }, Math.max(0, startMs));
+    return () => { clearTimeout(startTimer); clearInterval(intId); };
+  }, [text, speed, startMs]);
+  return out;
+}
+
+// Flips true once `startMs` has elapsed — used to fade a row in.
+function useRevealAt(startMs) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setOn(true), Math.max(0, startMs));
+    return () => clearTimeout(t);
+  }, [startMs]);
+  return on;
+}
+
+// Build a top-down reveal timeline: headline → agents → params → center title.
+// Each item's start time is the cumulative length of everything before it, so
+// items reveal one after another in reading order.
+const REVEAL_SPEED = 15; // ms per character
+const REVEAL_GAP   = 70; // ms pause between items
+function buildReveal(headline, agentNames, paramKeys, centerLines) {
+  let t = 0;
+  const at = (s) => { const start = t; t += s.length * REVEAL_SPEED + REVEAL_GAP; return start; };
+  return {
+    speed:      REVEAL_SPEED,
+    headlineAt: at(headline),
+    agentsAt:   agentNames.map(at),
+    paramsAt:   paramKeys.map(at),
+    centerAt:   centerLines.map(at),
+  };
+}
+
+// System-parameter rows (keys are typed; values fade in alongside).
+const PARAM_KEYS = [
+  "DESIGNATION", "VERSION", "CLEARANCE", "BACKEND", "PROTOCOL",
+  "AGENTS", "OVERSEER", "TIMEZONE", "BUILD", "OPERATOR",
+];
+function paramValues(overseerStatus) {
+  return {
+    DESIGNATION: "R.A.M.B.O",
+    VERSION:     "VERSION III",
+    CLEARANCE:   "AUTHORIZED",
+    BACKEND:     "localhost:8000",
+    PROTOCOL:    "HTTP / WebSocket",
+    AGENTS:      `${AGENT_ROSTER.length} REGISTERED`,
+    OVERSEER:    STATUS_LABELS[overseerStatus] ?? "OFFLINE",
+    TIMEZONE:    "America/Detroit",
+    BUILD:       "DEVELOPMENT",
+    OPERATOR:    "DANIEL",
+  };
+}
+
+const CENTER_SUBTITLE = "Responsive Autonomous Multi-Brain Operator";
+
 /* ------------------------------------------------------------------ */
 /*  SHARED PRIMITIVES                                                   */
 /* ------------------------------------------------------------------ */
@@ -89,26 +159,6 @@ function AgentDot({ status }) {
 /* ------------------------------------------------------------------ */
 /*  PHASE 1 — TRANSMISSION SCREEN                                       */
 /* ------------------------------------------------------------------ */
-
-function RamboEmblem() {
-  return (
-    <div className="tx-emblem-wrap">
-      {/* The exact same orb as Phase 2 (particles + plasma core + bloom),
-          just contained here — no network webs. */}
-      <div className="tx-plasma-big">
-        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true }}>
-          <RamboOrb3D />
-          <EffectComposer>
-            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
-              intensity={1.4} mipmapBlur radius={0.8} />
-          </EffectComposer>
-        </Canvas>
-      </div>
-      <div className="tx-emblem-title">R.A.M.B.O</div>
-      <div className="tx-emblem-operator">RESPONSIVE AUTONOMOUS MULTI-BRAIN OPERATOR</div>
-    </div>
-  );
-}
 
 function TransmissionScreen({ onAdvance }) {
   const [progress, setProgress] = useState(0);
@@ -149,10 +199,23 @@ function TransmissionScreen({ onAdvance }) {
 
   return (
     <div className="phase-screen tx-screen">
-      <div className="hud-dot-grid" />
+      {/* Full-screen orb — identical size/look to Phase 2 */}
+      <div className="orb-canvas">
+        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true }}>
+          <RamboOrb3D />
+          <EffectComposer>
+            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
+              intensity={1.4} mipmapBlur radius={0.8} />
+            <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
+              radialModulation={false} modulationOffset={0} />
+          </EffectComposer>
+        </Canvas>
+      </div>
 
-      <div className="tx-content">
-        <RamboEmblem />
+      {/* All loading text housed inside / over the orb, centered */}
+      <div className="tx-content tx-content-overlay">
+        <div className="tx-emblem-title">R.A.M.B.O</div>
+        <div className="tx-emblem-operator">RESPONSIVE AUTONOMOUS MULTI-BRAIN OPERATOR</div>
 
         <p className="tx-label">[ R.A.M.B.O SYSTEM ]</p>
         <p className="tx-subtitle">STANDBY FOR NEURAL SYNC</p>
@@ -170,7 +233,7 @@ function TransmissionScreen({ onAdvance }) {
           <p className="tx-progress-label">{Math.floor(progress)}%</p>
         </div>
 
-        {/* boot log — moved here from old Phase 2 center */}
+        {/* boot log */}
         <div className="tx-boot-log">
           {logLines.map((line, i) => (
             <div key={i} className="tx-boot-line">{line}</div>
@@ -188,31 +251,41 @@ function TransmissionScreen({ onAdvance }) {
 /*  PHASE 2 — LEFT: AGENT ROSTER (names, roles, descriptions, status) */
 /* ------------------------------------------------------------------ */
 
-function AgentRosterPanel({ statusData, headline }) {
+function RosterRow({ agent, status, startMs, speed }) {
+  const revealed  = useRevealAt(startMs);
+  const typedName = useDelayedTypewriter(agent.name, speed, startMs);
+  return (
+    <li className={`brief-agent-entry${revealed ? " revealed" : ""}`}>
+      <div className="brief-agent-header">
+        <AgentDot status={status} />
+        <span className="brief-agent-name neon-agent">{typedName}</span>
+        <span className="brief-agent-role">{agent.role}</span>
+        <span className="brief-agent-badge neon-badge" style={{ color: STATUS_COLORS[status] }}>
+          {STATUS_LABELS[status]}
+        </span>
+      </div>
+      <p className="brief-agent-desc">{agent.desc}</p>
+    </li>
+  );
+}
+
+function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed }) {
   const agents   = statusData?.agents ?? AGENT_ROSTER.map(a => ({ name: a.name, status: "offline" }));
   const agentMap = Object.fromEntries(agents.map(a => [a.name.toLowerCase(), a.status]));
+  const typed    = useDelayedTypewriter(headline, speed, headlineAt);
 
   return (
     <aside className="roster-panel glitch-in">
-      <h1 className="headline system-online">{headline}</h1>
+      <h1 className="headline system-online">
+        {typed}
+        {typed !== headline && <span className="type-caret">▌</span>}
+      </h1>
       <div className="brief-section-label neon-label">AGENT ROSTER</div>
       <ul className="brief-agent-list">
-        {AGENT_ROSTER.map(a => {
-          const status = agentMap[a.key] ?? "offline";
-          return (
-            <li key={a.key} className="brief-agent-entry">
-              <div className="brief-agent-header">
-                <AgentDot status={status} />
-                <span className="brief-agent-name neon-agent">{a.name}</span>
-                <span className="brief-agent-role">{a.role}</span>
-                <span className="brief-agent-badge neon-badge" style={{ color: STATUS_COLORS[status] }}>
-                  {STATUS_LABELS[status]}
-                </span>
-              </div>
-              <p className="brief-agent-desc">{a.desc}</p>
-            </li>
-          );
-        })}
+        {AGENT_ROSTER.map((a, i) => (
+          <RosterRow key={a.key} agent={a} status={agentMap[a.key] ?? "offline"}
+            startMs={agentsAt[i]} speed={speed} />
+        ))}
       </ul>
     </aside>
   );
@@ -222,32 +295,47 @@ function AgentRosterPanel({ statusData, headline }) {
 /*  PHASE 2 — RIGHT: SYSTEM PARAMETERS                                 */
 /* ------------------------------------------------------------------ */
 
-function SystemParamsPanel({ statusData }) {
+function ParamRow({ paramKey, value, startMs, speed }) {
+  const revealed = useRevealAt(startMs);
+  const typedKey = useDelayedTypewriter(paramKey, speed, startMs);
+  return (
+    <div className={`brief-param-row${revealed ? " revealed" : ""}`}>
+      <span className="brief-param-key">{typedKey}</span>
+      <span className="brief-param-val">{value}</span>
+    </div>
+  );
+}
+
+function SystemParamsPanel({ statusData, paramsAt, speed }) {
   const overseer = statusData?.overseer ?? { status: "offline" };
+  const values   = paramValues(overseer.status);
 
   return (
     <aside className="agent-panel glitch-in">
       <div className="agent-section-label neon-label">SYSTEM PARAMETERS</div>
       <div className="brief-params">
-        {[
-          ["DESIGNATION", "R.A.M.B.O"],
-          ["VERSION",     "VERSION III"],
-          ["CLEARANCE",   "AUTHORIZED"],
-          ["BACKEND",     "localhost:8000"],
-          ["PROTOCOL",    "HTTP / WebSocket"],
-          ["AGENTS",      `${AGENT_ROSTER.length} REGISTERED`],
-          ["OVERSEER",    STATUS_LABELS[overseer.status] ?? "OFFLINE"],
-          ["TIMEZONE",    "America/Detroit"],
-          ["BUILD",       "DEVELOPMENT"],
-          ["OPERATOR",    "DANIEL"],
-        ].map(([k, v]) => (
-          <div key={k} className="brief-param-row">
-            <span className="brief-param-key">{k}</span>
-            <span className="brief-param-val">{v}</span>
-          </div>
+        {PARAM_KEYS.map((k, i) => (
+          <ParamRow key={k} paramKey={k} value={values[k]} startMs={paramsAt[i]} speed={speed} />
         ))}
       </div>
     </aside>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PHASE 2 — CENTER: ORB TITLE STACK (types in last)                 */
+/* ------------------------------------------------------------------ */
+
+function OrbTitleStack({ projectLabel, agentName, centerAt, speed }) {
+  const p = useDelayedTypewriter(projectLabel, speed, centerAt[0]);
+  const t = useDelayedTypewriter(agentName, speed, centerAt[1]);
+  const s = useDelayedTypewriter(CENTER_SUBTITLE, speed, centerAt[2]);
+  return (
+    <div className="orb-title-stack">
+      <div className="project-label">{p}</div>
+      <div className="title-banner">{t}</div>
+      <div className="subtitle">{s}</div>
+    </div>
   );
 }
 
@@ -319,12 +407,11 @@ export default function SplashScreen({
 
   const statusData = useAgentStatus();
 
-  const [clockStr, setClockStr] = useState(
-    () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+  const clockFmt = () =>
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const [clockStr, setClockStr] = useState(clockFmt);
   useEffect(() => {
-    const id = setInterval(() =>
-      setClockStr(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })), 10000);
+    const id = setInterval(() => setClockStr(clockFmt()), 1000); // tick seconds
     return () => clearInterval(id);
   }, []);
 
@@ -339,6 +426,15 @@ export default function SplashScreen({
     window.addEventListener("mousemove", handler);
     return () => window.removeEventListener("mousemove", handler);
   }, []);
+
+  // Sequenced reveal timeline (values are stable across re-renders):
+  // roster headline → agents top-down → params top-down → center title.
+  const reveal = buildReveal(
+    headline,
+    AGENT_ROSTER.map(a => a.name),
+    PARAM_KEYS,
+    [projectLabel, agentName, CENTER_SUBTITLE],
+  );
 
   return (
     <div className={`splash-root${fading ? " phase-fading" : ""}`}>
@@ -356,6 +452,8 @@ export default function SplashScreen({
               <EffectComposer>
                 <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
                   intensity={1.4} mipmapBlur radius={0.8} />
+                <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
+                  radialModulation={false} modulationOffset={0} />
               </EffectComposer>
             </Canvas>
           </div>
@@ -370,23 +468,23 @@ export default function SplashScreen({
               <span className="topbar-tab">LOGS</span>
             </div>
             <div className="topbar-right">
-              <span className="topbar-time">{clockStr}</span>
+              <span className="topbar-time neon-clock">{clockStr}</span>
             </div>
           </header>
 
           <div className="byline">{byline}</div>
 
-          <div className="orb-title-stack glitch-in">
-            <div className="project-label">{projectLabel}</div>
-            <div className="title-banner">{agentName}</div>
-            <div className="subtitle">Responsive Autonomous Multi-Brain Operator</div>
-          </div>
+          {/* center title types in LAST, after roster + params */}
+          <OrbTitleStack projectLabel={projectLabel} agentName={agentName}
+            centerAt={reveal.centerAt} speed={reveal.speed} />
 
           <main className="splash-main">
-            {/* LEFT: agent roster with descriptions + live status */}
-            <AgentRosterPanel statusData={statusData} headline={headline} />
-            {/* RIGHT: system parameters (replaces old status panel) */}
-            <SystemParamsPanel statusData={statusData} />
+            {/* LEFT: agent roster — types in FIRST, top-down */}
+            <AgentRosterPanel statusData={statusData} headline={headline}
+              headlineAt={reveal.headlineAt} agentsAt={reveal.agentsAt} speed={reveal.speed} />
+            {/* RIGHT: system parameters — types in SECOND, top-down */}
+            <SystemParamsPanel statusData={statusData}
+              paramsAt={reveal.paramsAt} speed={reveal.speed} />
           </main>
 
           <footer className="splash-footer glitch-in">

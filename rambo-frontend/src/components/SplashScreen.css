@@ -1197,3 +1197,56 @@
   text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
   margin-top: 4px;
 }
+
+/* ================================================================== */
+/*  PHASE 2 — NEON TOPBAR CLOCK (with seconds)                        */
+/* ================================================================== */
+
+.neon-clock {
+  color: var(--accent-glow) !important;
+  text-shadow: 0 0 6px var(--accent), 0 0 14px var(--accent);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================== */
+/*  PHASE 1 — TEXT OVERLAY HOUSED INSIDE THE FULL-SCREEN ORB          */
+/* ================================================================== */
+
+.tx-content-overlay {
+  position: relative;
+  z-index: 2;
+  max-width: 90vw;
+  gap: 12px;
+}
+
+/* ================================================================== */
+/*  PHASE 2 — SEQUENCED TYPEWRITER REVEAL (JS-driven .revealed)        */
+/* ================================================================== */
+
+/* Roster rows and parameter rows start hidden, then fade in as the
+   top-down cascade reaches them (.revealed is toggled from JS). */
+.roster-panel .brief-agent-entry,
+.agent-panel  .brief-param-row {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.roster-panel .brief-agent-entry.revealed,
+.agent-panel  .brief-param-row.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Typewriter caret on the "System Online" headline */
+.type-caret {
+  color: #00ff88;
+  margin-left: 2px;
+  text-shadow: 0 0 6px #00ff88, 0 0 14px #00ff88;
+  animation: caretBlink 0.7s step-end infinite;
+}
+
+@keyframes caretBlink {
+  50% { opacity: 0; }
+}
