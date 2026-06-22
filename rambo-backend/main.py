@@ -4,17 +4,16 @@ from pydantic import BaseModel
 
 from orchestrator.orchestrator import Orchestrator
 import sentinel_queue
+import agent_tracker
 
 try:
     import psutil
-except ImportError:  # graceful if psutil isn't installed yet
+except ImportError:
     psutil = None
 
 app = FastAPI()
 rambo = Orchestrator()
 
-# Single shared activity feed: the orchestrator broadcasts to rambo.ws, and the
-# WebSocket endpoint registers clients on that SAME manager so they receive it.
 manager = rambo.ws
 
 app.add_middleware(
@@ -34,7 +33,7 @@ class Command(BaseModel):
 
 class SentinelDecision(BaseModel):
     id: str
-    decision: str  # "APPROVE" or "DENY"
+    decision: str
 
 
 @app.get("/")
@@ -45,6 +44,11 @@ async def root():
 @app.get("/agents/status")
 async def get_agent_status():
     return rambo.get_status()
+
+
+@app.get("/agents/{agent_key}/detail")
+async def get_agent_detail(agent_key: str):
+    return agent_tracker.get_detail(agent_key)
 
 
 @app.get("/system/stats")
@@ -68,7 +72,6 @@ async def system_stats():
 @app.post("/rambo/execute")
 async def execute_command(cmd: Command):
     ctx = {"lat": cmd.lat, "lon": cmd.lon}
-    # handle() returns { "response": <text>, "agent": <which agent produced it> }
     return await rambo.handle(cmd.goal, ctx)
 
 
@@ -81,6 +84,11 @@ async def get_approvals():
 async def post_decision(decision: SentinelDecision):
     updated = sentinel_queue.decide(decision.id, decision.decision)
     return {"updated": updated}
+
+
+@app.get("/learning/log")
+async def get_learning_log():
+    return agent_tracker.get_learnings()
 
 
 @app.websocket("/ws/activity")

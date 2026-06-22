@@ -5,6 +5,7 @@ from models.task import Task
 from router import choose_brain
 from memory.sqlite_store import SQLiteStore
 from skills import match_skill
+import agent_tracker
 
 from agents.architect import Architect
 from agents.engineer import Engineer
@@ -77,11 +78,18 @@ class Orchestrator:
         if skill:
             agent_name = skill["agent"]
             await self._set_status(agent_name, "working")
+            agent_tracker.record_task_start(agent_name, goal)
             await self.broadcast(f"[{agent_name.capitalize()}] Working on: {goal}")
             try:
                 result = await skill["run"](goal, ctx)
+                agent_tracker.record_task_end(agent_name, goal, success=True)
+                agent_tracker.add_learning(
+                    f"Completed skill '{skill['name']}' for: {goal}",
+                    source=agent_name.capitalize(), category=skill["name"],
+                )
             except Exception as e:
                 result = f"[{skill['name']}] error: {e}"
+                agent_tracker.record_task_end(agent_name, goal, success=False)
             await self._response(agent_name, result)
             await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
             await self._set_status(agent_name, "idle")
@@ -111,6 +119,7 @@ class Orchestrator:
 
             await self._contact(agent_name)
             await self._set_status(agent_name, "working")
+            agent_tracker.record_task_start(agent_name, task.description)
             await self.broadcast(f"[{agent_name.capitalize()}] Starting: {task.description}")
 
             if agent_name in ("engineer", "steward", "link"):
@@ -139,6 +148,7 @@ class Orchestrator:
 
             output = agent.execute(task)
             results.append(output)
+            agent_tracker.record_task_end(agent_name, task.description, success=True)
 
             await self._response(agent_name, output)
             await self.broadcast(f"[{agent_name.capitalize()}] Finished: {task.description}")
@@ -146,8 +156,14 @@ class Orchestrator:
             await asyncio.sleep(0.15)
 
         await self._set_status("echo", "working")
+        agent_tracker.record_task_start("echo", f"Summarize: {goal}")
         await self.broadcast("[Echo] Finalizing response...")
         summary = echo.summarize(goal, plan, results)
+        agent_tracker.record_task_end("echo", f"Summarize: {goal}", success=True)
+        agent_tracker.add_learning(
+            f"Orchestrated {len(tasks)} tasks for: {goal}",
+            source="Pilot", category="orchestration",
+        )
         await self._response("echo", summary)
         await self.broadcast("[Echo] Response ready.")
         await self._set_status("echo", "idle")

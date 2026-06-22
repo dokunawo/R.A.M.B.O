@@ -59,7 +59,7 @@ agent's status.
 - **🧠 Multi-agent orchestration** — 10 specialized agents coordinated by an Overseer.
 - **🛡️ Sentinel security gate** — risky actions (engineer / steward / link) are reviewed and can be blocked or held for manual approval.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
-- **🌌 Living plasma orb** — custom GLSL shaders (fbm noise, breathing pulse, additive bloom) render the Overseer as a living nucleus.
+- **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo.
 - **🎬 Three-phase splash sequence** — scripted boot experience with sequential scans, mission briefing, and a live console.
 - **🐳 Fully Dockerized** — backend, production frontend, and hot-reload dev frontend orchestrated with Docker Compose.
 - **🎛️ PowerShell control panel** — boot animations, health scans, force-rebuild, and one-key browser launch.
@@ -134,8 +134,8 @@ The front end boots through **two** scripted phases:
 
 | Phase | Name | What it shows |
 |-------|---------------------|------------------------------------------------------------------|
-| **1** | **Transmission** | The living orb (particles + plasma core + bloom), R.A.M.B.O title, operator line, a **"BOOTING UP"** status, a single scan bar (0→100%, no loop), and the boot log typing in beneath it. When the log finishes it shows **"NOW BOOTING UP"** and transitions. |
-| **2** | **Live Console** | Full plasma orb with bloom + interconnecting network-web overlay, R.A.M.B.O title stack, dock, and system stat bars. **Left:** Agent Roster table (names, roles, descriptions, live status). **Right:** System Parameters table. |
+| **1** | **Transmission** | The wireframe icosahedron orb (CosmicOrb + bloom + chromatic aberration), R.A.M.B.O title, operator line, a **"BOOTING UP"** status, a single scan bar (0→100%, no loop), and the boot log typing in beneath it. When the log finishes it shows **"NOW BOOTING UP"** and transitions. |
+| **2** | **Live Console** | Full wireframe orb with bloom + EM pulse network overlay, R.A.M.B.O title stack, command input, and system stat bars. **Left:** Agent Roster + SYSTEMS nav (Learning Log, Round Table). **Right:** System Parameters. |
 
 Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber neon scheme on near-black.
 
@@ -146,9 +146,9 @@ Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber 
 **Front End**
 - React 19 + React Scripts (CRA)
 - `@react-three/fiber` + `three` (WebGL orb)
-- `@react-three/postprocessing` (Bloom)
-- Custom GLSL shaders (plasma, particles)
-- `react-router-dom`
+- `@react-three/postprocessing` (Bloom, ChromaticAberration)
+- Custom GLSL shaders (simplex noise, wireframe icosahedron, fresnel glow)
+- `react-router-dom` v7 (SPA routing)
 
 **Back End**
 - FastAPI + Uvicorn
@@ -184,20 +184,23 @@ R.A.M.B.O/
 │   ├── models/                 # Task model, router, sqlite store
 │   ├── memory/                 # SQLite persistence
 │   ├── websocket/              # ConnectionManager (broadcast)
-│   ├── sentinel_queue.py       # manual approval queue
+│   ├── sentinel_queue.py       # UUID-tracked approval queue
+│   ├── agent_tracker.py        # per-agent stats, activity, learnings
 │   ├── requirements.txt
 │   ├── Dockerfile  Dockerfile.dev
 │
 ├── rambo-frontend/
 │   ├── src/
-│   │   ├── App.js
+│   │   ├── App.js / App.css          # root component + global CSS vars
+│   │   ├── index.js                  # BrowserRouter + all routes
 │   │   └── components/
-│   │       ├── SplashScreen.js      # three-phase sequence + console
-│   │       ├── SplashScreen.css
-│   │       ├── RamboOrb3D.jsx        # particle cloud + plasma core
-│   │       ├── RamboOrbShaders.js    # GLSL shaders
-│   │       ├── HudLayout.js/.css
-│   │       └── BrainFeed.js
+│   │       ├── SplashScreen.js/css   # Phase 1 (boot) + Phase 2 (console)
+│   │       ├── CosmicOrb.jsx         # wireframe icosahedron orb (Tier 1)
+│   │       ├── CosmicOrbShaders.js   # GLSL: simplex noise + fresnel glow
+│   │       ├── RamboOrb3D.jsx        # legacy particle cloud (retained)
+│   │       ├── AgentPage.js/css      # per-agent detail pages
+│   │       ├── RoundTable.js/css     # council view — orbiting agents
+│   │       └── LearningLog.js/css    # system learning log
 │   ├── public/
 │   ├── package.json
 │   ├── Dockerfile  Dockerfile.dev
@@ -288,8 +291,10 @@ npm start          # serves on http://localhost:3000
 | `GET` | `/agents/status` | — | Overseer + all agent statuses |
 | `GET` | `/system/stats` | — | Live CPU / RAM / disk metrics (`psutil`) |
 | `POST` | `/rambo/execute` | `{ "goal": "..." }` | Run a goal through the full orchestration |
+| `GET` | `/agents/{key}/detail`| — | Per-agent stats, activity, budget (Steward) |
 | `GET` | `/sentinel/approvals`| — | List tasks awaiting manual approval |
 | `POST` | `/sentinel/decision` | `{ "id": "...", "decision": "APPROVE" \| "DENY" }` | Approve or deny a held task |
+| `GET` | `/learning/log` | — | System-wide learning entries |
 | `WS` | `/ws/activity` | — | Live activity + `STATUS:<agent>:<state>` feed |
 
 **Example — run a goal:**
@@ -323,17 +328,18 @@ curl -X POST http://localhost:8000/rambo/execute \
 | `docker-compose.yml` | Prod frontend host port | `3000 → 80` |
 | `SplashScreen.js` | Backend URL (status polling) | `http://localhost:8000` |
 | `SplashScreen.js` | Timezone (briefing clock) | `America/Detroit` |
-| `RamboOrb3D.jsx` | `PARTICLE_COUNT`, `BREATH_FREQ` | `4000`, `1.8` |
+| `CosmicOrb.jsx` | `ORB_RADIUS`, `DETAIL` | `1.6`, `18` |
+| `CosmicOrbShaders.js` | Noise scale, strength, fresnel power | `1.2`, `0.12`, `1.8` |
 
 ---
 
 ## Visual System
 
 - **Color scheme:** gold / amber neon (`--accent: #e8b15a`, `--accent-glow: #ffd98a`) on near-black (`#08090b`).
-- **Plasma core:** billboarded quad with 6-octave fbm noise; breathes in sync with the particle cloud at `BREATH_FREQ = 1.8`.
-- **Particles:** 4,000-point spherical shell with additive blending and cursor parallax.
-- **Postprocessing:** Bloom (`intensity 1.4`, `radius 0.8`, `mipmapBlur`).
-- **Status colors:** `online #00ff88` · `working #e8b15a` · `idle #4a5568` · `offline #2a3040`.
+- **Cosmic orb:** wireframe icosahedron (detail 18) with 3D simplex noise displacement, fresnel rim glow, slow two-axis tumble, and mouse parallax. Gold color with a billboarded glow halo (additive blending).
+- **GLSL shaders:** layered noise displacement (3 octaves + global breath), fresnel-based rim glow (configurable power/bias), radial gradient glow sprite.
+- **Postprocessing:** Bloom (`intensity 1.4`, `radius 0.8`, `mipmapBlur`) + ChromaticAberration (offset `0.0012`).
+- **Status colors:** `online #00ff88` · `working #e8b15a` · `idle #8fa0b5` · `offline #5a6575`.
 
 ---
 
@@ -350,6 +356,35 @@ See [`ROADMAP_R.A.M.B.O_06-21-2026_18-34.md`](ROADMAP_R.A.M.B.O_06-21-2026_18-34
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-22 — Cosmic wireframe orb (Tier 1), unified orb across all pages
+
+- **[Orb · CosmicOrb]** Replaced the particle cloud `RamboOrb3D` with a new **wireframe icosahedron** (`CosmicOrb.jsx`) across **all pages**: Phase 1 boot, Phase 2 console, Agent pages, Round Table, and Learning Log. The new orb uses IcosahedronGeometry (detail 18), 3D simplex noise vertex displacement (3 octaves + breathing), fresnel rim glow (gold `#e8b15a`), wireframe mode with additive blending, and slow two-axis tumble with mouse parallax.
+- **[Orb · GlowHalo]** Soft glow halo rendered as a **billboarded plane sprite** (always faces camera) with a radial gradient shader and additive blending. Eliminates the black-square artifacts caused by the previous 3D mesh shell approach.
+- **[Orb · Shaders]** New `CosmicOrbShaders.js` with compact 3D simplex noise (Ashima/Gustavson), layered noise displacement vertex shader, and fresnel-based fragment shaders for both the wireframe and the glow.
+- **[Fix · black squares]** Fixed persistent black square artifacts that appeared on the orb and across the screen. Root cause: the `GlowShell` was a low-detail icosahedron with `BackSide` rendering that created visible dark face patches. Replaced with a depth-test-free billboarded plane with purely additive blending.
+
+### 2026-06-22 — Response controls, Round Table, SYSTEMS nav, Phase 2 backgrounds
+
+- **[Phase 2 · responses]** Inline response panels now have **minimize** (▬) and **dismiss** (✕) buttons. Clicking inside a response no longer navigates to the agent page. Responses stay until dismissed or replaced by a new execution.
+- **[Phase 2 · SYSTEMS nav]** Added a **SYSTEMS** section header below Agent Roster with links to **Learning Log** and **Round Table**.
+- **[Navigation · Command Center]** The "← COMMAND CENTER" button on all sub-pages now navigates to `/console` which loads Phase 2 directly (skips the Phase 1 boot intro). New `skipIntro` prop on SplashScreen.
+- **[Navigation · Council View]** Renamed to accent-gold color scheme, now links to the new **Round Table** page at `/council`.
+- **[Round Table]** New `/council` page — full-screen Phase 2 orb with all 10 agents orbiting around it as clickable nodes. Each node shows the agent's avatar, color, name label, and live status dot. Connection lines radiate from the core to each agent. Click any node to enter that agent's detail page.
+- **[Agent pages · background]** All agent detail pages now use the **full-screen Phase 2 orb** (with Bloom + ChromaticAberration + mouse parallax) as the background instead of a static gradient.
+- **[Learning Log · background]** Same full-screen orb background treatment. Council View link color updated to accent gold.
+
+### 2026-06-22 — Per-agent detail pages + learning log + Sentinel approvals + Steward budget
+
+- **[Frontend · routing]** Added React Router — `SplashScreen` at `/`, per-agent pages at `/agent/:key`, learning log at `/learning`.
+- **[Frontend · AgentPage]** Each of the 10 agents now has a dedicated page: R.A.M.B.O plasma orb hero with agent avatar overlay, unique agent color, 3 stat cards (tasks completed, pending, success rate), core objectives with progress bars, and recent activity feed.
+- **[Frontend · Sentinel]** Sentinel page includes a live **approval queue** — review, approve, or deny pending agent operations directly from the UI.
+- **[Frontend · Steward]** Steward page includes a **budget planner** table with categories, budgeted/spent/remaining columns, and visual progress bars.
+- **[Frontend · LearningLog]** New `/learning` page showing a running record of patterns, corrections, and adaptations captured across all agent operations.
+- **[Frontend · navigation]** Clicking any agent in the Phase 2 roster now navigates to that agent's detail page (was a no-op placeholder).
+- **[Backend · agent_tracker]** New `agent_tracker.py` module tracks per-agent task stats, recent activity, and learning entries in memory. Wired into the orchestrator for both skill and pipeline execution paths.
+- **[Backend · endpoints]** New `GET /agents/{key}/detail` (per-agent stats + activity + budget for Steward), `GET /learning/log` (system-wide learning entries).
+- **[Backend · sentinel_queue]** Upgraded from stub to functional queue with UUID-tracked approvals, pending/decided states, and history.
 
 ### 2026-06-22 — Full-screen Phase 1 orb + neon clock
 

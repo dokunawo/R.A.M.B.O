@@ -1,9 +1,10 @@
 // SplashScreen.js
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
-import RamboOrb3D from "./RamboOrb3D";
+import CosmicOrb from "./CosmicOrb";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -159,7 +160,15 @@ function useRamboLive() {
     return () => { closed = true; clearTimeout(retry); if (ws) try { ws.close(); } catch {} };
   }, []);
 
-  return { statusData, stats, activity, connected, responses };
+  const dismissResponse = useCallback((agentKey) => {
+    setResponses(prev => {
+      const next = { ...prev };
+      delete next[agentKey];
+      return next;
+    });
+  }, []);
+
+  return { statusData, stats, activity, connected, responses, dismissResponse };
 }
 
 // Typewriter that waits `startMs` before typing `text` one char at a time.
@@ -512,10 +521,10 @@ function TransmissionScreen({ onAdvance }) {
 
   return (
     <div className="phase-screen tx-screen">
-      {/* Full-screen orb — identical size/look to Phase 2 */}
+      {/* Full-screen cosmic orb — same wireframe icosahedron as Phase 2 */}
       <div className="orb-canvas">
         <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true }}>
-          <RamboOrb3D />
+          <CosmicOrb />
           <EffectComposer>
             <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
               intensity={1.4} mipmapBlur radius={0.8} />
@@ -575,16 +584,17 @@ function TransmissionScreen({ onAdvance }) {
 /*  PHASE 2 — LEFT: AGENT ROSTER (names, roles, descriptions, status) */
 /* ------------------------------------------------------------------ */
 
-function RosterRow({ agent, status, startMs, speed, response, rowRef, onClick }) {
+function RosterRow({ agent, status, startMs, speed, response, rowRef, onClick, onDismissResponse }) {
   const revealed  = useRevealAt(startMs);
   const typedName = useDelayedTypewriter(agent.name, speed, startMs);
   const done = typedName === agent.name;
+  const [minimized, setMinimized] = useState(false);
   return (
     <li
       className={`brief-agent-entry agent-clickable${revealed ? " revealed" : ""}`}
       ref={(el) => rowRef && rowRef(agent.key, el)}
       onClick={() => onClick && onClick(agent)}
-      title={`${agent.name} — details (coming soon)`}
+      title={`${agent.name} — click for details`}
     >
       <div className="brief-agent-header">
         <AgentDot status={status} />
@@ -601,13 +611,22 @@ function RosterRow({ agent, status, startMs, speed, response, rowRef, onClick })
         )}
       </div>
       {done && <p className="brief-agent-desc">{agent.desc}</p>}
-      {/* response panel extends out from this agent when it replies */}
       {done && response && (
-        <div className="agent-response">
+        <div className="agent-response" onClick={(e) => e.stopPropagation()}>
           <div className="agent-response-arm" />
           <div className="agent-response-body">
-            <div className="agent-response-head">{agent.name} · RESPONSE</div>
-            <div className="agent-response-text">{response}</div>
+            <div className="agent-response-head">
+              <span>{agent.name} · RESPONSE</span>
+              <span className="agent-response-controls">
+                <button className="agent-response-btn" onClick={(e) => { e.stopPropagation(); setMinimized(m => !m); }}
+                  title={minimized ? "Expand" : "Minimize"} aria-label={minimized ? "Expand" : "Minimize"}>
+                  {minimized ? "▪" : "▬"}
+                </button>
+                <button className="agent-response-btn" onClick={(e) => { e.stopPropagation(); onDismissResponse && onDismissResponse(agent.key); }}
+                  title="Dismiss" aria-label="Dismiss">✕</button>
+              </span>
+            </div>
+            {!minimized && <div className="agent-response-text">{response}</div>}
           </div>
         </div>
       )}
@@ -615,7 +634,7 @@ function RosterRow({ agent, status, startMs, speed, response, rowRef, onClick })
   );
 }
 
-function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, responses = {}, rowRef, onAgentClick }) {
+function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, responses = {}, rowRef, onAgentClick, onDismissResponse, onNavigate }) {
   const agents   = statusData?.agents ?? AGENT_ROSTER.map(a => ({ name: a.name, status: "offline" }));
   const agentMap = Object.fromEntries(agents.map(a => [a.name.toLowerCase(), a.status]));
   const typed    = useDelayedTypewriter(headline, speed, headlineAt);
@@ -631,8 +650,19 @@ function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, r
         {AGENT_ROSTER.map((a, i) => (
           <RosterRow key={a.key} agent={a} status={agentMap[a.key] ?? "offline"}
             startMs={agentsAt[i]} speed={speed} response={responses[a.key]}
-            rowRef={rowRef} onClick={onAgentClick} />
+            rowRef={rowRef} onClick={onAgentClick} onDismissResponse={onDismissResponse} />
         ))}
+      </ul>
+      <div className="brief-section-label neon-label systems-label">SYSTEMS</div>
+      <ul className="systems-nav">
+        <li className="systems-nav-item" onClick={() => onNavigate && onNavigate("/learning")}>
+          <span className="systems-nav-icon">🧬</span>
+          <span className="systems-nav-text">Learning Log</span>
+        </li>
+        <li className="systems-nav-item" onClick={() => onNavigate && onNavigate("/council")}>
+          <span className="systems-nav-icon">◆</span>
+          <span className="systems-nav-text">Round Table</span>
+        </li>
       </ul>
     </aside>
   );
@@ -906,19 +936,19 @@ export default function SplashScreen({
   title        = "MK III",
   byline       = "BY DANIEL",
   headline     = "System Online",
+  skipIntro    = false,
 }) {
-  const [phase,  setPhase]  = useState("transmission");
+  const [phase,  setPhase]  = useState(skipIntro ? "main" : "transmission");
   const [fading, setFading] = useState(false);
 
   // Result branch (response panel + connector) + clickable agents
   const [result, setResult] = useState(null);
   const agentRowsRef = useRef({});
   const registerRow = useCallback((key, el) => { agentRowsRef.current[key] = el; }, []);
+  const nav = useNavigate();
   const onAgentClick = useCallback((agent) => {
-    // Placeholder for future per-agent pages/phases. For now: no-op hook.
-    // eslint-disable-next-line no-console
-    console.log(`[R.A.M.B.O] agent selected: ${agent.name}`);
-  }, []);
+    nav(`/agent/${agent.key}`);
+  }, [nav]);
 
   // Stable across re-renders — polling/clock updates must NOT recreate these,
   // otherwise child phase timers restart and the scan bar loops forever.
@@ -929,7 +959,9 @@ export default function SplashScreen({
   const goMain = useCallback(() => advance("main"), [advance]);
 
   // Live backend link: status + system stats + WebSocket activity feed.
-  const { statusData, stats, activity, connected, responses } = useRamboLive();
+  const { statusData, stats, activity, connected, responses, dismissResponse } = useRamboLive();
+
+  const onNavigate = useCallback((path) => { nav(path); }, [nav]);
 
   // Real system stats → stat bars (falls back to em-dash when unavailable).
   const statBars = stats?.available
@@ -1021,11 +1053,11 @@ export default function SplashScreen({
 
       {phase === "main" && (
         <>
-          {/* full-screen orb (dpr + bloom tuned down on mobile) */}
+          {/* full-screen cosmic orb — wireframe icosahedron with fresnel glow */}
           <div className="orb-canvas">
             <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
               dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true }}>
-              <RamboOrb3D mouseRef={mouseRef} />
+              <CosmicOrb mouseRef={mouseRef} />
               <EffectComposer>
                 <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
                   intensity={1.4} mipmapBlur={!IS_MOBILE} radius={0.8} />
@@ -1053,7 +1085,8 @@ export default function SplashScreen({
             {/* LEFT: agent roster — types in FIRST, top-down */}
             <AgentRosterPanel statusData={statusData} headline={headline} responses={responses}
               headlineAt={reveal.headlineAt} agentsAt={reveal.agentsAt} speed={reveal.speed}
-              rowRef={registerRow} onAgentClick={onAgentClick} />
+              rowRef={registerRow} onAgentClick={onAgentClick}
+              onDismissResponse={dismissResponse} onNavigate={onNavigate} />
             {/* RIGHT: system parameters — types in SECOND, top-down */}
             <SystemParamsPanel statusData={statusData}
               paramsAt={reveal.paramsAt} speed={reveal.speed} />

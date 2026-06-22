@@ -37,28 +37,40 @@ These are fully implemented and running:
 
 ## Short Term (Now → July 2026)
 
-These are the highest-impact remaining items. Most can be slotted into any session.
+### 🌌 Living Cosmic Interface — Tier-by-Tier Build
 
-### Visuals & UX
-- [x] **Chromatic aberration postprocessing** — ✅ added `ChromaticAberration` (offset 0.0012) alongside Bloom on both orb composers (2026-06-22)
-- [x] **Boot typing animation for transcript** — ✅ typewriter on the "System Online" headline, 30ms/char, fires on the transition into the console (2026-06-22)
-- [x] **Phase 2 staggered agent row animations** — ✅ roster rows slide in with a 40ms offset (2026-06-22)
-- [~] **Phase 1 emblem spin-up** — ⛔ OBSOLETE: the `.tx-emblem-svg` tick-ring emblem was removed when Phase 1 switched to the live orb; nothing to spin up (orb rotation + phase fade-in cover the entrance)
+The orb is being rebuilt as a multi-layered living cosmic interface. Each tier builds on the previous.
 
-### Accessibility
-- [~] ARIA labels — ⛔ dock removed (replaced by the command console); instead added ARIA labels to the command input + connection indicator (2026-06-22)
-- [x] `prefers-reduced-motion` — ✅ typewriters reveal instantly + animations/transitions disabled via media query (2026-06-22)
-- [x] Color contrast audit — ✅ lightened `idle` (#4a5568 → #8fa0b5) and `offline` (#2a3040 → #5a6575) (2026-06-22)
+| Tier | Name | Status | Description |
+|------|------|--------|-------------|
+| **1** | The Orb Itself | ✅ Done (2026-06-22) | Wireframe icosahedron (detail 18), simplex noise displacement, fresnel rim glow, billboarded glow halo, slow tumble + mouse parallax. Gold color. Deployed across all pages. |
+| **2** | The Cosmos | 🔲 Next | Deep-space nebula background: twinkling stars, nebula clouds (layered noise), distant glowing node web, colored glow pooled behind the orb. Separate background renderer. |
+| **3** | The Voice | 🔲 Planned | 5 conversational states (idle/listening/processing/speaking/error) with real microphone audio reactivity (Web Audio API). Asymmetric audio smoothing, synthetic fallback. |
+| **4** | The Constellation | 🔲 Planned | 10 sub-agents orbiting the orb as a floating constellation. Avatar sprites, labels that track camera and fade by depth, status-driven glow. |
+| **5** | Dispatch & Docking | 🔲 Planned | Dispatch beams from orb to agent, working pulse, docking near roster rows, processing rings ("helix" effect). |
+| **6** | Wire to Reality | 🔲 Planned | Connect to real WebSocket events, performance mode, reduced motion support, battery/focus handling. |
 
-### Mobile Performance
-- [x] Reduce `PARTICLE_COUNT` from 4000 → 1800 when `window.innerWidth < 768` — ✅ (2026-06-22)
-- [x] Disable `mipmapBlur` on Bloom for mobile — ✅ (2026-06-22)
-- [x] Cap `devicePixelRatio` at 1.5 on mobile — ✅ (2026-06-22)
-
-### Functional (was "make it functional")
-- [x] Command input → `POST /rambo/execute` + live activity feed → `/ws/activity` WebSocket — ✅ (2026-06-22)
-- [x] Real system stats → `/system/stats` (psutil) feeding the stat bars — ✅ (2026-06-22)
-- [x] Boot chime + ambient hum (Web Audio) — ✅ (2026-06-22)
+### ✅ Completed (Short Term)
+- [x] Chromatic aberration postprocessing (2026-06-22)
+- [x] Boot typing animation for transcript (2026-06-22)
+- [x] Phase 2 staggered agent row animations (2026-06-22)
+- [x] ARIA labels on command input + connection indicator (2026-06-22)
+- [x] `prefers-reduced-motion` support (2026-06-22)
+- [x] Color contrast audit — `idle`/`offline` lightened (2026-06-22)
+- [x] Mobile LOD: particle count, bloom mipmapBlur, DPR cap (2026-06-22)
+- [x] Functional command console + live WebSocket feed (2026-06-22)
+- [x] Real system stats via `/system/stats` (2026-06-22)
+- [x] Boot chime + ambient hum (Web Audio) (2026-06-22)
+- [x] Per-agent detail pages with stats, objectives, activity (2026-06-22)
+- [x] Sentinel approval queue UI (2026-06-22)
+- [x] Steward budget planner (2026-06-22)
+- [x] Learning Log page (2026-06-22)
+- [x] Round Table / Council View with orbiting agents (2026-06-22)
+- [x] Response minimize/dismiss controls (2026-06-22)
+- [x] SYSTEMS nav section (Learning Log + Round Table links) (2026-06-22)
+- [x] `skipIntro` — Command Center button skips Phase 1 (2026-06-22)
+- [x] Unified CosmicOrb across all pages (2026-06-22)
+- [x] Fixed black square artifacts on orb (2026-06-22)
 
 **Owner:** Daniel (design decisions), Claude (implementation)
 
@@ -67,19 +79,21 @@ These are the highest-impact remaining items. Most can be slotted into any sessi
 ## Mid Term (July → September 2026)
 
 ### Audio
-- [ ] **Boot chime** — short synthesized tone on Phase 1 → Phase 2 transition (Web Audio API oscillator, no file needed)
-- [ ] **Ambient hum** — low-frequency oscillator running during Phase 3, volume tied to breathing rhythm
-- [ ] Mute button in dock (replace placeholder icon)
+- [x] **Boot chime** — ✅ synthesized tone on Phase 1 → Phase 2 transition (2026-06-22)
+- [x] **Ambient hum** — ✅ low-frequency pad during console (2026-06-22)
+- [x] Mute toggle (bottom-right) — ✅ (2026-06-22)
+- [ ] Voice reactivity — real microphone input driving orb animation (part of Tier 3)
 
 ### Interactive Controls
 - [ ] Pause/resume orb animation (spacebar or dock button)
 - [ ] Color preset switcher — "Gold" (current), "Cyan", "Red Alert", "Offline" — swaps CSS variables and shader uniforms
-- [ ] Speed control — `BREATH_FREQ` and rotation speed as adjustable props passed from a settings panel
+- [ ] Speed control — noise strength and rotation speed as adjustable props
 
 ### Agent Depth
-- [ ] Clickable agents in Phase 2 briefing panel — expand to show current task description (if backend provides it)
-- [ ] Agent history log — last 5 actions per agent, visible in an expandable row in Phase 3 panel
-- [ ] `WORKING` status pulse animation — agent dot pulses when status is `working`
+- [x] Clickable agents → per-agent detail pages — ✅ (2026-06-22)
+- [x] Agent stats + activity feed on detail pages — ✅ (2026-06-22)
+- [x] `WORKING` status pulse animation — ✅ (2026-06-22)
+- [ ] Agent history log — last 5 actions per agent, expandable in roster
 
 ### AI Personalities / Presets
 - [ ] Define preset schema: `{ name, accentColor, particleColor, breathFreq, bloomIntensity }`
@@ -188,8 +202,8 @@ Copilot items already exist here — listed first so we don't rebuild them.
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 18, @react-three/fiber, @react-three/postprocessing, Three.js |
-| Shaders | GLSL (fbm noise, vertex displacement, bloom-reactive plasma) |
+| Frontend | React 19, @react-three/fiber, @react-three/postprocessing, Three.js, react-router-dom v7 |
+| Shaders | GLSL (3D simplex noise, wireframe icosahedron displacement, fresnel glow) |
 | Backend | FastAPI (Python), WebSocket via `ConnectionManager` |
 | Orchestrator | `Orchestrator` class, 10 agents in `agents/` folder |
 | Dev environment | Docker Compose — `rambo-frontend-dev` (port 3001, hot-reload), `rambo-backend` (port 8000) |
@@ -208,4 +222,4 @@ Copilot items already exist here — listed first so we don't rebuild them.
 
 ---
 
-*Next session priority: Chromatic aberration → boot typing animation → mobile LOD tuning*
+*Next session priority: Cosmic Interface Tier 2 (deep-space nebula background) → Tier 3 (voice reactivity + conversational states)*

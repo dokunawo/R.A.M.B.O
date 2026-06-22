@@ -1,3 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root {
+  --bg: #08090b;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text-hi: #ffffff;
+  --text-mid: #d0d0d0;
+  --text-dim: #7a7a7a;
+  --accent: #e8b15a;
+  --accent-glow: #ffd98a;
+  --mono: "JetBrains Mono", "Share Tech Mono", monospace;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,9 +19,9 @@
 }
 
 body {
-  background: #020617;
+  background: var(--bg);
   color: #e5e7eb;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--mono);
 }
 
 .app-root {

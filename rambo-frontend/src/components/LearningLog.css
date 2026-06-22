@@ -1,0 +1,209 @@
+/* LearningLog.css */
+
+.ll-root {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 30%, #0e1116 0%, #08090b 65%);
+  color: #ffffff;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  overflow-x: hidden;
+  padding-bottom: 60px;
+}
+
+.ll-orb-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ll-grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.12;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  z-index: 1;
+}
+
+.ll-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(8, 9, 11, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.ll-back-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #e8b15a;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.ll-back-btn:hover {
+  background: rgba(232, 177, 90, 0.1);
+  border-color: #e8b15a;
+}
+
+.ll-topbar-title {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #d0d0d0;
+}
+
+.ll-topbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.ll-council-link {
+  font-size: 11px;
+  color: var(--accent, #e8b15a);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.ll-council-link:hover { color: var(--accent-glow, #ffd98a); }
+
+.ll-info-card {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: -30px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+  background: rgba(14, 17, 22, 0.9);
+  border: 1px solid rgba(255, 68, 102, 0.2);
+  border-radius: 4px;
+}
+
+.ll-info-icon { font-size: 36px; }
+
+.ll-title {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: #ff4466;
+}
+
+.ll-subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #7a7a7a;
+  line-height: 1.5;
+}
+
+.ll-section {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 24px auto;
+  padding: 0 24px;
+}
+
+.ll-section-title {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #06b6d4;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.ll-empty {
+  text-align: center;
+  padding: 30px;
+}
+.ll-empty p { margin: 0; font-size: 13px; color: #5a6575; }
+.ll-empty-sub { margin-top: 8px !important; font-size: 11px !important; color: #3a4555 !important; }
+
+.ll-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ll-item {
+  padding: 14px 16px;
+  background: rgba(14, 17, 22, 0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+
+.ll-item-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ll-item-source {
+  font-size: 11px;
+  color: #e8b15a;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.ll-item-time {
+  font-size: 10px;
+  color: #5a6575;
+}
+
+.ll-item-text {
+  margin: 0;
+  font-size: 12px;
+  color: #d0d0d0;
+  line-height: 1.5;
+}
+
+.ll-item-cat {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 9px;
+  padding: 3px 8px;
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 3px;
+  letter-spacing: 1px;
+}
+
+.ll-op-desc {
+  font-size: 12px;
+  color: #7a7a7a;
+  line-height: 1.6;
+}
+
+.ll-footer {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 40px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #5a6575;
+  letter-spacing: 1px;
+}
