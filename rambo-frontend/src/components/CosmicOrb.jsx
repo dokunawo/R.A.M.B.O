@@ -57,7 +57,7 @@ function WireframeOrb({ audioLevelRef }) {
           uNoiseStrength: { value: 0.12 },
           uBreathSpeed: { value: 1.0 },
           uColor: { value: GOLD.clone() },
-          uOpacity: { value: 0.7 },
+          uOpacity: { value: 0.55 },
           uFresnelPower: { value: 1.8 },
           uFresnelBias: { value: 0.1 },
           uAudioLevel: { value: 0 },
@@ -90,7 +90,7 @@ function GlowHalo({ audioLevelRef }) {
         fragmentShader: glowSpriteFrag,
         uniforms: {
           uColor: { value: GOLD_GLOW.clone() },
-          uIntensity: { value: 0.5 },
+          uIntensity: { value: 0.2 },
           uAudioLevel: { value: 0 },
         },
         transparent: true,
@@ -107,7 +107,7 @@ function GlowHalo({ audioLevelRef }) {
     material.uniforms.uAudioLevel.value = audioLevelRef?.current ?? 0;
   });
 
-  const size = ORB_RADIUS * 3.6;
+  const size = ORB_RADIUS * 2.8;
   return (
     <mesh ref={ref} material={material} renderOrder={-1}>
       <planeGeometry args={[size, size]} />

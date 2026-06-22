@@ -536,8 +536,8 @@ function TransmissionScreen({ onAdvance }) {
           <CosmicBackground />
           <CosmicOrb />
           <EffectComposer>
-            <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
-              intensity={1.4} mipmapBlur radius={0.8} />
+            <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
+              intensity={0.8} mipmapBlur radius={0.6} />
             <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
               radialModulation={false} modulationOffset={0} />
           </EffectComposer>
@@ -1149,8 +1149,8 @@ export default function SplashScreen({
               <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
               <AgentConstellation statusMap={agentStatusMap} />
               <EffectComposer>
-                <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
-                  intensity={1.4} mipmapBlur={!IS_MOBILE} radius={0.8} />
+                <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
+                  intensity={0.8} mipmapBlur={!IS_MOBILE} radius={0.6} />
                 <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
                   radialModulation={false} modulationOffset={0} />
               </EffectComposer>

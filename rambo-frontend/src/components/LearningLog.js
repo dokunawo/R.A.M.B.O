@@ -58,8 +58,8 @@ function LearningLog() {
           <CosmicBackground />
           <CosmicOrb mouseRef={mouseRef} />
           <EffectComposer>
-            <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
-              intensity={1.4} radius={0.8} />
+            <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
+              intensity={0.8} radius={0.6} />
             <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
               radialModulation={false} modulationOffset={0} />
           </EffectComposer>

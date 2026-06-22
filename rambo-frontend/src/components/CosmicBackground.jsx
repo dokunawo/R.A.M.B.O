@@ -126,7 +126,7 @@ void main() {
   // circular radial fade — must hit zero well before quad edge
   float dist = length(uv) * 2.0;
   float radial = smoothstep(1.0, 0.15, dist);
-  float alpha = blend * radial * 0.12;
+  float alpha = blend * radial * 0.05;
 
   gl_FragColor = vec4(color, alpha);
 }
@@ -280,7 +280,7 @@ function GlowPool() {
         glow *= 0.9 + 0.1 * sin(uTime * 0.5);
         // hard circular cutoff well before quad edge
         glow *= smoothstep(0.95, 0.5, d);
-        gl_FragColor = vec4(uColor, glow * 0.15);
+        gl_FragColor = vec4(uColor, glow * 0.04);
       }
     `,
     uniforms: {
