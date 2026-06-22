@@ -251,9 +251,11 @@ function NodeWeb() {
   useFrame(({ clock }) => { nodeMat.uniforms.uTime.value = clock.getElapsedTime(); });
 
   return (
-    <group renderOrder={-8}>
-      <points geometry={nodeGeo} material={nodeMat} />
-      <lineSegments geometry={lineGeo} material={lineMat} />
+    <group>
+      <points geometry={nodeGeo} material={nodeMat} renderOrder={-8} />
+      {linePositions.length > 0 && (
+        <lineSegments geometry={lineGeo} material={lineMat} renderOrder={-8} />
+      )}
     </group>
   );
 }

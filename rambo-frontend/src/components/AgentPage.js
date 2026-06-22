@@ -4,11 +4,13 @@ import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
+import CosmicBackground from "./CosmicBackground";
 import "./AgentPage.css";
 
 class OrbErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
   static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err) { console.error("[OrbErrorBoundary]", err); }
   render() { return this.state.hasError ? null : this.props.children; }
 }
 
@@ -226,6 +228,7 @@ function AgentPage() {
         <OrbErrorBoundary>
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
             dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+            <CosmicBackground />
             <CosmicOrb mouseRef={mouseRef} />
             <EffectComposer>
               <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}

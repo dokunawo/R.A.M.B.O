@@ -781,11 +781,30 @@ function OrbWeb() {
 /*  PHASE 2 — COMMAND CONSOLE (live feed + directive input)           */
 /* ------------------------------------------------------------------ */
 
-function CommandConsole({ activity, connected, onResult }) {
+function CommandConsole({ activity, connected, onResult, voiceText, voiceState, onVoiceExecuted }) {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
   const feedRef = useRef(null);
   const locRef = useRef({ lat: null, lon: null });
+  const voiceSubmitTimer = useRef(null);
+
+  // Voice input: update goal as the user speaks
+  useEffect(() => {
+    if (voiceText && voiceState === "listening") {
+      setGoal(voiceText);
+    }
+  }, [voiceText, voiceState]);
+
+  // When voice state changes to processing, auto-execute after a short pause
+  useEffect(() => {
+    if (voiceState === "processing" && goal.trim() && !busy) {
+      voiceSubmitTimer.current = setTimeout(() => {
+        submitGoal(goal.trim());
+      }, 300);
+    }
+    return () => { if (voiceSubmitTimer.current) clearTimeout(voiceSubmitTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceState]);
 
   // ask the browser for location once (used by skills like weather)
   useEffect(() => {
@@ -802,9 +821,7 @@ function CommandConsole({ activity, connected, onResult }) {
     if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
   }, [activity]);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const g = goal.trim();
+  const submitGoal = async (g) => {
     if (!g || busy) return;
     setBusy(true);
     try {
@@ -816,11 +833,17 @@ function CommandConsole({ activity, connected, onResult }) {
       const data = await res.json().catch(() => ({}));
       onResult({ goal: g, text: data.response || "(no response)", agent: (data.agent || "echo").toLowerCase() });
       setGoal("");
+      if (onVoiceExecuted) onVoiceExecuted();
     } catch {
       onResult({ goal: g, text: "Request failed — is the backend running?", agent: "echo" });
     } finally {
       setBusy(false);
     }
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    submitGoal(goal.trim());
   };
 
   return (
@@ -944,8 +967,27 @@ export default function SplashScreen({
   const [phase,  setPhase]  = useState(skipIntro ? "main" : "transmission");
   const [fading, setFading] = useState(false);
 
-  // Tier 3: voice reactivity
-  const { levelRef: audioLevelRef, state: convState, micActive, toggleMic } = useVoiceReactivity();
+  // Tier 3: voice reactivity + speech-to-text
+  const [voiceText, setVoiceText] = useState("");
+  const voiceSetStateRef = useRef(null);
+  const handleFinalTranscript = useCallback((text) => {
+    setVoiceText(text);
+    setTimeout(() => {
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
+    }, 800);
+  }, []);
+  const {
+    levelRef: audioLevelRef, state: convState, setState: voiceSetState,
+    micActive, toggleMic,
+  } = useVoiceReactivity({
+    onTranscript: setVoiceText,
+    onFinalTranscript: handleFinalTranscript,
+  });
+  voiceSetStateRef.current = voiceSetState;
+  const handleVoiceExecuted = useCallback(() => {
+    setVoiceText("");
+    if (micActive) voiceSetState(CONV_STATES.LISTENING);
+  }, [micActive, voiceSetState]);
 
   // Result branch (response panel + connector) + clickable agents
   const [result, setResult] = useState(null);
@@ -1117,7 +1159,8 @@ export default function SplashScreen({
               {statBars.map(s => <StatBar key={s.label} {...s} />)}
             </div>
             {/* functional command console replaces the decorative dock */}
-            <CommandConsole activity={activity} connected={connected} onResult={setResult} />
+            <CommandConsole activity={activity} connected={connected} onResult={setResult}
+              voiceText={voiceText} voiceState={convState} onVoiceExecuted={handleVoiceExecuted} />
           </footer>
 
           {/* response branches out (with a connector line) from its agent; draggable */}
