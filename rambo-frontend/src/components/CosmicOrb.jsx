@@ -117,8 +117,8 @@ function GlowHalo({ audioLevelRef }) {
 
 export default function CosmicOrb({ mouseRef = null, audioLevelRef = null }) {
   const groupRef = useRef();
-  // Internal fallback ref when no external audio
-  const fallbackRef = useRef({ current: 0 });
+  // Internal fallback ref when no external audio — .current must be a number
+  const fallbackRef = useRef(0);
   const effectiveAudioRef = audioLevelRef || fallbackRef;
 
   useFrame(({ clock }) => {
