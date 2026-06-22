@@ -197,6 +197,7 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 
 | Date | Time (ET) | Changes |
 |------|-----------|---------|
+| 06/22/2026 | 16:30 | Fixed orb missing on sub-pages (fallbackRef bug — nested object instead of number). Added speech-to-text via Web Speech API (SpeechRecognition) — spoken words fill command input live, auto-execute on silence. SYSTEMS nav restyled to match Agent Roster gold accent scheme. |
 | 06/22/2026 | 14:15 | Tier 2 (cosmic background) + Tier 3 (voice reactivity) shipped. Fixed amber square on nebula/glow quads. |
 | 06/22/2026 | 13:39 | Created new roadmap. Fixed black flickers (Bloom threshold + premultipliedAlpha). Skip typing cascade on Command Center click. All shipped items consolidated. |
 | 06/22/2026 | ~12:00 | CosmicOrb (Tier 1) built and deployed across all pages. Black square fix (billboarded sprite). Per-agent pages, Round Table, Learning Log, SYSTEMS nav, response controls, skipIntro routing, agent_tracker, sentinel_queue. |
