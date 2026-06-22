@@ -345,11 +345,12 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 ## Roadmap
 
-See [`ROADMAP_R.A.M.B.O_06-21-2026_18-34.md`](ROADMAP_R.A.M.B.O_06-21-2026_18-34.md) for the full plan. Highlights:
+See [`ROADMAP_R.A.M.B.O_06-22-2026_13-39.md`](ROADMAP_R.A.M.B.O_06-22-2026_13-39.md) for the full plan. Highlights:
 
-- **Short term:** chromatic aberration, boot typing animation, accessibility pass, mobile LOD tuning.
-- **Mid term:** audio (ambient hum + boot chimes), interactive controls, AI personality presets, unit tests.
-- **Long term:** multi-orb network mode, real-time data integration, video export, reusable component library.
+- **Now:** Living Cosmic Interface Tier 2 (deep-space nebula background) → Tier 3 (voice reactivity + conversational states).
+- **Short term:** Operator greeting, shutdown sequence, HUD boot transition, task history panel, command palette.
+- **Mid term:** Color presets, modular HUD panels, mission dashboard, data stream visualizer.
+- **Long term:** Voice activation, secure login, CLI tool, plugin system.
 
 ---
 

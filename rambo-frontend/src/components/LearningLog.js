@@ -42,10 +42,10 @@ function LearningLog() {
       {/* full-screen orb background — same as Phase 2 */}
       <div className="ll-orb-bg">
         <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-          dpr={[1, 1.5]} gl={{ antialias: true, alpha: true }}>
+          dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
           <CosmicOrb mouseRef={mouseRef} />
           <EffectComposer>
-            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
+            <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
               intensity={1.4} radius={0.8} />
             <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
               radialModulation={false} modulationOffset={0} />

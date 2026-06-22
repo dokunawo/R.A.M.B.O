@@ -175,9 +175,9 @@ function useRamboLive() {
 // Re-runs on mount, so the whole cascade restarts when the console appears.
 // Honors prefers-reduced-motion by revealing the full text immediately.
 function useDelayedTypewriter(text, speed, startMs, silent = false) {
-  const [out, setOut] = useState("");
+  const [out, setOut] = useState(speed === 0 ? text : "");
   useEffect(() => {
-    if (prefersReducedMotion()) { setOut(text); return; }
+    if (speed === 0 || prefersReducedMotion()) { setOut(text); return; }
     setOut("");
     let i = 0;
     let intId;
@@ -185,7 +185,7 @@ function useDelayedTypewriter(text, speed, startMs, silent = false) {
       intId = setInterval(() => {
         i += 1;
         setOut(text.slice(0, i));
-        if (!silent && text[i - 1] && text[i - 1] !== " ") playKeyClick(); // click per keystroke
+        if (!silent && text[i - 1] && text[i - 1] !== " ") playKeyClick();
         if (i >= text.length) clearInterval(intId);
       }, speed);
     }, Math.max(0, startMs));
@@ -196,9 +196,9 @@ function useDelayedTypewriter(text, speed, startMs, silent = false) {
 
 // Flips true once `startMs` has elapsed — used to fade a row in.
 function useRevealAt(startMs) {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(startMs === 0);
   useEffect(() => {
-    if (prefersReducedMotion()) { setOn(true); return; }
+    if (startMs === 0 || prefersReducedMotion()) { setOn(true); return; }
     const t = setTimeout(() => setOn(true), Math.max(0, startMs));
     return () => clearTimeout(t);
   }, [startMs]);
@@ -523,10 +523,10 @@ function TransmissionScreen({ onAdvance }) {
     <div className="phase-screen tx-screen">
       {/* Full-screen cosmic orb — same wireframe icosahedron as Phase 2 */}
       <div className="orb-canvas">
-        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true }}>
+        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
           <CosmicOrb />
           <EffectComposer>
-            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
+            <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
               intensity={1.4} mipmapBlur radius={0.8} />
             <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
               radialModulation={false} modulationOffset={0} />
@@ -1030,14 +1030,19 @@ export default function SplashScreen({
 
   // Sequenced reveal timeline (values are stable across re-renders):
   // topbar → roster → params → center title, each starting after the previous.
-  const reveal = buildReveal({
-    brandText,
-    clockText: "00:00:00 AM",
-    headline,
-    agentNames: AGENT_ROSTER.map(a => a.name),
-    paramKeys: PARAM_KEYS,
-    centerLines: [projectLabel, agentName, CENTER_SUBTITLE],
-  });
+  // When skipIntro is true (Command Center click), skip the typing cascade entirely.
+  const reveal = skipIntro
+    ? { speed: 0, brandAt: 0, clockAt: 0, headlineAt: 0,
+        agentsAt: AGENT_ROSTER.map(() => 0), paramsAt: PARAM_KEYS.map(() => 0),
+        centerAt: [0, 0, 0] }
+    : buildReveal({
+        brandText,
+        clockText: "00:00:00 AM",
+        headline,
+        agentNames: AGENT_ROSTER.map(a => a.name),
+        paramKeys: PARAM_KEYS,
+        centerLines: [projectLabel, agentName, CENTER_SUBTITLE],
+      });
 
   return (
     <div className={`splash-root${fading ? " phase-fading" : ""}`}>
@@ -1056,10 +1061,10 @@ export default function SplashScreen({
           {/* full-screen cosmic orb — wireframe icosahedron with fresnel glow */}
           <div className="orb-canvas">
             <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-              dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true }}>
+              dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
               <CosmicOrb mouseRef={mouseRef} />
               <EffectComposer>
-                <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9}
+                <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
                   intensity={1.4} mipmapBlur={!IS_MOBILE} radius={0.8} />
                 <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
                   radialModulation={false} modulationOffset={0} />
