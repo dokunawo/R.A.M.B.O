@@ -5,8 +5,132 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
-import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
+import { usePageVoice, VoiceControls } from "./VoiceControls";
 import "./AgentPage.css";
+
+/* ------------------------------------------------------------------ */
+/*  Response branches — tree structure emanating from the orb center   */
+/* ------------------------------------------------------------------ */
+
+function ResponseBranch({ entry, index, agentColor, onDismiss }) {
+  const [pos, setPos] = useState(null);
+  const dragRef = useRef(null);
+
+  // Position each branch radiating outward from center
+  useEffect(() => {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    // Fan out from center — alternate left/right, stagger vertically
+    const side = index % 2 === 0 ? 1 : -1;
+    const tier = Math.floor(index / 2);
+    const offsetX = side * (280 + tier * 30);
+    const offsetY = -60 + tier * 140;
+    setPos({
+      x: Math.max(16, Math.min(window.innerWidth - 370, cx + offsetX - 175)),
+      y: Math.max(60, Math.min(window.innerHeight - 200, cy + offsetY)),
+    });
+  }, [index]);
+
+  const beginDrag = (e) => {
+    if (!pos) return;
+    const start = { mx: e.clientX, my: e.clientY, x: pos.x, y: pos.y };
+    const move = (ev) => setPos({ x: start.x + (ev.clientX - start.mx), y: start.y + (ev.clientY - start.my) });
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    dragRef.current = up;
+  };
+
+  if (!pos) return null;
+
+  const orbCenter = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const panelAnchor = { x: pos.x + 175, y: pos.y + 16 };
+
+  // Bezier from orb center to panel
+  const dx = panelAnchor.x - orbCenter.x;
+  const dy = panelAnchor.y - orbCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  // Start the line at the orb edge (approximate radius ~120px on screen)
+  const orbRadius = 120;
+  const ratio = orbRadius / dist;
+  const lineStart = {
+    x: orbCenter.x + dx * ratio,
+    y: orbCenter.y + dy * ratio,
+  };
+  const cp1 = { x: lineStart.x + dx * 0.4, y: lineStart.y };
+  const cp2 = { x: panelAnchor.x - dx * 0.3, y: panelAnchor.y };
+
+  const isComplete = entry.status === "complete";
+  const isError = entry.status === "error";
+
+  return (
+    <>
+      <svg className="ap-branch-line" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id={`grad-${entry.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={agentColor} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={agentColor} stopOpacity="0.3" />
+          </linearGradient>
+        </defs>
+        <path
+          d={`M ${lineStart.x} ${lineStart.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${panelAnchor.x} ${panelAnchor.y}`}
+          fill="none" stroke={`url(#grad-${entry.id})`} strokeWidth="1.4"
+        />
+        <circle cx={lineStart.x} cy={lineStart.y} r="3" fill={agentColor} opacity="0.9">
+          <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx={panelAnchor.x} cy={panelAnchor.y} r="3" fill={agentColor} opacity="0.7" />
+      </svg>
+      <div className="ap-branch-panel" style={{ left: pos.x, top: pos.y, borderColor: `${agentColor}66` }}>
+        <div className="ap-branch-head" onPointerDown={beginDrag}>
+          <span className="ap-branch-title" style={{ color: agentColor }}>
+            R.A.M.B.O · RESPONSE
+          </span>
+          <button className="ap-branch-close" type="button" onClick={() => onDismiss(entry.id)} aria-label="Close">✕</button>
+        </div>
+        <div className="ap-branch-goal" style={{ color: agentColor }}>&gt; {entry.command}</div>
+        <div className={`ap-branch-body ${isError ? "ap-branch-error" : ""}`}>
+          {entry.status === "processing" ? (
+            <span className="ap-branch-processing">Processing<span className="ap-dots">...</span></span>
+          ) : (
+            entry.response || "(awaiting response)"
+          )}
+        </div>
+        <div className="ap-branch-footer">
+          <span className="ap-branch-time">{entry.time}</span>
+          <span className={`ap-branch-status ap-branch-status-${entry.status}`}>
+            {entry.status === "processing" ? "◉" : isComplete ? "✓" : "✕"} {entry.status.toUpperCase()}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ResponseTree({ commandLog, agentColor }) {
+  const [dismissed, setDismissed] = useState(new Set());
+  const visible = commandLog.filter(e => !dismissed.has(e.id)).slice(0, 4);
+
+  const dismiss = useCallback((id) => {
+    setDismissed(prev => new Set([...prev, id]));
+  }, []);
+
+  if (visible.length === 0) return null;
+
+  return (
+    <>
+      {visible.map((entry, i) => (
+        <ResponseBranch
+          key={entry.id}
+          entry={entry}
+          index={i}
+          agentColor={agentColor}
+          onDismiss={dismiss}
+        />
+      ))}
+    </>
+  );
+}
 
 class OrbErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
@@ -304,7 +428,7 @@ function AgentPage() {
         ))}
       </nav>
 
-      <CommandLog commandLog={commandLog} agentColor={meta.color} />
+      <ResponseTree commandLog={commandLog} agentColor={meta.color} />
 
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>
