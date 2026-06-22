@@ -6,6 +6,7 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
+import AgentConstellation from "./AgentConstellation";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
@@ -837,9 +838,10 @@ function CommandConsole({ activity, connected, onResult, voiceText, voiceState, 
         body: JSON.stringify({ goal: g, lat: locRef.current.lat, lon: locRef.current.lon }),
       });
       const data = await res.json().catch(() => ({}));
-      onResult({ goal: g, text: data.response || "(no response)", agent: (data.agent || "echo").toLowerCase() });
+      const responseText = data.response || "(no response)";
+      onResult({ goal: g, text: responseText, agent: (data.agent || "echo").toLowerCase() });
       setGoal("");
-      if (onVoiceExecuted) onVoiceExecuted();
+      if (onVoiceExecuted) onVoiceExecuted(responseText);
     } catch {
       onResult({ goal: g, text: "Request failed — is the backend running?", agent: "echo" });
     } finally {
@@ -973,9 +975,10 @@ export default function SplashScreen({
   const [phase,  setPhase]  = useState(skipIntro ? "main" : "transmission");
   const [fading, setFading] = useState(false);
 
-  // Tier 3: voice reactivity + speech-to-text
+  // Tier 3: voice reactivity — wake word "Rambo" + TTS response
   const [voiceText, setVoiceText] = useState("");
   const voiceSetStateRef = useRef(null);
+  const speakRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
     setTimeout(() => {
@@ -984,16 +987,22 @@ export default function SplashScreen({
   }, []);
   const {
     levelRef: audioLevelRef, state: convState, setState: voiceSetState,
-    micActive, toggleMic,
+    micActive, toggleMic, speakResponse,
   } = useVoiceReactivity({
     onTranscript: setVoiceText,
     onFinalTranscript: handleFinalTranscript,
   });
   voiceSetStateRef.current = voiceSetState;
-  const handleVoiceExecuted = useCallback(() => {
+  speakRef.current = speakResponse;
+  const handleVoiceExecuted = useCallback((responseText) => {
     setVoiceText("");
-    if (micActive) voiceSetState(CONV_STATES.LISTENING);
-  }, [micActive, voiceSetState]);
+    // Read the response back aloud
+    if (responseText && speakRef.current) {
+      speakRef.current(responseText);
+    } else {
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+    }
+  }, []);
 
   // Result branch (response panel + connector) + clickable agents
   const [result, setResult] = useState(null);
@@ -1014,6 +1023,18 @@ export default function SplashScreen({
 
   // Live backend link: status + system stats + WebSocket activity feed.
   const { statusData, stats, activity, connected, responses, dismissResponse } = useRamboLive();
+
+  // Build status map for constellation: { architect: "active", scout: "idle", ... }
+  const agentStatusMap = useMemo(() => {
+    const map = {};
+    if (statusData?.agents) {
+      statusData.agents.forEach(a => {
+        const key = (a.key || a.name || "").toLowerCase();
+        map[key] = a.status || "idle";
+      });
+    }
+    return map;
+  }, [statusData]);
 
   const onNavigate = useCallback((path) => { nav(path); }, [nav]);
 
@@ -1108,7 +1129,7 @@ export default function SplashScreen({
       {phase === "main" && (
         <button className="mic-toggle" type="button" onClick={toggleMic}
           aria-label={micActive ? "Disable microphone" : "Enable microphone"}
-          title={micActive ? "Mic active — click to disable" : "Enable mic for voice reactivity"}>
+          title={micActive ? 'Mic active — say "Rambo" to command' : 'Enable mic — say "Rambo" to activate'}>
           {micActive ? "🎙️" : "🎤"}
           {micActive && <span className="mic-state">{convState.toUpperCase()}</span>}
         </button>
@@ -1126,6 +1147,7 @@ export default function SplashScreen({
               dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
               <CosmicBackground />
               <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
+              <AgentConstellation statusMap={agentStatusMap} />
               <EffectComposer>
                 <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
                   intensity={1.4} mipmapBlur={!IS_MOBILE} radius={0.8} />

@@ -1,19 +1,54 @@
-// useVoiceReactivity.js — Tier 3: microphone audio reactivity + speech-to-text.
-// Returns a smoothed audio level (0..1), speech transcript, and conversational state.
+// useVoiceReactivity.js — Voice system: wake word "Rambo", speech-to-text,
+// TTS response with cosmic AI voice, and audio-level reactivity for the orb.
 import { useRef, useEffect, useCallback, useState } from "react";
 
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
+const WAKE_WORD   = "rambo";
 
 export const CONV_STATES = {
-  IDLE:       "idle",
-  LISTENING:  "listening",
-  PROCESSING: "processing",
-  SPEAKING:   "speaking",
+  IDLE:       "idle",        // passive listening for wake word
+  LISTENING:  "listening",   // wake word detected — capturing command
+  PROCESSING: "processing",  // command captured — executing
+  SPEAKING:   "speaking",    // reading response aloud
   ERROR:      "error",
 };
 
-export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
+// ---- TTS: cosmic AI voice ----
+function speak(text, onStart, onEnd) {
+  const synth = window.speechSynthesis;
+  if (!synth) { onEnd?.(); return; }
+
+  // Cancel any ongoing speech
+  synth.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+
+  // Pick the most robotic/neutral voice available
+  const voices = synth.getVoices();
+  const preferred = voices.find(v =>
+    /google us english|microsoft david|microsoft zira|microsoft mark/i.test(v.name)
+  ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
+  if (preferred) utter.voice = preferred;
+
+  utter.rate  = 0.92;   // slightly slower than natural
+  utter.pitch = 0.75;   // lower pitch for robotic depth
+  utter.volume = 1.0;
+
+  utter.onstart = () => onStart?.();
+  utter.onend   = () => onEnd?.();
+  utter.onerror = () => onEnd?.();
+
+  synth.speak(utter);
+}
+
+// Preload voices (Chrome loads them async)
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakStart, onSpeakEnd } = {}) {
   const levelRef    = useRef(0);
   const activeRef   = useRef(false);
   const streamRef   = useRef(null);
@@ -21,16 +56,23 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
   const analyserRef = useRef(null);
   const rafRef      = useRef(null);
   const recognitionRef = useRef(null);
-  const [state, setState]       = useState(CONV_STATES.IDLE);
+  const wakeDetectedRef = useRef(false);
+  const commandBufferRef = useRef("");
+  const silenceTimerRef = useRef(null);
+  const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
   const [transcript, setTranscript] = useState("");
 
-  // Stable callback refs so we don't re-create recognition on every render
-  const onTranscriptRef = useRef(onTranscript);
+  const onTranscriptRef      = useRef(onTranscript);
   const onFinalTranscriptRef = useRef(onFinalTranscript);
+  const onSpeakStartRef      = useRef(onSpeakStart);
+  const onSpeakEndRef        = useRef(onSpeakEnd);
   useEffect(() => { onTranscriptRef.current = onTranscript; }, [onTranscript]);
   useEffect(() => { onFinalTranscriptRef.current = onFinalTranscript; }, [onFinalTranscript]);
+  useEffect(() => { onSpeakStartRef.current = onSpeakStart; }, [onSpeakStart]);
+  useEffect(() => { onSpeakEndRef.current = onSpeakEnd; }, [onSpeakEnd]);
 
+  // Audio level tick for orb animation
   const tick = useCallback(() => {
     if (!analyserRef.current || !activeRef.current) return;
     const analyser = analyserRef.current;
@@ -43,6 +85,21 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
     const alpha = rms > prev ? SMOOTH_UP : SMOOTH_DOWN;
     levelRef.current = prev + alpha * (rms - prev);
     rafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  // Speak a response aloud with the cosmic voice
+  const speakResponse = useCallback((text) => {
+    setState(CONV_STATES.SPEAKING);
+    onSpeakStartRef.current?.();
+
+    speak(text, null, () => {
+      onSpeakEndRef.current?.();
+      // Return to idle (passive wake-word listening)
+      setState(CONV_STATES.IDLE);
+      wakeDetectedRef.current = false;
+      commandBufferRef.current = "";
+      setTranscript("");
+    });
   }, []);
 
   const startMic = useCallback(async () => {
@@ -61,10 +118,11 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
       analyserRef.current = analyser;
       activeRef.current = true;
       setMicActive(true);
-      setState(CONV_STATES.LISTENING);
+      setState(CONV_STATES.IDLE);
+      wakeDetectedRef.current = false;
       rafRef.current = requestAnimationFrame(tick);
 
-      // Speech recognition
+      // Speech recognition — always on, listening for wake word then command
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -74,34 +132,94 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
 
         recognition.onresult = (event) => {
           let interim = "";
-          let final = "";
+          let finalText = "";
+
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const t = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              final += t;
+              finalText += t;
             } else {
               interim += t;
             }
           }
 
-          if (final) {
-            setTranscript(final.trim());
-            if (onTranscriptRef.current) onTranscriptRef.current(final.trim());
-            if (onFinalTranscriptRef.current) onFinalTranscriptRef.current(final.trim());
-          } else if (interim) {
-            setTranscript(interim);
-            if (onTranscriptRef.current) onTranscriptRef.current(interim);
+          const combined = (finalText || interim).toLowerCase().trim();
+
+          if (!wakeDetectedRef.current) {
+            // Passive mode: scan for wake word
+            if (combined.includes(WAKE_WORD)) {
+              wakeDetectedRef.current = true;
+              setState(CONV_STATES.LISTENING);
+
+              // Extract everything after "rambo" as the start of the command
+              const idx = combined.indexOf(WAKE_WORD);
+              const after = combined.slice(idx + WAKE_WORD.length).trim();
+              if (after) {
+                commandBufferRef.current = after;
+                setTranscript(after);
+                onTranscriptRef.current?.(after);
+              }
+              return;
+            }
+          } else {
+            // Active mode: capturing command after wake word
+            if (finalText) {
+              // Strip wake word if it appears at the start of the final text
+              let cmd = finalText.trim();
+              const lower = cmd.toLowerCase();
+              if (lower.startsWith(WAKE_WORD)) {
+                cmd = cmd.slice(WAKE_WORD.length).trim();
+              }
+              // Remove leading punctuation/filler
+              cmd = cmd.replace(/^[,.\s]+/, "");
+
+              if (cmd) {
+                commandBufferRef.current = cmd;
+                setTranscript(cmd);
+                onTranscriptRef.current?.(cmd);
+
+                // Wait for a silence gap — if no new speech in 1.5s, finalize
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = setTimeout(() => {
+                  const finalCmd = commandBufferRef.current.trim();
+                  if (finalCmd) {
+                    onFinalTranscriptRef.current?.(finalCmd);
+                  }
+                }, 1500);
+              }
+            } else if (interim) {
+              let cmd = interim.trim();
+              const lower = cmd.toLowerCase();
+              if (lower.startsWith(WAKE_WORD)) {
+                cmd = cmd.slice(WAKE_WORD.length).trim();
+              }
+              cmd = cmd.replace(/^[,.\s]+/, "");
+
+              if (cmd) {
+                commandBufferRef.current = cmd;
+                setTranscript(cmd);
+                onTranscriptRef.current?.(cmd);
+              }
+
+              // Reset silence timer on interim results
+              if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+              silenceTimerRef.current = setTimeout(() => {
+                const finalCmd = commandBufferRef.current.trim();
+                if (finalCmd) {
+                  onFinalTranscriptRef.current?.(finalCmd);
+                }
+              }, 1500);
+            }
           }
         };
 
         recognition.onerror = (event) => {
-          if (event.error !== "no-speech") {
+          if (event.error !== "no-speech" && event.error !== "aborted") {
             console.warn("[SpeechRecognition]", event.error);
           }
         };
 
         recognition.onend = () => {
-          // Restart if still active (browser stops after silence)
           if (activeRef.current && recognitionRef.current) {
             try { recognitionRef.current.start(); } catch {}
           }
@@ -120,6 +238,9 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
   const stopMic = useCallback(() => {
     activeRef.current = false;
     setMicActive(false);
+    wakeDetectedRef.current = false;
+    commandBufferRef.current = "";
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
@@ -137,6 +258,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
     levelRef.current = 0;
     setTranscript("");
     setState(CONV_STATES.IDLE);
+    window.speechSynthesis?.cancel();
   }, []);
 
   const toggleMic = useCallback(() => {
@@ -147,10 +269,12 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
   useEffect(() => {
     return () => {
       activeRef.current = false;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (ctxRef.current) ctxRef.current.close();
+      window.speechSynthesis?.cancel();
     };
   }, []);
 
@@ -163,5 +287,6 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript } = {}) {
     startMic,
     stopMic,
     toggleMic,
+    speakResponse,
   };
 }

@@ -77,8 +77,8 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 |------|------|--------|-------------|
 | **1** | The Orb Itself | **Done** (06/22/2026) | Wireframe icosahedron, simplex noise, fresnel glow, billboarded halo, gold, tumble + parallax. |
 | **2** | The Cosmos | **Done** (06/22/2026 14:15) | Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb. All layers use billboarded quads with circular radial fade. |
-| **3** | The Voice | **Done** (06/22/2026 14:15) | Mic capture via Web Audio API, FFT analysis, asymmetric smoothing (fast attack/slow decay). 5 states: idle/listening/processing/speaking/error. Audio drives orb displacement (3x boost) + glow brightness. Mic toggle button in Phase 2 UI. |
-| **4** | The Constellation | Planned | 10 sub-agents orbiting as floating constellation. Avatar sprites, depth-fading labels, status-driven glow. |
+| **3** | The Voice | **Done** (06/22/2026 17:00) | Wake word "Rambo" activates listening. Speech-to-text fills command input, auto-executes on silence (1.5s). TTS reads response aloud with cosmic AI voice (low pitch 0.75, slow rate 0.92). Full cycle: idle→listening→processing→speaking→idle. Mic always-on passive listening for wake word. |
+| **4** | The Constellation | **Done** (06/22/2026 17:00) | 10 agent nodes orbiting the orb as a 3D constellation. Billboarded glow sprites with agent colors, canvas-texture labels with depth fading, tilted orbit ring, connection lines from orb center. Status-driven pulse (active/idle/offline). |
 | **5** | Dispatch & Docking | Planned | Dispatch beams from orb to agent, working pulse, docking near roster rows, processing rings ("helix"). |
 | **6** | Wire to Reality | Planned | Real WebSocket events, performance mode, reduced motion, battery/focus handling. |
 
@@ -197,6 +197,7 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 
 | Date | Time (ET) | Changes |
 |------|-----------|---------|
+| 06/22/2026 | 17:00 | Tier 3 upgraded: wake word "Rambo" for hands-free activation, TTS cosmic voice reads responses aloud (pitch 0.75, rate 0.92). Tier 4 shipped: AgentConstellation — 10 orbiting agent sprites in 3D, status-driven glow, depth-faded labels, orbit ring + connection lines. |
 | 06/22/2026 | 16:30 | Fixed orb missing on sub-pages (fallbackRef bug — nested object instead of number). Added speech-to-text via Web Speech API (SpeechRecognition) — spoken words fill command input live, auto-execute on silence. SYSTEMS nav restyled to match Agent Roster gold accent scheme. |
 | 06/22/2026 | 14:15 | Tier 2 (cosmic background) + Tier 3 (voice reactivity) shipped. Fixed amber square on nebula/glow quads. |
 | 06/22/2026 | 13:39 | Created new roadmap. Fixed black flickers (Bloom threshold + premultipliedAlpha). Skip typing cascade on Command Center click. All shipped items consolidated. |
