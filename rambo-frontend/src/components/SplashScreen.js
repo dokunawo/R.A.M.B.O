@@ -5,6 +5,8 @@ import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
+import CosmicBackground from "./CosmicBackground";
+import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -524,6 +526,7 @@ function TransmissionScreen({ onAdvance }) {
       {/* Full-screen cosmic orb — same wireframe icosahedron as Phase 2 */}
       <div className="orb-canvas">
         <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+          <CosmicBackground />
           <CosmicOrb />
           <EffectComposer>
             <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
@@ -941,6 +944,9 @@ export default function SplashScreen({
   const [phase,  setPhase]  = useState(skipIntro ? "main" : "transmission");
   const [fading, setFading] = useState(false);
 
+  // Tier 3: voice reactivity
+  const { levelRef: audioLevelRef, state: convState, micActive, toggleMic } = useVoiceReactivity();
+
   // Result branch (response panel + connector) + clickable agents
   const [result, setResult] = useState(null);
   const agentRowsRef = useRef({});
@@ -1051,6 +1057,14 @@ export default function SplashScreen({
       {fading && <div className="phase-flash" />}
 
       <SoundToggle />
+      {phase === "main" && (
+        <button className="mic-toggle" type="button" onClick={toggleMic}
+          aria-label={micActive ? "Disable microphone" : "Enable microphone"}
+          title={micActive ? "Mic active — click to disable" : "Enable mic for voice reactivity"}>
+          {micActive ? "🎙️" : "🎤"}
+          {micActive && <span className="mic-state">{convState.toUpperCase()}</span>}
+        </button>
+      )}
 
       {phase === "transmission" && (
         <TransmissionScreen onAdvance={goMain} />
@@ -1062,7 +1076,8 @@ export default function SplashScreen({
           <div className="orb-canvas">
             <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
               dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
-              <CosmicOrb mouseRef={mouseRef} />
+              <CosmicBackground />
+              <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
               <EffectComposer>
                 <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9}
                   intensity={1.4} mipmapBlur={!IS_MOBILE} radius={0.8} />

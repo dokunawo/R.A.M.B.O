@@ -56,6 +56,7 @@ uniform float uTime;
 uniform float uNoiseScale;
 uniform float uNoiseStrength;
 uniform float uBreathSpeed;
+uniform float uAudioLevel;  // 0..1 — drives displacement intensity
 
 varying vec3 vNormal;
 varying vec3 vViewPosition;
@@ -65,12 +66,15 @@ void main() {
   vec3 pos = position;
   vec3 norm = normalize(normal);
 
+  // Audio-reactive boost: idle breath + audio spike
+  float audioBoost = 1.0 + uAudioLevel * 3.0;
+
   // Layered noise displacement along normals — breathing surface
   float n1 = snoise(pos * uNoiseScale + uTime * uBreathSpeed * 0.3);
   float n2 = snoise(pos * uNoiseScale * 2.0 + uTime * uBreathSpeed * 0.5 + 42.0);
   float n3 = snoise(pos * uNoiseScale * 0.5 + uTime * uBreathSpeed * 0.15 - 17.0);
 
-  float displacement = (n1 * 0.6 + n2 * 0.25 + n3 * 0.15) * uNoiseStrength;
+  float displacement = (n1 * 0.6 + n2 * 0.25 + n3 * 0.15) * uNoiseStrength * audioBoost;
 
   // Slow global breath
   displacement += sin(uTime * 0.8) * uNoiseStrength * 0.15;
@@ -93,6 +97,7 @@ uniform vec3 uColor;
 uniform float uOpacity;
 uniform float uFresnelPower;
 uniform float uFresnelBias;
+uniform float uAudioLevel;
 
 varying vec3 vNormal;
 varying vec3 vViewPosition;
@@ -103,10 +108,11 @@ void main() {
   float fresnel = 1.0 - abs(dot(viewDir, vNormal));
   fresnel = uFresnelBias + (1.0 - uFresnelBias) * pow(fresnel, uFresnelPower);
 
-  // Displacement brightens slightly to show surface detail
   float displacementBright = 1.0 + vDisplacement * 0.8;
+  // Audio adds extra glow intensity
+  float audioBright = 1.0 + uAudioLevel * 0.6;
 
-  vec3 color = uColor * mix(0.35, 1.6, fresnel) * displacementBright;
+  vec3 color = uColor * mix(0.35, 1.6, fresnel) * displacementBright * audioBright;
   float alpha = mix(0.15, 0.95, fresnel) * uOpacity;
 
   gl_FragColor = vec4(color, alpha);

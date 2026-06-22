@@ -1,5 +1,5 @@
-// CosmicOrb.jsx — Tier 1: wireframe icosahedron with noise displacement,
-// fresnel rim glow, billboarded glow halo, slow two-axis tumble.
+// CosmicOrb.jsx — Tier 1+3: wireframe icosahedron with noise displacement,
+// fresnel rim glow, billboarded glow halo, voice reactivity.
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -14,7 +14,6 @@ const DETAIL = 18;
 const GOLD = new THREE.Color("#e8b15a");
 const GOLD_GLOW = new THREE.Color("#ffd98a");
 
-// Glow halo as a camera-facing sprite — no depth/face artifacts
 const glowSpriteVert = /* glsl */ `
 varying vec2 vUv;
 void main() {
@@ -27,18 +26,20 @@ const glowSpriteFrag = /* glsl */ `
 precision highp float;
 uniform vec3 uColor;
 uniform float uIntensity;
+uniform float uAudioLevel;
 varying vec2 vUv;
 void main() {
   vec2 c = vUv - 0.5;
   float d = length(c) * 2.0;
-  // soft radial falloff — bright core ring, fades outward
   float glow = smoothstep(1.0, 0.3, d) * smoothstep(0.0, 0.25, d);
-  glow = pow(glow, 1.5) * uIntensity;
+  // Audio expands and brightens the halo
+  float audioBright = 1.0 + uAudioLevel * 0.8;
+  glow = pow(glow, 1.5) * uIntensity * audioBright;
   gl_FragColor = vec4(uColor * 1.2, glow);
 }
 `;
 
-function WireframeOrb() {
+function WireframeOrb({ audioLevelRef }) {
   const geometry = useMemo(() => {
     const geo = new THREE.IcosahedronGeometry(ORB_RADIUS, DETAIL);
     geo.computeVertexNormals();
@@ -59,6 +60,7 @@ function WireframeOrb() {
           uOpacity: { value: 0.7 },
           uFresnelPower: { value: 1.8 },
           uFresnelBias: { value: 0.1 },
+          uAudioLevel: { value: 0 },
         },
         wireframe: true,
         transparent: true,
@@ -72,12 +74,13 @@ function WireframeOrb() {
 
   useFrame(({ clock }) => {
     material.uniforms.uTime.value = clock.getElapsedTime();
+    material.uniforms.uAudioLevel.value = audioLevelRef?.current ?? 0;
   });
 
   return <mesh geometry={geometry} material={material} />;
 }
 
-function GlowHalo() {
+function GlowHalo({ audioLevelRef }) {
   const ref = useRef();
 
   const material = useMemo(
@@ -88,6 +91,7 @@ function GlowHalo() {
         uniforms: {
           uColor: { value: GOLD_GLOW.clone() },
           uIntensity: { value: 0.5 },
+          uAudioLevel: { value: 0 },
         },
         transparent: true,
         depthWrite: false,
@@ -98,9 +102,9 @@ function GlowHalo() {
     []
   );
 
-  // Billboard: always face the camera
   useFrame(({ camera }) => {
     if (ref.current) ref.current.quaternion.copy(camera.quaternion);
+    material.uniforms.uAudioLevel.value = audioLevelRef?.current ?? 0;
   });
 
   const size = ORB_RADIUS * 3.6;
@@ -111,8 +115,11 @@ function GlowHalo() {
   );
 }
 
-export default function CosmicOrb({ mouseRef = null }) {
+export default function CosmicOrb({ mouseRef = null, audioLevelRef = null }) {
   const groupRef = useRef();
+  // Internal fallback ref when no external audio
+  const fallbackRef = useRef({ current: 0 });
+  const effectiveAudioRef = audioLevelRef || fallbackRef;
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -130,10 +137,9 @@ export default function CosmicOrb({ mouseRef = null }) {
 
   return (
     <>
-      {/* Glow halo sits behind the orb, always facing camera */}
-      <GlowHalo />
+      <GlowHalo audioLevelRef={effectiveAudioRef} />
       <group ref={groupRef}>
-        <WireframeOrb />
+        <WireframeOrb audioLevelRef={effectiveAudioRef} />
       </group>
     </>
   );
