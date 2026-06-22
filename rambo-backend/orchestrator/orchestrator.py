@@ -2,7 +2,11 @@ import asyncio
 import json
 import os
 
-import anthropic
+try:
+    import anthropic
+    _HAS_ANTHROPIC = bool(os.environ.get("ANTHROPIC_API_KEY"))
+except ImportError:
+    _HAS_ANTHROPIC = False
 
 from models.task import Task
 from router import choose_brain
@@ -33,8 +37,9 @@ class Orchestrator:
         self.ws = ConnectionManager()
         self.conversation = ConversationManager()
         self.personality_text = load_personality()
-        self.llm = anthropic.AsyncAnthropic(
-            api_key=os.environ.get("ANTHROPIC_API_KEY"),
+        self.llm = (
+            anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+            if _HAS_ANTHROPIC else None
         )
 
         self.agents = {
@@ -175,10 +180,18 @@ class Orchestrator:
         return {"response": summary, "agent": "rambo"}
 
     async def _speak(self, goal: str, plan: list[str], results: list[str]) -> str:
+        results_block = "\n".join(f"  - {r}" for r in results)
+
+        if not self.llm:
+            text = results_block.strip()
+            await self._response("rambo", text)
+            await self.broadcast("[R.A.M.B.O] Response delivered.")
+            return text
+
         execution_report = (
             f"Operator goal: {goal}\n\n"
             f"Plan:\n" + "\n".join(f"  - {s}" for s in plan) + "\n\n"
-            f"Agent results:\n" + "\n".join(f"  - {r}" for r in results)
+            f"Agent results:\n" + results_block
         )
 
         self.conversation.add_user_message(execution_report)
@@ -197,7 +210,7 @@ class Orchestrator:
                 b.text for b in response.content if b.type == "text"
             )
         except Exception as e:
-            text = f"[R.A.M.B.O] LLM error: {e}. Raw report:\n{execution_report}"
+            text = results_block.strip()
 
         self.conversation.add_assistant_message(text)
         await self._response("rambo", text)
