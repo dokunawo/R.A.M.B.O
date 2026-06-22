@@ -60,7 +60,10 @@ agent's status.
 - **🛡️ Sentinel security gate** — risky actions (engineer / steward / link) are reviewed and can be blocked or held for manual approval.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
 - **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo.
-- **🎬 Three-phase splash sequence** — scripted boot experience with sequential scans, mission briefing, and a live console.
+- **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow.
+- **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
+- **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
+- **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.
 - **🐳 Fully Dockerized** — backend, production frontend, and hot-reload dev frontend orchestrated with Docker Compose.
 - **🎛️ PowerShell control panel** — boot animations, health scans, force-rebuild, and one-key browser launch.
 
@@ -338,7 +341,12 @@ curl -X POST http://localhost:8000/rambo/execute \
 - **Color scheme:** gold / amber neon (`--accent: #e8b15a`, `--accent-glow: #ffd98a`) on near-black (`#08090b`).
 - **Cosmic orb:** wireframe icosahedron (detail 18) with 3D simplex noise displacement, fresnel rim glow, slow two-axis tumble, and mouse parallax. Gold color with a billboarded glow halo (additive blending).
 - **GLSL shaders:** layered noise displacement (3 octaves + global breath), fresnel-based rim glow (configurable power/bias), radial gradient glow sprite.
-- **Postprocessing:** Bloom (`intensity 1.4`, `radius 0.8`, `mipmapBlur`) + ChromaticAberration (offset `0.0012`).
+- **Postprocessing:** Bloom (`intensity 0.8`, `radius 0.6`, `threshold 0.55`, `mipmapBlur`) + ChromaticAberration (offset `0.0012`).
+- **Agent Constellation:** 10 orbiting nodes with billboarded glow sprites, canvas-texture labels, tilted orbit ring, status-driven pulse.
+- **Dispatch beams:** Dynamic cylinder beams from orb center to orbiting agent nodes during task processing.
+- **Processing helix:** 3 tilted golden rings spinning around the orb during active work.
+- **Voice:** Wake word "Rambo", Web Speech API STT/TTS, conversational follow-up flow.
+- **Performance mode:** Auto-adapts to battery level, tab visibility, `prefers-reduced-motion`.
 - **Status colors:** `online #00ff88` · `working #e8b15a` · `idle #8fa0b5` · `offline #5a6575`.
 
 ---
@@ -347,16 +355,41 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 See [`ROADMAP_R.A.M.B.O_06-22-2026_13-39.md`](ROADMAP_R.A.M.B.O_06-22-2026_13-39.md) for the full plan. Highlights:
 
-- **Now:** Living Cosmic Interface Tier 2 (deep-space nebula background) → Tier 3 (voice reactivity + conversational states).
+- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality.
 - **Short term:** Operator greeting, shutdown sequence, HUD boot transition, task history panel, command palette.
 - **Mid term:** Color presets, modular HUD panels, mission dashboard, data stream visualizer.
-- **Long term:** Voice activation, secure login, CLI tool, plugin system.
+- **Long term:** Secure login, CLI tool, plugin system.
 
 ---
 
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-22 19:30 ET — Tiers 5+6, agent page redesign, voice on all pages
+
+- **[Tier 5 · Dispatch & Docking]** Dynamic dispatch beams from orb center to orbiting agent nodes (cylinder geometry, additive blending, tracks orbit position). Processing helix: 3 tilted golden rings spin around orb during active work.
+- **[Tier 6 · Wire to Reality]** All dispatch animations driven by real WebSocket STATUS events and agent log lines. Performance mode auto-detects battery (<20%), tab visibility, `prefers-reduced-motion`.
+- **[Agent pages · redesign]** Stripped all middle UI (info cards, stat cards, objectives, activity feed, budget planner, sentinel queue). Orb is now fully visible full-screen. Floating status badge shows agent state.
+- **[Voice · all pages]** Mic + volume controls on every page (Agent, Learning Log, Round Table). Voice commands execute against the backend and results shown in a Command Log panel (bottom-left). Auto-start mic in IDLE mode.
+- **[Voice · natural]** TTS tuned for natural speech (rate 1.0, pitch 1.05, prefers natural/female voices).
+- **[Constellation · Round Table]** Agent Constellation added to Round Table canvas.
+- **[Neon]** Date/time/council view pulse with neon gold glow animation on all pages. Round Table subtitle text changed to neon white.
+- **[Alignment]** Agent page titles absolutely centered in topbar.
+
+### 2026-06-22 17:00 ET — Tiers 3+4, wake word, TTS, constellation, neon styling
+
+- **[Tier 3 · Voice]** Wake word "Rambo" activates listening. Speech-to-text fills command input, auto-executes on silence (1.5s). TTS reads response aloud. Conversational follow-up: after responding, asks "Is there anything else?" and stays in LISTENING mode.
+- **[Tier 4 · Constellation]** 10 agent nodes orbiting the orb in 3D. Billboarded glow sprites with agent colors, canvas-texture labels, tilted orbit ring, connection lines. Status-driven pulse.
+- **[Audio]** Hum volume reduced 70% (gain 0.02→0.006, LFO 0.006→0.001).
+- **[Fix]** Cortisol→Echo in constellation. Auto-start mic on Phase 2 load.
+- **[Neon]** Agent titles in agent color with neon glow. Gold neon council/date/time on all pages. White visible orb center labels.
+
+### 2026-06-22 14:15 ET — Tier 2 cosmos, orb consistency, bloom/flicker fix
+
+- **[Tier 2 · Cosmos]** Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb.
+- **[Orb fix]** Root cause of orb missing on sub-pages: `useRef({ current: 0 })` → `useRef(0)`. Three.js crashed silently on object-typed uniform.
+- **[Bloom]** Threshold raised 0.15→0.55, intensity reduced 1.4→0.8, radius 0.8→0.6 to eliminate wash-out and black flickers.
 
 ### 2026-06-22 — Cosmic wireframe orb (Tier 1), unified orb across all pages
 

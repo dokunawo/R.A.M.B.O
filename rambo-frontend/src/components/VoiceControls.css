@@ -36,3 +36,109 @@
   color: #e8b15a;
   text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
 }
+
+/* ---- Command Log ---- */
+.cmd-log {
+  position: fixed;
+  left: 16px;
+  bottom: 60px;
+  z-index: 50;
+  width: 340px;
+  max-height: 45vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 9, 11, 0.85);
+  border: 1px solid rgba(232, 177, 90, 0.15);
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.cmd-log-header {
+  padding: 10px 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #e8b15a;
+  border-bottom: 1px solid;
+  text-shadow: 0 0 8px rgba(232, 177, 90, 0.5);
+  flex-shrink: 0;
+}
+.cmd-log-icon {
+  margin-right: 6px;
+}
+
+.cmd-log-entries {
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cmd-log-entries::-webkit-scrollbar { width: 4px; }
+.cmd-log-entries::-webkit-scrollbar-track { background: transparent; }
+.cmd-log-entries::-webkit-scrollbar-thumb { background: rgba(232, 177, 90, 0.2); border-radius: 2px; }
+
+.cmd-log-entry {
+  padding: 10px 12px;
+  background: rgba(14, 17, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  font-family: "JetBrains Mono", monospace;
+}
+.cmd-log-entry.cmd-log-processing {
+  border-color: rgba(232, 177, 90, 0.2);
+}
+.cmd-log-entry.cmd-log-error {
+  border-color: rgba(255, 68, 102, 0.2);
+}
+
+.cmd-log-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.cmd-log-time {
+  font-size: 9px;
+  color: #5a6575;
+  letter-spacing: 1px;
+}
+.cmd-log-status {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+.cmd-log-status-processing {
+  color: #e8b15a;
+  background: rgba(232, 177, 90, 0.1);
+}
+.cmd-log-status-complete {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+.cmd-log-status-error {
+  color: #ff4466;
+  background: rgba(255, 68, 102, 0.1);
+}
+
+.cmd-log-command {
+  font-size: 11px;
+  color: #d0d0d0;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.cmd-log-prompt {
+  color: #e8b15a;
+  font-weight: bold;
+}
+
+.cmd-log-response {
+  font-size: 10px;
+  color: #8fa0b5;
+  line-height: 1.5;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  max-height: 80px;
+  overflow-y: auto;
+}

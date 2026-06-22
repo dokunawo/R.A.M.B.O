@@ -6,7 +6,7 @@ import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
-import { usePageVoice, VoiceControls } from "./VoiceControls";
+import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -68,7 +68,7 @@ function LiveClock() {
 function RoundTable() {
   const navigate = useNavigate();
   const [statusMap, setStatusMap] = useState({});
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -184,6 +184,7 @@ function RoundTable() {
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>
       </footer>
 
+      <CommandLog commandLog={commandLog} agentColor="#e8b15a" />
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>
   );

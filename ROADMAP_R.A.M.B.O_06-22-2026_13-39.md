@@ -59,6 +59,43 @@ Created: 06/22/2026 at 13:39 (supersedes ROADMAP 06/21/2026 18:34)
 | Backend: `agent_tracker.py` (per-agent stats, activity, learnings), `sentinel_queue.py` (UUID-tracked approvals) | Done |
 | Backend: `GET /agents/{key}/detail`, `GET /learning/log` endpoints | Done |
 
+### Voice System (06/22/2026 17:00 ET)
+| Feature | Status |
+|---|---|
+| Wake word "Rambo" — continuous passive listening via Web Speech API | Done (17:00 ET) |
+| Speech-to-text command capture with 1.5s silence gap detection | Done (17:00 ET) |
+| TTS response readback — natural voice (pitch 1.05, rate 1.0, prefers natural/female voices) | Done (19:30 ET) |
+| Conversational follow-up — "Is there anything else?" → LISTENING (skips wake word) | Done (17:00 ET) |
+| Auto-start mic in IDLE on Phase 2 load | Done (17:00 ET) |
+| Mic + volume controls on all pages (Agent, Learning Log, Round Table) | Done (19:30 ET) |
+| Command Log panel — voice commands execute against backend, results shown on sub-pages | Done (19:30 ET) |
+
+### Agent Constellation (06/22/2026 17:00 ET)
+| Feature | Status |
+|---|---|
+| 10 orbiting agent nodes — billboarded glow sprites with agent colors | Done (17:00 ET) |
+| Canvas-texture labels with depth fading | Done (17:00 ET) |
+| Tilted orbit ring + connection lines from orb center | Done (17:00 ET) |
+| Status-driven pulse (active/idle/offline) | Done (17:00 ET) |
+| Constellation on Round Table page | Done (19:30 ET) |
+
+### Dispatch & Performance (06/22/2026 19:00 ET)
+| Feature | Status |
+|---|---|
+| Dispatch beams — dynamic cylinders from orb center to orbiting agent nodes | Done (18:45 ET) |
+| Processing helix — 3 tilted golden rings spinning during active work | Done (18:45 ET) |
+| All dispatch driven by real WebSocket STATUS events + agent log lines | Done (19:00 ET) |
+| Performance mode — battery (<20%), tab visibility, `prefers-reduced-motion` | Done (19:00 ET) |
+
+### Agent Pages Redesign (06/22/2026 19:30 ET)
+| Feature | Status |
+|---|---|
+| Stripped middle UI — orb fully visible full-screen | Done (19:30 ET) |
+| Floating status badge | Done (19:30 ET) |
+| Neon gold pulse on date/time/council on all pages | Done (19:30 ET) |
+| Agent titles absolutely centered in topbar | Done (19:30 ET) |
+| Round Table subtitle text neon white | Done (19:30 ET) |
+
 ### Accessibility & Performance (06/22/2026)
 | Feature | Status |
 |---|---|
@@ -75,12 +112,12 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 
 | Tier | Name | Status | Description |
 |------|------|--------|-------------|
-| **1** | The Orb Itself | **Done** (06/22/2026) | Wireframe icosahedron, simplex noise, fresnel glow, billboarded halo, gold, tumble + parallax. |
-| **2** | The Cosmos | **Done** (06/22/2026 14:15) | Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb. All layers use billboarded quads with circular radial fade. |
-| **3** | The Voice | **Done** (06/22/2026 17:00) | Wake word "Rambo" activates listening. Speech-to-text fills command input, auto-executes on silence (1.5s). TTS reads response aloud with cosmic AI voice (low pitch 0.75, slow rate 0.92). Full cycle: idle→listening→processing→speaking→idle. Mic always-on passive listening for wake word. |
-| **4** | The Constellation | **Done** (06/22/2026 17:00) | 10 agent nodes orbiting the orb as a 3D constellation. Billboarded glow sprites with agent colors, canvas-texture labels with depth fading, tilted orbit ring, connection lines from orb center. Status-driven pulse (active/idle/offline). |
-| **5** | Dispatch & Docking | **Done** (06/22/2026) | Dynamic dispatch beams from orb center to orbiting agent nodes (cylinder geometry, additive blending, auto-tracks orbit position). Processing helix — 3 tilted rings spinning around orb during active processing. Beams fire on WS STATUS working/active events and agent log lines. |
-| **6** | Wire to Reality | **Done** (06/22/2026) | All dispatch animations driven by real WebSocket events (STATUS broadcasts + agent log lines). Performance mode: auto-detects battery level (<20% unplugged → low mode), tab visibility (hidden → low), prefers-reduced-motion (→ minimal). Low mode: DPR capped to 1, antialiasing off, bloom disabled. Minimal mode: all animations suppressed. |
+| **1** | The Orb Itself | **Done** (06/22/2026 13:39 ET) | Wireframe icosahedron, simplex noise, fresnel glow, billboarded halo, gold, tumble + parallax. |
+| **2** | The Cosmos | **Done** (06/22/2026 14:15 ET) | Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb. All layers use billboarded quads with circular radial fade. |
+| **3** | The Voice | **Done** (06/22/2026 17:00 ET) | Wake word "Rambo" activates listening. Speech-to-text fills command input, auto-executes on silence (1.5s). TTS reads response aloud with natural voice (pitch 1.05, rate 1.0). Full cycle: idle→listening→processing→speaking→idle. Conversational follow-up mode. Mic always-on passive listening for wake word. |
+| **4** | The Constellation | **Done** (06/22/2026 17:00 ET) | 10 agent nodes orbiting the orb as a 3D constellation. Billboarded glow sprites with agent colors, canvas-texture labels with depth fading, tilted orbit ring, connection lines from orb center. Status-driven pulse (active/idle/offline). |
+| **5** | Dispatch & Docking | **Done** (06/22/2026 18:45 ET) | Dynamic dispatch beams from orb center to orbiting agent nodes (cylinder geometry, additive blending, auto-tracks orbit position). Processing helix — 3 tilted rings spinning around orb during active processing. Beams fire on WS STATUS working/active events and agent log lines. |
+| **6** | Wire to Reality | **Done** (06/22/2026 19:00 ET) | All dispatch animations driven by real WebSocket events (STATUS broadcasts + agent log lines). Performance mode: auto-detects battery level (<20% unplugged → low mode), tab visibility (hidden → low), prefers-reduced-motion (→ minimal). Low mode: DPR capped to 1, antialiasing off, bloom disabled. Minimal mode: all animations suppressed. |
 
 ---
 

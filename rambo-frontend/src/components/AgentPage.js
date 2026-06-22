@@ -5,7 +5,7 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
-import { usePageVoice, VoiceControls } from "./VoiceControls";
+import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
 import "./AgentPage.css";
 
 class OrbErrorBoundary extends Component {
@@ -145,11 +145,9 @@ function AgentPage() {
   const { agentKey } = useParams();
   const navigate = useNavigate();
   const meta = AGENT_META[agentKey];
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
 
   const [status, setStatus] = useState("idle");
-  const [agentDetail, setAgentDetail] = useState(null);
-  const [approvals, setApprovals] = useState([]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -164,43 +162,11 @@ function AgentPage() {
     } catch {}
   }, [agentKey]);
 
-  const fetchDetail = useCallback(async () => {
-    try {
-      const r = await fetch(`${API}/agents/${agentKey}/detail`);
-      if (r.ok) setAgentDetail(await r.json());
-    } catch {}
-  }, [agentKey]);
-
-  const fetchApprovals = useCallback(async () => {
-    if (agentKey !== "sentinel") return;
-    try {
-      const r = await fetch(`${API}/sentinel/approvals`);
-      if (r.ok) setApprovals(await r.json());
-    } catch {}
-  }, [agentKey]);
-
   useEffect(() => {
     fetchStatus();
-    fetchDetail();
-    fetchApprovals();
-    const id = setInterval(() => {
-      fetchStatus();
-      fetchDetail();
-      fetchApprovals();
-    }, 3000);
+    const id = setInterval(fetchStatus, 3000);
     return () => clearInterval(id);
-  }, [fetchStatus, fetchDetail, fetchApprovals]);
-
-  const handleDecision = async (approvalId, decision) => {
-    try {
-      await fetch(`${API}/sentinel/decision`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: approvalId, decision }),
-      });
-      fetchApprovals();
-    } catch {}
-  };
+  }, [fetchStatus]);
 
   const mouseRef = useRef({ x: 0, y: 0 });
   useEffect(() => {
@@ -226,13 +192,6 @@ function AgentPage() {
       </div>
     );
   }
-
-  const detail = agentDetail || {};
-  const tasksCompleted = detail.tasks_completed ?? 0;
-  const tasksPending = detail.tasks_pending ?? 0;
-  const successRate = detail.success_rate ?? "100%";
-  const recentActivity = detail.recent_activity ?? [];
-  const budgetData = detail.budget ?? null;
 
   return (
     <div className="agent-page-root">
@@ -269,223 +228,15 @@ function AgentPage() {
         </div>
       </header>
 
-      {/* orb hero with avatar */}
-      <section className="ap-orb-hero">
-        <div className="ap-avatar-overlay" style={{ borderColor: meta.color }}>
-          <span className="ap-avatar-icon">{meta.avatar}</span>
-        </div>
-        <div className="ap-orb-labels">
-          <span className="ap-orb-label-top">Incoming Contacts</span>
-          <span className="ap-orb-label-right">Outgoing Dispatch</span>
-          <span className="ap-orb-label-bottom">Active Operations</span>
-        </div>
-      </section>
+      {/* agent status badge — floating over orb */}
+      <div className="ap-status-floating" style={{
+        color: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
+        borderColor: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
+      }}>
+        {meta.avatar} {status.toUpperCase()}
+      </div>
 
-      {/* agent info card */}
-      <section className="ap-info-card" style={{ borderColor: meta.color }}>
-        <div className="ap-info-left">
-          <div
-            className="ap-avatar-badge"
-            style={{ background: meta.color + "22", borderColor: meta.color }}
-          >
-            <span>{meta.avatar}</span>
-          </div>
-          <div className="ap-info-text">
-            <h2 className="ap-agent-name" style={{ color: meta.color }}>
-              {meta.name.toUpperCase()}
-            </h2>
-            <p className="ap-agent-role">{meta.role}</p>
-            <p className="ap-agent-desc">{meta.desc}</p>
-          </div>
-        </div>
-        <div className="ap-status-pill" style={{
-          background: status === "working" ? "#e8b15a33" : status === "idle" ? "#8fa0b522" : "#00ff8833",
-          color: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
-          borderColor: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
-        }}>
-          {status.toUpperCase()}
-        </div>
-      </section>
-
-      {/* stat cards */}
-      <section className="ap-stats-row">
-        <div className="ap-stat-card" style={{ borderBottomColor: meta.color }}>
-          <span className="ap-stat-value" style={{ color: meta.color }}>
-            {tasksCompleted}
-          </span>
-          <span className="ap-stat-label">Tasks Completed</span>
-        </div>
-        <div className="ap-stat-card" style={{ borderBottomColor: meta.color }}>
-          <span className="ap-stat-value" style={{ color: meta.color }}>
-            {tasksPending}
-          </span>
-          <span className="ap-stat-label">Tasks Pending</span>
-        </div>
-        <div className="ap-stat-card" style={{ borderBottomColor: meta.color }}>
-          <span className="ap-stat-value" style={{ color: meta.color }}>
-            {successRate}
-          </span>
-          <span className="ap-stat-label">Success Rate</span>
-        </div>
-      </section>
-
-      {/* core objectives */}
-      <section className="ap-section">
-        <h3 className="ap-section-title" style={{ color: meta.color }}>
-          ◆ CORE OBJECTIVES
-        </h3>
-        <ul className="ap-objectives">
-          {meta.objectives.map((obj, i) => (
-            <li key={i} className="ap-objective-row">
-              <div className="ap-obj-text">{obj}</div>
-              <div className="ap-obj-bar">
-                <div
-                  className="ap-obj-fill"
-                  style={{
-                    width: `${70 + Math.random() * 30}%`,
-                    background: meta.color,
-                  }}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* recent activity */}
-      <section className="ap-section">
-        <h3 className="ap-section-title" style={{ color: meta.color }}>
-          ◆ RECENT ACTIVITY
-        </h3>
-        {recentActivity.length === 0 ? (
-          <p className="ap-empty">No recent activity recorded.</p>
-        ) : (
-          <ul className="ap-activity-list">
-            {recentActivity.map((item, i) => (
-              <li key={i} className="ap-activity-item">
-                <span className="ap-activity-time">{item.time}</span>
-                <span className="ap-activity-text">{item.text}</span>
-                <span className={`ap-activity-status ap-status-${item.status}`}>
-                  {item.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* sentinel approval queue */}
-      {agentKey === "sentinel" && (
-        <section className="ap-section ap-sentinel-section">
-          <h3 className="ap-section-title" style={{ color: meta.color }}>
-            ◆ SENTINEL APPROVAL QUEUE
-          </h3>
-          <p className="ap-sentinel-desc">
-            Review and approve or deny agent operations. All risky operations
-            require explicit clearance before execution.
-          </p>
-          {approvals.length === 0 ? (
-            <p className="ap-empty">No pending approvals.</p>
-          ) : (
-            <ul className="ap-approval-list">
-              {approvals.map((a) => (
-                <li key={a.id} className="ap-approval-item">
-                  <div className="ap-approval-info">
-                    <span className="ap-approval-agent">{a.agent}</span>
-                    <span className="ap-approval-desc">{a.description}</span>
-                  </div>
-                  <div className="ap-approval-actions">
-                    <button
-                      className="ap-btn ap-btn-approve"
-                      onClick={() => handleDecision(a.id, "APPROVE")}
-                    >
-                      APPROVE
-                    </button>
-                    <button
-                      className="ap-btn ap-btn-deny"
-                      onClick={() => handleDecision(a.id, "DENY")}
-                    >
-                      DENY
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      {/* steward budget planner */}
-      {agentKey === "steward" && (
-        <section className="ap-section ap-steward-section">
-          <h3 className="ap-section-title" style={{ color: meta.color }}>
-            ◆ BUDGET PLANNER
-          </h3>
-          {budgetData ? (
-            <div className="ap-budget">
-              <table className="ap-budget-table">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Budgeted</th>
-                    <th>Spent</th>
-                    <th>Remaining</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(budgetData.categories || []).map((cat, i) => {
-                    const remaining = cat.budgeted - cat.spent;
-                    const pct = cat.budgeted > 0 ? (cat.spent / cat.budgeted) * 100 : 0;
-                    return (
-                      <tr key={i}>
-                        <td>{cat.name}</td>
-                        <td className="ap-budget-num">${cat.budgeted.toFixed(2)}</td>
-                        <td className="ap-budget-num">${cat.spent.toFixed(2)}</td>
-                        <td className="ap-budget-num" style={{
-                          color: remaining < 0 ? "#ff4466" : "#22c55e",
-                        }}>
-                          ${remaining.toFixed(2)}
-                        </td>
-                        <td>
-                          <div className="ap-budget-bar">
-                            <div
-                              className="ap-budget-fill"
-                              style={{
-                                width: `${Math.min(pct, 100)}%`,
-                                background: pct > 90 ? "#ff4466" : pct > 70 ? "#e8b15a" : "#22c55e",
-                              }}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {budgetData.total_budget != null && (
-                <div className="ap-budget-summary">
-                  <span>Total Budget: <b>${budgetData.total_budget.toFixed(2)}</b></span>
-                  <span>Total Spent: <b>${budgetData.total_spent.toFixed(2)}</b></span>
-                  <span style={{
-                    color: budgetData.total_budget - budgetData.total_spent < 0 ? "#ff4466" : "#22c55e",
-                  }}>
-                    Remaining: <b>${(budgetData.total_budget - budgetData.total_spent).toFixed(2)}</b>
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="ap-empty">No budget data available. Configure via Steward agent.</p>
-          )}
-        </section>
-      )}
-
-      {/* footer */}
-      <footer className="ap-footer">
-        <span>R.A.M.B.O — Accuracy · Precision · Execution</span>
-        <span>© {new Date().getFullYear()}</span>
-      </footer>
+      <CommandLog commandLog={commandLog} agentColor={meta.color} />
 
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>
