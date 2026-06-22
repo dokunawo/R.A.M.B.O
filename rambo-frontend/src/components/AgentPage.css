@@ -120,6 +120,137 @@
   white-space: nowrap;
 }
 
+/* ---- LEFT PANEL (roster style) ---- */
+
+.ap-left-panel {
+  position: fixed;
+  top: 50%;
+  left: 24px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 340px;
+  max-width: 32vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.ap-panel-frame {
+  border: 1px solid rgba(232, 177, 90, 0.16);
+  border-radius: 4px;
+  padding: 14px 16px;
+  background: rgba(8, 9, 11, 0.65);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ap-section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent, #e8b15a);
+  display: inline-block;
+  align-self: flex-start;
+  padding-bottom: 4px;
+  border-bottom: 1px solid;
+}
+
+.ap-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ap-avatar {
+  font-size: 28px;
+}
+
+.ap-agent-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+}
+
+.ap-agent-role {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.ap-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: auto;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.ap-agent-desc {
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.ap-objective-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ap-obj-marker {
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ap-obj-text {
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- RIGHT PANEL (system parameters style) ---- */
+
+.ap-right-panel {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 280px;
+  max-width: 28vw;
+  pointer-events: none;
+}
+
+.ap-param-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.10);
+}
+
+.ap-param-row-last {
+  border-bottom: none;
+}
+
+.ap-param-key {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1.5px;
+}
+
+.ap-param-val {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: right;
+  letter-spacing: 0.5px;
+}
+
 /* ---- error ---- */
 
 .agent-page-error {

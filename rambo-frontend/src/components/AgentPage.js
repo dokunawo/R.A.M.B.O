@@ -228,12 +228,61 @@ function AgentPage() {
         </div>
       </header>
 
-      {/* agent status badge — floating over orb */}
-      <div className="ap-status-floating" style={{
-        color: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
-        borderColor: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88",
-      }}>
-        {meta.avatar} {status.toUpperCase()}
+      {/* LEFT PANEL — agent identity + objectives (roster style) */}
+      <div className="ap-left-panel">
+        <div className="ap-panel-frame">
+          <div className="ap-section-label" style={{ borderColor: meta.color }}>◆ AGENT PROFILE</div>
+          <div className="ap-profile-row">
+            <span className="ap-avatar">{meta.avatar}</span>
+            <div>
+              <div className="ap-agent-name" style={{ color: meta.color }}>{meta.name}</div>
+              <div className="ap-agent-role">{meta.role}</div>
+            </div>
+            <span className="ap-status-dot" style={{
+              background: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88"
+            }} />
+          </div>
+          <div className="ap-agent-desc">{meta.desc}</div>
+        </div>
+
+        <div className="ap-panel-frame">
+          <div className="ap-section-label" style={{ borderColor: meta.color }}>◆ OBJECTIVES</div>
+          {meta.objectives.map((obj, i) => (
+            <div key={i} className="ap-objective-row">
+              <span className="ap-obj-marker" style={{ color: meta.color }}>▸</span>
+              <span className="ap-obj-text">{obj}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* RIGHT PANEL — live stats (system parameters style) */}
+      <div className="ap-right-panel">
+        <div className="ap-panel-frame">
+          <div className="ap-section-label" style={{ borderColor: meta.color }}>◆ SYSTEM STATUS</div>
+          <div className="ap-param-row">
+            <span className="ap-param-key">STATUS</span>
+            <span className="ap-param-val" style={{
+              color: status === "working" ? "#e8b15a" : status === "idle" ? "#8fa0b5" : "#00ff88"
+            }}>{status.toUpperCase()}</span>
+          </div>
+          <div className="ap-param-row">
+            <span className="ap-param-key">AGENT KEY</span>
+            <span className="ap-param-val">{agentKey}</span>
+          </div>
+          <div className="ap-param-row">
+            <span className="ap-param-key">ROLE</span>
+            <span className="ap-param-val">{meta.role}</span>
+          </div>
+          <div className="ap-param-row">
+            <span className="ap-param-key">OBJECTIVES</span>
+            <span className="ap-param-val">{meta.objectives.length} active</span>
+          </div>
+          <div className="ap-param-row ap-param-row-last">
+            <span className="ap-param-key">COLOR</span>
+            <span className="ap-param-val" style={{ color: meta.color }}>{meta.color}</span>
+          </div>
+        </div>
       </div>
 
       <CommandLog commandLog={commandLog} agentColor={meta.color} />
