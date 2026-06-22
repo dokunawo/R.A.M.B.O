@@ -24,6 +24,8 @@ try:
 except ImportError:
     _HAS_GDRIVE = False
 
+from chief_of_staff import chief_of_staff_skill as _cos_skill
+
 
 WEATHER_CODES = {
     0: "clear sky", 1: "mainly clear", 2: "partly cloudy", 3: "overcast",
@@ -139,6 +141,18 @@ if _HAS_GDRIVE:
         )),
         "run": _drive_skill,
     })
+
+SKILLS.append({
+    "name": "chief-of-staff",
+    "agent": "architect",
+    "match": lambda g: any(w in g.lower() for w in (
+        "plan my day", "morning brief", "what should i work on",
+        "what should i focus", "priorities", "chief of staff",
+        "daily brief", "what's the priority", "guide me",
+        "what do i do today", "where should i focus",
+    )),
+    "run": _cos_skill,
+})
 
 
 def match_skill(goal: str):
