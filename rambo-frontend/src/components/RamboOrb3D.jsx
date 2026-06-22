@@ -12,7 +12,9 @@ import {
   ramboPlasmaFragmentShader,
 } from "./RamboOrbShaders";
 
-const PARTICLE_COUNT = 4000;
+// Fewer particles on small screens for performance (LOD).
+const PARTICLE_COUNT =
+  (typeof window !== "undefined" && window.innerWidth < 768) ? 1800 : 4000;
 const ORB_RADIUS = 1.8;
 
 // Nudge this by eye — world units for the plasma nucleus radius
@@ -153,7 +155,7 @@ function RamboOrbPoints({ geometry, colorOuter, colorCore }) {
         fragmentShader: ramboOrbFragmentShader,
         uniforms: {
           uTime: { value: 0 },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio, window.innerWidth < 768 ? 1.5 : 2) },
           uBaseSize: { value: 2.6 },
           uRotationSpeed: { value: 0.06 },
           uPerspective: { value: CAMERA_DISTANCE },

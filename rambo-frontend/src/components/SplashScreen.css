@@ -1250,3 +1250,141 @@
 @keyframes caretBlink {
   50% { opacity: 0; }
 }
+
+/* ================================================================== */
+/*  PHASE 2 — TOPBAR TABS FADE (after brand types in)                 */
+/* ================================================================== */
+
+.topbar-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.topbar-tabs.revealed {
+  opacity: 1;
+}
+
+/* ================================================================== */
+/*  PHASE 2 — COMMAND CONSOLE (live feed + directive input)           */
+/* ================================================================== */
+
+.cmd-console {
+  flex: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.cmd-feed {
+  height: 92px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 177, 90, 0.3) transparent;
+  padding: 8px 12px;
+  border: 1px solid rgba(232, 177, 90, 0.14);
+  border-radius: 4px;
+  background: rgba(8, 9, 11, 0.55);
+  backdrop-filter: blur(8px);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+}
+.cmd-feed::-webkit-scrollbar { width: 6px; }
+.cmd-feed::-webkit-scrollbar-thumb { background: rgba(232, 177, 90, 0.3); border-radius: 3px; }
+
+.cmd-feed-empty { color: var(--text-dim); opacity: 0.6; }
+
+.cmd-feed-line {
+  color: var(--accent);
+  text-shadow: 0 0 5px rgba(232, 177, 90, 0.3);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cmd-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(232, 177, 90, 0.18);
+  border-radius: 4px;
+  background: rgba(8, 9, 11, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.cmd-conn {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.cmd-conn.on  { color: #00ff88; text-shadow: 0 0 6px #00ff88; }
+.cmd-conn.off { color: #ff5b5b; text-shadow: 0 0 6px rgba(255, 91, 91, 0.5); }
+
+.cmd-prompt {
+  color: var(--accent-glow);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-shadow: 0 0 6px var(--accent);
+}
+
+.cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-hi);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.cmd-input::placeholder { color: var(--text-dim); }
+
+.cmd-exec {
+  background: rgba(232, 177, 90, 0.12);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--accent-glow);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.cmd-exec:hover:not(:disabled) {
+  background: rgba(232, 177, 90, 0.22);
+  box-shadow: 0 0 14px rgba(232, 177, 90, 0.4);
+}
+.cmd-exec:disabled { opacity: 0.4; cursor: default; }
+
+/* ================================================================== */
+/*  ACCESSIBILITY — reduced motion                                    */
+/* ================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch-in,
+  .phase-screen,
+  .phase-fading,
+  .tx-status-dot,
+  .tx-boot-line,
+  .tx-boot-cursor,
+  .type-caret,
+  .brief-log-line {
+    animation: none !important;
+  }
+  .roster-panel .brief-agent-entry,
+  .agent-panel  .brief-param-row,
+  .topbar-tabs {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

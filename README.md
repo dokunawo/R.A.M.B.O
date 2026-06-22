@@ -284,7 +284,9 @@ npm start          # serves on http://localhost:3000
 
 | Method | Path | Body | Description |
 |--------|----------------------|--------------------------------|----------------------------------------------|
+| `GET` | `/` | — | Health check (`{status: "online"}`) |
 | `GET` | `/agents/status` | — | Overseer + all agent statuses |
+| `GET` | `/system/stats` | — | Live CPU / RAM / disk metrics (`psutil`) |
 | `POST` | `/rambo/execute` | `{ "goal": "..." }` | Run a goal through the full orchestration |
 | `GET` | `/sentinel/approvals`| — | List tasks awaiting manual approval |
 | `POST` | `/sentinel/decision` | `{ "id": "...", "decision": "APPROVE" \| "DENY" }` | Approve or deny a held task |
@@ -354,6 +356,22 @@ Running log of splash-screen / UI changes, newest first. Each entry is labeled b
 - **[Phase 1 · orb]** Promoted the orb to a **full-screen** canvas, identical in size and look to the Phase 2 orb (same camera + bloom). Removed the contained `RamboEmblem` box.
 - **[Phase 1 · layout]** All loading text (title, operator, system label, standby, BOOTING UP, scan bar, boot log) is now **housed centered over the orb** via `.tx-content-overlay`.
 - **[Phase 2 · clock]** Top-right clock is now **neon gold** (`.neon-clock`) and **shows seconds** (`HH:MM:SS`), ticking every second.
+
+### 2026-06-22 — Functional console: live backend, real stats, a11y, mobile, audio
+
+- **[Backend · WS fix]** Fixed the activity feed: the orchestrator and the `/ws/activity` endpoint now share **one** `ConnectionManager` (previously two separate instances, so broadcasts never reached clients). Added a real `connect()` (with `await websocket.accept()`) / `disconnect()`.
+- **[Backend · stats]** New `GET /system/stats` (CPU / RAM / disk via `psutil`) and a `GET /` health route (also fixes the Docker healthcheck). Added `psutil` + `websockets` to requirements.
+- **[Frontend · functional]** New **command console** (replaces the decorative dock): a directive input wired to `POST /rambo/execute` and a live activity feed wired to the `/ws/activity` WebSocket (auto-reconnect). Type a goal → agent status dots flip to **working** in real time (live `STATUS:<name>:<state>` overrides) → log lines stream in. A `● LIVE / ○ OFFLINE` indicator shows backend connectivity.
+- **[Frontend · real stats]** Stat bars now show real CPU / RAM / DISK from `/system/stats` (was hardcoded CPU/RAM/GPU/VRAM/DSK); em-dash when the backend is unreachable.
+- **[A11y]** `prefers-reduced-motion` honored — typewriters reveal instantly, animations/transitions disabled via media query. ARIA labels on the command input + connection indicator. Lightened the `idle`/`offline` status colors for readable contrast.
+- **[Mobile]** `PARTICLE_COUNT` 4000→1800 under 768px, Bloom `mipmapBlur` off on mobile, canvas `dpr` capped at 1.5.
+- **[Audio]** Boot chime on the Phase 1→2 transition + a low ambient hum (synthesized via Web Audio, no asset files). Audio context resumes on first user gesture (browser autoplay policy).
+
+### 2026-06-22 — Typewriter pacing + settle timing + topbar
+
+- **[Pacing]** Slower per-character speed (15→26ms) and a longer pause between sections (560ms vs 80ms between rows within a section).
+- **[Settle fix]** The cascade now waits `INITIAL_DELAY` (1550ms) so the panels' `glitch-in` slide-into-place finishes *before* any typing starts — fixes the "panel shifts, then types" overlap.
+- **[Topbar]** The top-left brand mark and top-right clock now type in too, as the first section of the cascade. The clock snapshots a fresh time when it starts typing, then hands off to the live ticking value; the SYSTEM/LOGS tabs fade in after the brand finishes.
 
 ### 2026-06-22 — Sequenced typewriter reveal across the console
 

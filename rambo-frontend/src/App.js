@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import "./App.css";
 import SplashScreen from "./components/SplashScreen";
-import HudLayout from "./components/HudLayout";
 
+// SplashScreen is now the full app: the boot sequence flows into a live,
+// interactive console (command input + activity feed). The old HudLayout was
+// only a placeholder scaffold, so we no longer swap to it after a timeout.
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="app-root">
-      {showSplash ? <SplashScreen /> : <HudLayout />}
+      <SplashScreen />
     </div>
   );
 }

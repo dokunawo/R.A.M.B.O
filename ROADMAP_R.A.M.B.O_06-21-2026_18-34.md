@@ -46,14 +46,19 @@ These are the highest-impact remaining items. Most can be slotted into any sessi
 - [~] **Phase 1 emblem spin-up** — ⛔ OBSOLETE: the `.tx-emblem-svg` tick-ring emblem was removed when Phase 1 switched to the live orb; nothing to spin up (orb rotation + phase fade-in cover the entrance)
 
 ### Accessibility
-- [ ] ARIA labels on dock buttons (`aria-label="Power"`, etc.)
-- [ ] `prefers-reduced-motion` media query — disable `glitch-in` animation and phase transitions for users with motion sensitivity
-- [ ] Color contrast audit — agent status text against dark background (especially `idle` gray `#4a5568`)
+- [~] ARIA labels — ⛔ dock removed (replaced by the command console); instead added ARIA labels to the command input + connection indicator (2026-06-22)
+- [x] `prefers-reduced-motion` — ✅ typewriters reveal instantly + animations/transitions disabled via media query (2026-06-22)
+- [x] Color contrast audit — ✅ lightened `idle` (#4a5568 → #8fa0b5) and `offline` (#2a3040 → #5a6575) (2026-06-22)
 
 ### Mobile Performance
-- [ ] Reduce `PARTICLE_COUNT` from 4000 → 1800 when `window.innerWidth < 768`
-- [ ] Disable `mipmapBlur` on Bloom for mobile (expensive)
-- [ ] Cap `devicePixelRatio` at 1.5 on mobile
+- [x] Reduce `PARTICLE_COUNT` from 4000 → 1800 when `window.innerWidth < 768` — ✅ (2026-06-22)
+- [x] Disable `mipmapBlur` on Bloom for mobile — ✅ (2026-06-22)
+- [x] Cap `devicePixelRatio` at 1.5 on mobile — ✅ (2026-06-22)
+
+### Functional (was "make it functional")
+- [x] Command input → `POST /rambo/execute` + live activity feed → `/ws/activity` WebSocket — ✅ (2026-06-22)
+- [x] Real system stats → `/system/stats` (psutil) feeding the stat bars — ✅ (2026-06-22)
+- [x] Boot chime + ambient hum (Web Audio) — ✅ (2026-06-22)
 
 **Owner:** Daniel (design decisions), Claude (implementation)
 
