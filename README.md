@@ -367,6 +367,21 @@ Running log of splash-screen / UI changes, newest first. Each entry is labeled b
 - **[Mobile]** `PARTICLE_COUNT` 4000→1800 under 768px, Bloom `mipmapBlur` off on mobile, canvas `dpr` capped at 1.5.
 - **[Audio]** Boot chime on the Phase 1→2 transition + a low ambient hum (synthesized via Web Audio, no asset files). Audio context resumes on first user gesture (browser autoplay policy).
 
+### 2026-06-22 — Response branches from its agent (draggable) + clickable agents
+
+- **[Phase 2 · result branch]** The response now **branches out from the agent that produced it** — a connector line runs from that agent's roster row to a panel showing the answer (tree-style). Backend `/rambo/execute` now returns `{response, agent}` so the UI knows which agent to anchor to.
+- **[Phase 2 · draggable]** The response panel is **draggable** (grab the header) and closes via ✕ / Esc.
+- **[Phase 2 · clickable agents]** Every agent row is now clickable (hover highlight + cursor) with an `onAgentClick` hook — placeholder for the future per-agent pages/phases.
+
+### 2026-06-22 — Real skills (weather), result popup, location, WORKING pulse
+
+- **[Backend · skills]** New scalable **skill layer** (`skills.py`): a registry of matchers + async runners that can call real services. First skill: **weather** via Open-Meteo (no API key) — "what's the weather in Detroit" geocodes the city (or uses the operator's location) and returns live conditions. Orchestrator checks skills first; the matched agent flips WORKING → runs → IDLE.
+- **[Backend · location]** `POST /rambo/execute` now accepts `lat`/`lon`; passed to skills as context.
+- **[Frontend · location]** Console requests browser geolocation (once, with permission) and sends it with each directive.
+- **[Frontend · result popup]** Executing a directive now opens a **pop-up window** with the response (Esc / click-away / ✕ to close).
+- **[Frontend · WORKING pulse]** Agent status dots now **pulse** while `working`, so the IDLE → WORKING → IDLE flip is clearly visible.
+- **[Note]** Agents remain rule-based stubs; genuinely open-ended "self-learning" answers need a real LLM wired into the orchestrator (a follow-up — needs an API key as an env var).
+
 ### 2026-06-22 — EM pulses replace the lines
 
 - **[Phase 2 · web]** Removed the radiating filament lines (too busy). Replaced with **small circular EM pulses** — scattered glowing synapse dots that emit expanding ripple rings (HTML/CSS so they stay perfectly round on any aspect), like cells firing bioelectric signals.

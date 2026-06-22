@@ -28,6 +28,8 @@ app.add_middleware(
 
 class Command(BaseModel):
     goal: str
+    lat: float | None = None
+    lon: float | None = None
 
 
 class SentinelDecision(BaseModel):
@@ -65,8 +67,9 @@ async def system_stats():
 
 @app.post("/rambo/execute")
 async def execute_command(cmd: Command):
-    result = await rambo.handle(cmd.goal)
-    return {"response": result}
+    ctx = {"lat": cmd.lat, "lon": cmd.lon}
+    # handle() returns { "response": <text>, "agent": <which agent produced it> }
+    return await rambo.handle(cmd.goal, ctx)
 
 
 @app.get("/sentinel/approvals")

@@ -4,6 +4,7 @@ import json
 from models.task import Task
 from router import choose_brain
 from memory.sqlite_store import SQLiteStore
+from skills import match_skill
 
 from agents.architect import Architect
 from agents.engineer import Engineer
@@ -67,7 +68,25 @@ class Orchestrator:
     async def _response(self, name: str, text: str):
         await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
 
-    async def handle(self, goal: str):
+    async def handle(self, goal: str, ctx: dict = None):
+        ctx = ctx or {}
+
+        # Real-world skills run first (weather, etc.). The matched agent flips
+        # WORKING → runs the live skill → IDLE, and its result is returned.
+        skill = match_skill(goal)
+        if skill:
+            agent_name = skill["agent"]
+            await self._set_status(agent_name, "working")
+            await self.broadcast(f"[{agent_name.capitalize()}] Working on: {goal}")
+            try:
+                result = await skill["run"](goal, ctx)
+            except Exception as e:
+                result = f"[{skill['name']}] error: {e}"
+            await self._response(agent_name, result)
+            await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
+            await self._set_status(agent_name, "idle")
+            return {"response": result, "agent": agent_name}
+
         architect = self.agents["architect"]
         pilot     = self.agents["pilot"]
         echo      = self.agents["echo"]
@@ -133,4 +152,4 @@ class Orchestrator:
         await self.broadcast("[Echo] Response ready.")
         await self._set_status("echo", "idle")
 
-        return summary
+        return {"response": summary, "agent": "echo"}

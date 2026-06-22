@@ -264,7 +264,10 @@ const CENTER_SUBTITLE = "Responsive Autonomous Multi-Brain Operator";
 
 function AgentDot({ status }) {
   return (
-    <span className="agent-dot" style={{ background: STATUS_COLORS[status] ?? STATUS_COLORS.offline }} />
+    <span
+      className={`agent-dot${status === "working" ? " working" : ""}`}
+      style={{ background: STATUS_COLORS[status] ?? STATUS_COLORS.offline }}
+    />
   );
 }
 
@@ -572,12 +575,17 @@ function TransmissionScreen({ onAdvance }) {
 /*  PHASE 2 — LEFT: AGENT ROSTER (names, roles, descriptions, status) */
 /* ------------------------------------------------------------------ */
 
-function RosterRow({ agent, status, startMs, speed, response }) {
+function RosterRow({ agent, status, startMs, speed, response, rowRef, onClick }) {
   const revealed  = useRevealAt(startMs);
   const typedName = useDelayedTypewriter(agent.name, speed, startMs);
   const done = typedName === agent.name;
   return (
-    <li className={`brief-agent-entry${revealed ? " revealed" : ""}`}>
+    <li
+      className={`brief-agent-entry agent-clickable${revealed ? " revealed" : ""}`}
+      ref={(el) => rowRef && rowRef(agent.key, el)}
+      onClick={() => onClick && onClick(agent)}
+      title={`${agent.name} — details (coming soon)`}
+    >
       <div className="brief-agent-header">
         <AgentDot status={status} />
         <span className="brief-agent-name neon-agent">
@@ -607,7 +615,7 @@ function RosterRow({ agent, status, startMs, speed, response }) {
   );
 }
 
-function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, responses = {} }) {
+function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, responses = {}, rowRef, onAgentClick }) {
   const agents   = statusData?.agents ?? AGENT_ROSTER.map(a => ({ name: a.name, status: "offline" }));
   const agentMap = Object.fromEntries(agents.map(a => [a.name.toLowerCase(), a.status]));
   const typed    = useDelayedTypewriter(headline, speed, headlineAt);
@@ -622,7 +630,8 @@ function AgentRosterPanel({ statusData, headline, headlineAt, agentsAt, speed, r
       <ul className="brief-agent-list">
         {AGENT_ROSTER.map((a, i) => (
           <RosterRow key={a.key} agent={a} status={agentMap[a.key] ?? "offline"}
-            startMs={agentsAt[i]} speed={speed} response={responses[a.key]} />
+            startMs={agentsAt[i]} speed={speed} response={responses[a.key]}
+            rowRef={rowRef} onClick={onAgentClick} />
         ))}
       </ul>
     </aside>
@@ -739,10 +748,21 @@ function OrbWeb() {
 /*  PHASE 2 — COMMAND CONSOLE (live feed + directive input)           */
 /* ------------------------------------------------------------------ */
 
-function CommandConsole({ activity, connected }) {
+function CommandConsole({ activity, connected, onResult }) {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
   const feedRef = useRef(null);
+  const locRef = useRef({ lat: null, lon: null });
+
+  // ask the browser for location once (used by skills like weather)
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { locRef.current = { lat: pos.coords.latitude, lon: pos.coords.longitude }; },
+      () => { /* denied/unavailable — skills fall back to a named city */ },
+      { timeout: 8000, maximumAge: 600000 },
+    );
+  }, []);
 
   // auto-scroll to newest line
   useEffect(() => {
@@ -755,14 +775,16 @@ function CommandConsole({ activity, connected }) {
     if (!g || busy) return;
     setBusy(true);
     try {
-      await fetch(`${API}/rambo/execute`, {
+      const res = await fetch(`${API}/rambo/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: g }),
+        body: JSON.stringify({ goal: g, lat: locRef.current.lat, lon: locRef.current.lon }),
       });
+      const data = await res.json().catch(() => ({}));
+      onResult({ goal: g, text: data.response || "(no response)", agent: (data.agent || "echo").toLowerCase() });
       setGoal("");
     } catch {
-      /* errors surface in the live feed */
+      onResult({ goal: g, text: "Request failed — is the backend running?", agent: "echo" });
     } finally {
       setBusy(false);
     }
@@ -798,6 +820,67 @@ function CommandConsole({ activity, connected }) {
   );
 }
 
+// Draggable response panel that branches (with a connector line) out from the
+// agent that produced the final output.
+function ResultBranch({ result, anchorEl, onClose }) {
+  const [pos, setPos] = useState(null);
+  const dragRef = useRef(null);
+
+  // initial position: just to the right of the producing agent's row
+  useEffect(() => {
+    const r = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
+    if (r) {
+      setPos({ x: Math.min(window.innerWidth - 400, r.right + 56), y: Math.max(16, r.top - 12) });
+    } else {
+      setPos({ x: Math.max(16, window.innerWidth / 2 - 190), y: window.innerHeight / 2 - 130 });
+    }
+  }, [anchorEl, result]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const beginDrag = (e) => {
+    if (!pos) return;
+    const start = { mx: e.clientX, my: e.clientY, x: pos.x, y: pos.y };
+    const move = (ev) => setPos({ x: start.x + (ev.clientX - start.mx), y: start.y + (ev.clientY - start.my) });
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    dragRef.current = up;
+  };
+
+  if (!pos) return null;
+  const a = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
+  const start = a ? { x: a.right, y: a.top + a.height / 2 } : null;
+  const end = { x: pos.x, y: pos.y + 22 };
+  const label = result.agent ? result.agent.charAt(0).toUpperCase() + result.agent.slice(1) : "R.A.M.B.O";
+
+  return (
+    <>
+      {start && (
+        <svg className="branch-line" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d={`M ${start.x} ${start.y} C ${(start.x + end.x) / 2} ${start.y}, ${(start.x + end.x) / 2} ${end.y}, ${end.x} ${end.y}`}
+            fill="none" stroke="var(--accent)" strokeWidth="1.4" opacity="0.75" />
+          <circle cx={start.x} cy={start.y} r="3" fill="var(--accent-glow)" />
+          <circle cx={end.x} cy={end.y} r="3" fill="var(--accent-glow)" />
+        </svg>
+      )}
+      <div className="branch-panel" style={{ left: pos.x, top: pos.y }}>
+        <div className="branch-head" onPointerDown={beginDrag}>
+          <span className="branch-title">{label} · RESPONSE</span>
+          <button className="branch-close" type="button" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="branch-goal">&gt; {result.goal}</div>
+        <div className="branch-body">{result.text}</div>
+      </div>
+    </>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  STAT BAR                                                            */
 /* ------------------------------------------------------------------ */
@@ -826,6 +909,16 @@ export default function SplashScreen({
 }) {
   const [phase,  setPhase]  = useState("transmission");
   const [fading, setFading] = useState(false);
+
+  // Result branch (response panel + connector) + clickable agents
+  const [result, setResult] = useState(null);
+  const agentRowsRef = useRef({});
+  const registerRow = useCallback((key, el) => { agentRowsRef.current[key] = el; }, []);
+  const onAgentClick = useCallback((agent) => {
+    // Placeholder for future per-agent pages/phases. For now: no-op hook.
+    // eslint-disable-next-line no-console
+    console.log(`[R.A.M.B.O] agent selected: ${agent.name}`);
+  }, []);
 
   // Stable across re-renders — polling/clock updates must NOT recreate these,
   // otherwise child phase timers restart and the scan bar loops forever.
@@ -959,7 +1052,8 @@ export default function SplashScreen({
           <main className="splash-main">
             {/* LEFT: agent roster — types in FIRST, top-down */}
             <AgentRosterPanel statusData={statusData} headline={headline} responses={responses}
-              headlineAt={reveal.headlineAt} agentsAt={reveal.agentsAt} speed={reveal.speed} />
+              headlineAt={reveal.headlineAt} agentsAt={reveal.agentsAt} speed={reveal.speed}
+              rowRef={registerRow} onAgentClick={onAgentClick} />
             {/* RIGHT: system parameters — types in SECOND, top-down */}
             <SystemParamsPanel statusData={statusData}
               paramsAt={reveal.paramsAt} speed={reveal.speed} />
@@ -970,8 +1064,14 @@ export default function SplashScreen({
               {statBars.map(s => <StatBar key={s.label} {...s} />)}
             </div>
             {/* functional command console replaces the decorative dock */}
-            <CommandConsole activity={activity} connected={connected} />
+            <CommandConsole activity={activity} connected={connected} onResult={setResult} />
           </footer>
+
+          {/* response branches out (with a connector line) from its agent; draggable */}
+          {result && (
+            <ResultBranch result={result} anchorEl={agentRowsRef.current[result.agent]}
+              onClose={() => setResult(null)} />
+          )}
         </>
       )}
     </div>

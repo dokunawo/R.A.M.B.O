@@ -1619,3 +1619,107 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ================================================================== */
+/*  AGENT "WORKING" PULSE                                              */
+/* ================================================================== */
+
+.agent-dot.working {
+  animation: dotWorking 0.85s ease-in-out infinite;
+}
+@keyframes dotWorking {
+  0%, 100% { box-shadow: 0 0 4px var(--accent); transform: scale(1); }
+  50%      { box-shadow: 0 0 10px var(--accent), 0 0 18px var(--accent); transform: scale(1.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-dot.working { animation: none; }
+}
+
+/* ================================================================== */
+/*  CLICKABLE AGENT ROWS (for future per-agent pages)                 */
+/* ================================================================== */
+
+.roster-panel .agent-clickable {
+  pointer-events: auto;       /* roster panel itself is pointer-events:none */
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+.roster-panel .agent-clickable:hover {
+  background: rgba(232, 177, 90, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(232, 177, 90, 0.18);
+}
+
+/* ================================================================== */
+/*  RESULT BRANCH (response branches from its agent; draggable)       */
+/* ================================================================== */
+
+/* connector line drawn in screen coordinates */
+.branch-line {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 79;
+  pointer-events: none;
+}
+
+.branch-panel {
+  position: fixed;
+  z-index: 80;
+  width: min(380px, 90vw);
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid rgba(232, 177, 90, 0.4);
+  border-radius: 6px;
+  background: rgba(10, 11, 14, 0.97);
+  box-shadow: 0 0 36px rgba(232, 177, 90, 0.22);
+  font-family: var(--mono);
+  animation: resultPop 0.22s ease;
+}
+
+.branch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.16);
+  cursor: move;            /* drag handle */
+  user-select: none;
+}
+.branch-title {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--accent-glow);
+  text-shadow: 0 0 8px var(--accent);
+}
+.branch-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+.branch-close:hover { color: var(--accent-glow); }
+
+.branch-goal {
+  padding: 10px 12px 4px;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.branch-body {
+  padding: 5px 12px 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-mid);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@keyframes resultPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
