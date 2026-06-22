@@ -7,6 +7,9 @@ import { Vector2 } from "three";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
+import DispatchBeams from "./DispatchBeam";
+import ProcessingHelix from "./ProcessingHelix";
+import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
@@ -101,6 +104,8 @@ function useRamboLive() {
   const [activity,   setActivity]   = useState([]);
   const [connected,  setConnected]  = useState(false);
   const [responses,  setResponses]  = useState({}); // { agentKey: responseText }
+  const [dispatches, setDispatches] = useState([]);  // Tier 5: active dispatch beams
+  const [processing, setProcessing] = useState(false); // Tier 5: helix active
 
   // REST polling
   useEffect(() => {
@@ -147,14 +152,32 @@ function useRamboLive() {
 
         const m = /^STATUS:([a-zA-Z]+):([a-zA-Z]+)$/.exec(msg);
         if (m) {
-          setStatusData(prev => applyLiveStatus(prev, m[1].toLowerCase(), m[2].toLowerCase()));
+          const agentName = m[1].toLowerCase();
+          const newStatus = m[2].toLowerCase();
+          setStatusData(prev => applyLiveStatus(prev, agentName, newStatus));
+          if (newStatus === "working" || newStatus === "active") {
+            setProcessing(true);
+            setDispatches(prev => [...prev, {
+              id: `${agentName}-${Date.now()}`,
+              agentKey: agentName,
+            }]);
+          }
           return;
         }
         // Log line — show it, and if it reports a completion, return that agent
         // to idle ("[Architect] Finished: …" / "[Echo] Response ready.").
+        const agentLog = /^\[([a-zA-Z]+)\]/.exec(msg);
         const fin = /^\[([a-zA-Z]+)\]\s+(?:Finished|Response ready)/.exec(msg);
         if (fin) {
           setStatusData(prev => applyLiveStatus(prev, fin[1].toLowerCase(), "idle"));
+          setProcessing(false);
+        } else if (agentLog) {
+          const aName = agentLog[1].toLowerCase();
+          setDispatches(prev => {
+            if (prev.some(d => d.agentKey === aName)) return prev;
+            return [...prev, { id: `${aName}-${Date.now()}`, agentKey: aName }];
+          });
+          setProcessing(true);
         }
         setActivity(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, msg }].slice(-120));
       };
@@ -171,7 +194,12 @@ function useRamboLive() {
     });
   }, []);
 
-  return { statusData, stats, activity, connected, responses, dismissResponse };
+  const dismissBeam = useCallback((beamId) => {
+    setDispatches(prev => prev.filter(d => d.id !== beamId));
+  }, []);
+
+  return { statusData, stats, activity, connected, responses, dismissResponse,
+           dispatches, processing, dismissBeam };
 }
 
 // Typewriter that waits `startMs` before typing `text` one char at a time.
@@ -1033,7 +1061,9 @@ export default function SplashScreen({
   const goMain = useCallback(() => advance("main"), [advance]);
 
   // Live backend link: status + system stats + WebSocket activity feed.
-  const { statusData, stats, activity, connected, responses, dismissResponse } = useRamboLive();
+  const { statusData, stats, activity, connected, responses, dismissResponse,
+          dispatches, processing, dismissBeam } = useRamboLive();
+  const perf = usePerformanceMode();
 
   // Build status map for constellation: { architect: "active", scout: "idle", ... }
   const agentStatusMap = useMemo(() => {
@@ -1155,11 +1185,13 @@ export default function SplashScreen({
           {/* full-screen cosmic orb — wireframe icosahedron with fresnel glow */}
           <div className="orb-canvas">
             <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-              dpr={[1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+              dpr={perf.isLow ? [1, 1] : [1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: !perf.isLow, alpha: true, premultipliedAlpha: false }}>
               <CosmicBackground />
               <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
               <AgentConstellation statusMap={agentStatusMap} />
-              <EffectComposer>
+              <DispatchBeams dispatches={dispatches} onBeamComplete={dismissBeam} />
+              <ProcessingHelix active={processing} />
+              <EffectComposer enabled={perf.bloomEnabled}>
                 <Bloom luminanceThreshold={0.55} luminanceSmoothing={0.9}
                   intensity={0.8} mipmapBlur={!IS_MOBILE} radius={0.6} />
                 <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}

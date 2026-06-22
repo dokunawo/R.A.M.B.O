@@ -79,8 +79,8 @@ The orb is being rebuilt as a multi-layered living cosmic interface. Each tier b
 | **2** | The Cosmos | **Done** (06/22/2026 14:15) | Twinkling starfield (500 pts), FBM nebula clouds (warm amber→cool violet), distant node web (24 pulsing nodes + connections), warm glow pool behind orb. All layers use billboarded quads with circular radial fade. |
 | **3** | The Voice | **Done** (06/22/2026 17:00) | Wake word "Rambo" activates listening. Speech-to-text fills command input, auto-executes on silence (1.5s). TTS reads response aloud with cosmic AI voice (low pitch 0.75, slow rate 0.92). Full cycle: idle→listening→processing→speaking→idle. Mic always-on passive listening for wake word. |
 | **4** | The Constellation | **Done** (06/22/2026 17:00) | 10 agent nodes orbiting the orb as a 3D constellation. Billboarded glow sprites with agent colors, canvas-texture labels with depth fading, tilted orbit ring, connection lines from orb center. Status-driven pulse (active/idle/offline). |
-| **5** | Dispatch & Docking | Planned | Dispatch beams from orb to agent, working pulse, docking near roster rows, processing rings ("helix"). |
-| **6** | Wire to Reality | Planned | Real WebSocket events, performance mode, reduced motion, battery/focus handling. |
+| **5** | Dispatch & Docking | **Done** (06/22/2026) | Dynamic dispatch beams from orb center to orbiting agent nodes (cylinder geometry, additive blending, auto-tracks orbit position). Processing helix — 3 tilted rings spinning around orb during active processing. Beams fire on WS STATUS working/active events and agent log lines. |
+| **6** | Wire to Reality | **Done** (06/22/2026) | All dispatch animations driven by real WebSocket events (STATUS broadcasts + agent log lines). Performance mode: auto-detects battery level (<20% unplugged → low mode), tab visibility (hidden → low), prefers-reduced-motion (→ minimal). Low mode: DPR capped to 1, antialiasing off, bloom disabled. Minimal mode: all animations suppressed. |
 
 ---
 
