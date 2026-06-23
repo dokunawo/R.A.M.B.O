@@ -159,23 +159,42 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
 
   const isListening = convState === CONV_STATES.LISTENING;
   const isProcessing = convState === CONV_STATES.PROCESSING;
+  const isError = convState === CONV_STATES.ERROR;
   const isActive = micActive && (isListening || isProcessing);
+
+  const micClass = [
+    "vc-mic-primary",
+    isActive ? "vc-mic-active" : "",
+    isProcessing ? "vc-mic-processing" : "",
+    isError ? "vc-mic-blocked" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <div className="vc-bar">
       <div className="vc-bar-center">
         <button
-          className={`vc-mic-primary${isActive ? " vc-mic-active" : ""}${isProcessing ? " vc-mic-processing" : ""}`}
+          className={micClass}
           type="button"
           onClick={toggleMic}
-          title={micActive ? 'Mic active — say "Rambo" to command' : "Enable mic"}
+          title={
+            isError ? "Microphone blocked — allow mic access in your browser, then reload"
+            : micActive ? 'Mic active — say "Rambo" to command'
+            : "Enable mic"
+          }
         >
-          {isActive ? (
+          {isError ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="3" y1="3" x2="21" y2="21" stroke="#ff5b5b"/>
+            </svg>
+          ) : isActive ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect x="3" y="3" width="10" height="10" rx="1.5" fill="white"/>
+              <rect x="3" y="3" width="10" height="10" rx="1.5" fill="currentColor"/>
             </svg>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="2" width="6" height="11" rx="3"/>
               <path d="M5 10a7 7 0 0 0 14 0"/>
               <line x1="12" y1="19" x2="12" y2="22"/>
@@ -187,9 +206,11 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
           <VolumeSvg vol={vol} />
         </button>
       </div>
-      {!isActive && (
+      {isError ? (
+        <span className="vc-hint vc-hint-error">MIC BLOCKED — ALLOW ACCESS &amp; RELOAD</span>
+      ) : !isActive ? (
         <span className="vc-hint">TAP OR SAY 'RAMBO'</span>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -29,29 +29,72 @@
 }
 
 .vc-mic-primary {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #16171D;
-  color: white;
+  border: 1.5px solid rgba(232, 177, 90, 0.45);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(232, 177, 90, 0.12), rgba(14, 15, 19, 0.6) 70%),
+    rgba(14, 15, 19, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #f3d9a6;
   cursor: pointer;
   display: grid;
   place-items: center;
   pointer-events: auto;
+  box-shadow: 0 0 18px rgba(232, 177, 90, 0.22),
+              inset 0 0 14px rgba(232, 177, 90, 0.06);
   transition: border-color 0.2s var(--ease-smooth),
               box-shadow 0.2s var(--ease-smooth),
-              background 0.2s var(--ease-smooth);
+              background 0.2s var(--ease-smooth),
+              transform 0.2s var(--ease-smooth),
+              color 0.2s var(--ease-smooth);
   position: relative;
 }
 
 .vc-mic-primary:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
+  border-color: rgba(232, 177, 90, 0.9);
+  color: #ffe9bf;
+  box-shadow: 0 0 28px rgba(232, 177, 90, 0.4),
+              inset 0 0 16px rgba(232, 177, 90, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Gentle idle breathing glow so it reads as a live control, not a black blob */
+.vc-mic-primary:not(.vc-mic-active):not(.vc-mic-blocked)::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 177, 90, 0.25);
+  animation: vcIdleBreath 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes vcIdleBreath {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(1.08); }
+}
+
+/* Blocked / permission-denied state */
+.vc-mic-blocked {
+  border-color: rgba(255, 91, 91, 0.7);
+  color: #ff8a8a;
+  box-shadow: 0 0 20px rgba(255, 91, 91, 0.35),
+              inset 0 0 14px rgba(255, 91, 91, 0.1);
+}
+.vc-mic-blocked:hover {
+  border-color: #ff5b5b;
+  box-shadow: 0 0 28px rgba(255, 91, 91, 0.5);
 }
 
 .vc-mic-active {
   border-color: var(--teal);
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(0, 212, 170, 0.18), rgba(14, 15, 19, 0.6) 70%),
+    rgba(14, 15, 19, 0.55);
   box-shadow: 0 0 24px var(--teal-glow);
 }
 
@@ -111,6 +154,11 @@
   color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   pointer-events: none;
+}
+
+.vc-hint-error {
+  color: #ff8a8a;
+  text-shadow: 0 0 8px rgba(255, 91, 91, 0.4);
 }
 
 @media (prefers-reduced-motion: reduce) {
