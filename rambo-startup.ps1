@@ -76,21 +76,18 @@ if (-not $frontendReady) {
 }
 
 # 4) Open the browser.
-# --autoplay-policy lets the intro sound play on boot without a click. NOTE:
-# Chrome only applies these flags when it launches a FRESH process — at login
-# Chrome isn't running yet, so this works. If Chrome is already open, the URL
-# opens in the existing window and the flag is ignored (you'd need a gesture).
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-# Flags only apply when Chrome launches a FRESH process (at login it isn't
-# running yet, so this works):
-#   --autoplay-policy : let the intro sound play without a click
-#   --new-window      : a dedicated window, not a tab in an existing one
-#   --start-fullscreen: open in F11-style fullscreen (kiosk-like)
+# RAMBO gets its OWN dedicated Chrome profile (--user-data-dir). This is the key
+# to reliable fullscreen: a separate profile always launches a fresh, isolated
+# Chrome instance, so --start-fullscreen is honored EVEN IF your normal Chrome
+# (with other tabs) is already open. Your everyday Chrome is left untouched.
+# One-time: grant the microphone permission once in this RAMBO window.
+$ramboProfile = "$projectRoot\.chrome-profile"
 $chromeFlags = @(
-    "--autoplay-policy=no-user-gesture-required",
-    "--new-window",
-    "--start-fullscreen"
+    "--user-data-dir=$ramboProfile",         # dedicated, isolated profile
+    "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
+    "--start-fullscreen"                     # F11-style fullscreen on launch
 )
 # ?boot=1 tells the app this is a fresh machine boot → reset to unmuted/max so a
 # persisted mute never survives a restart. The app strips the flag after reading.
