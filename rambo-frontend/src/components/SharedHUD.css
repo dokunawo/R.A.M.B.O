@@ -1,0 +1,173 @@
+/* SharedHUD.css — stat bars, activity feed, command input used across all pages */
+
+/* ---- Stat Bars (top-left under byline) ---- */
+.hud-stat-panel {
+  position: fixed;
+  top: 56px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  color: var(--text-dim, #7a7a7a);
+  pointer-events: none;
+}
+
+.hud-stat-row {
+  display: grid;
+  grid-template-columns: 30px 64px 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-stat-label {
+  color: var(--text-dim, #7a7a7a);
+}
+
+.hud-stat-bar {
+  display: block;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hud-stat-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent, #e8b15a);
+  box-shadow: 0 0 10px var(--accent, #e8b15a);
+}
+
+.hud-stat-value {
+  color: var(--text-dim, #7a7a7a);
+}
+
+/* ---- Activity Feed (bottom-right) ---- */
+.hud-activity-feed {
+  position: fixed;
+  bottom: 22px;
+  right: 24px;
+  z-index: 10;
+  width: 300px;
+  max-height: 140px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 177, 90, 0.3) transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--glass-bg, rgba(14, 15, 19, 0.15));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.06));
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+.hud-activity-feed::-webkit-scrollbar { width: 6px; }
+.hud-activity-feed::-webkit-scrollbar-thumb { background: rgba(232, 177, 90, 0.3); border-radius: 3px; }
+
+.hud-activity-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent, #e8b15a);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.15);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
+}
+
+.hud-feed-empty {
+  color: var(--text-dim, #7a7a7a);
+  opacity: 0.6;
+}
+
+.hud-feed-line {
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 5px rgba(232, 177, 90, 0.3);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---- Command Input (bottom-left) ---- */
+.hud-cmd-input {
+  position: fixed;
+  bottom: 22px;
+  left: 24px;
+  z-index: 10;
+  width: 420px;
+  max-width: 36vw;
+  pointer-events: auto;
+}
+
+.hud-cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.06));
+  border-radius: 4px;
+  background: var(--glass-bg, rgba(14, 15, 19, 0.15));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+}
+
+.hud-cmd-conn {
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.hud-cmd-conn.on  { color: #00ff88; text-shadow: 0 0 6px #00ff88; }
+.hud-cmd-conn.off { color: #ff5b5b; text-shadow: 0 0 6px rgba(255, 91, 91, 0.5); }
+
+.hud-cmd-prompt {
+  color: var(--accent-glow, #ffd98a);
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 13px;
+  text-shadow: 0 0 6px var(--accent, #e8b15a);
+}
+
+.hud-cmd-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.hud-cmd-field::placeholder { color: var(--text-dim, #7a7a7a); }
+
+.hud-cmd-exec {
+  background: rgba(232, 177, 90, 0.12);
+  border: 1px solid var(--accent, #e8b15a);
+  border-radius: 3px;
+  color: var(--accent-glow, #ffd98a);
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.hud-cmd-exec:hover:not(:disabled) {
+  background: rgba(232, 177, 90, 0.22);
+  box-shadow: 0 0 14px rgba(232, 177, 90, 0.4);
+}
+.hud-cmd-exec:disabled { opacity: 0.4; cursor: default; }
+
+/* Push command input above quick-switch nav on agent pages */
+.agent-page-root .hud-cmd-input,
+.ll-root .hud-cmd-input {
+  bottom: 62px;
+}
+
+/* Push activity feed above quick-switch nav on agent pages */
+.agent-page-root .hud-activity-feed,
+.ll-root .hud-activity-feed {
+  bottom: 62px;
+}

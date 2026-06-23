@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
-import { Vector2 } from "three";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
@@ -12,6 +11,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
+import { StatBars } from "./SharedHUD";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -561,14 +561,12 @@ function TransmissionScreen({ onAdvance }) {
     <div className="phase-screen tx-screen">
       {/* Full-screen cosmic orb — same wireframe icosahedron as Phase 2 */}
       <div className="orb-canvas">
-        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+        <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }} gl={{ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance', stencil: false }}>
           <CosmicBackground />
           <CosmicOrb />
           <EffectComposer>
             <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
               intensity={0.6} mipmapBlur radius={0.5} />
-            <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
-              radialModulation={false} modulationOffset={0} />
           </EffectComposer>
         </Canvas>
       </div>
@@ -817,21 +815,33 @@ function OrbWeb() {
 /*  PHASE 2 — COMMAND CONSOLE (live feed + directive input)           */
 /* ------------------------------------------------------------------ */
 
-function CommandConsole({ activity, connected, onResult, voiceText, voiceState, onVoiceExecuted }) {
+function ActivityFeed({ activity }) {
+  const feedRef = useRef(null);
+  useEffect(() => {
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+  }, [activity]);
+  return (
+    <div className="activity-feed" ref={feedRef} aria-live="polite">
+      <div className="activity-feed-label">◆ ACTIVITY FEED</div>
+      {activity.length === 0
+        ? <div className="cmd-feed-empty">{"// awaiting activity…"}</div>
+        : activity.map(a => <div key={a.id} className="cmd-feed-line">{a.msg}</div>)}
+    </div>
+  );
+}
+
+function CommandConsole({ connected, onResult, voiceText, voiceState, onVoiceExecuted }) {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
-  const feedRef = useRef(null);
   const locRef = useRef({ lat: null, lon: null });
   const voiceSubmitTimer = useRef(null);
 
-  // Voice input: update goal as the user speaks
   useEffect(() => {
     if (voiceText && voiceState === "listening") {
       setGoal(voiceText);
     }
   }, [voiceText, voiceState]);
 
-  // When voice state changes to processing, auto-execute after a short pause
   useEffect(() => {
     if (voiceState === "processing" && goal.trim() && !busy) {
       voiceSubmitTimer.current = setTimeout(() => {
@@ -842,20 +852,14 @@ function CommandConsole({ activity, connected, onResult, voiceText, voiceState, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceState]);
 
-  // ask the browser for location once (used by skills like weather)
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => { locRef.current = { lat: pos.coords.latitude, lon: pos.coords.longitude }; },
-      () => { /* denied/unavailable — skills fall back to a named city */ },
+      () => {},
       { timeout: 8000, maximumAge: 600000 },
     );
   }, []);
-
-  // auto-scroll to newest line
-  useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
-  }, [activity]);
 
   const submitGoal = async (g) => {
     if (!g || busy) return;
@@ -885,11 +889,6 @@ function CommandConsole({ activity, connected, onResult, voiceText, voiceState, 
 
   return (
     <div className="cmd-console">
-      <div className="cmd-feed" ref={feedRef} aria-live="polite">
-        {activity.length === 0
-          ? <div className="cmd-feed-empty">{"// awaiting activity…"}</div>
-          : activity.map(a => <div key={a.id} className="cmd-feed-line">{a.msg}</div>)}
-      </div>
       <form className="cmd-input-row" onSubmit={submit}>
         <span className={`cmd-conn ${connected ? "on" : "off"}`} aria-label={connected ? "Backend online" : "Backend offline"}>
           {connected ? "● LIVE" : "○ OFFLINE"}
@@ -1187,7 +1186,7 @@ export default function SplashScreen({
           {/* full-screen cosmic orb — wireframe icosahedron with fresnel glow */}
           <div className="orb-canvas">
             <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-              dpr={perf.isLow ? [1, 1] : [1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: !perf.isLow, alpha: true, premultipliedAlpha: false }}>
+              dpr={perf.isLow ? [1, 1] : [1, IS_MOBILE ? 1.5 : 2]} gl={{ antialias: !perf.isLow, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance', stencil: false }}>
               <CosmicBackground />
               <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
               <AgentConstellation statusMap={agentStatusMap} />
@@ -1196,8 +1195,6 @@ export default function SplashScreen({
               <EffectComposer enabled={perf.bloomEnabled}>
                 <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
                   intensity={0.6} mipmapBlur={!IS_MOBILE} radius={0.5} />
-                <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
-                  radialModulation={false} modulationOffset={0} />
               </EffectComposer>
             </Canvas>
           </div>
@@ -1212,6 +1209,7 @@ export default function SplashScreen({
             onCouncil={() => nav("/council")} />
 
           <div className="byline">{byline}</div>
+          <StatBars stats={stats} />
 
           {/* center title types in LAST, after roster + params */}
           <OrbTitleStack projectLabel={projectLabel} agentName={agentName}
@@ -1228,14 +1226,10 @@ export default function SplashScreen({
               paramsAt={reveal.paramsAt} speed={reveal.speed} />
           </main>
 
-          <footer className="splash-footer glitch-in">
-            <div className="stat-panel">
-              {statBars.map(s => <StatBar key={s.label} {...s} />)}
-            </div>
-            {/* functional command console replaces the decorative dock */}
-            <CommandConsole activity={activity} connected={connected} onResult={setResult}
+          <CommandConsole connected={connected} onResult={setResult}
               voiceText={voiceText} voiceState={convState} onVoiceExecuted={handleVoiceExecuted} />
-          </footer>
+
+          <ActivityFeed activity={activity} />
 
           {/* response branches out (with a connector line) from its agent; draggable */}
           {result && (

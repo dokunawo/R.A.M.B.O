@@ -6,7 +6,7 @@
 
 **A multi-agent AI orchestration system with a living, cinematic command-center interface.**
 
-`MK III` · React + Three.js front end · FastAPI multi-agent back end · Dockerized
+`MK III` · React 19 + Three.js front end · FastAPI multi-agent back end · Dockerized
 
 </div>
 
@@ -59,7 +59,8 @@ agent's status.
 - **🧠 Multi-agent orchestration** — 10 specialized agents coordinated by an Overseer.
 - **🛡️ Sentinel security gate** — risky actions (engineer / steward / link) are reviewed and can be blocked or held for manual approval.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
-- **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo.
+- **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo. Bloom postprocessing for cinematic glow.
+- **📊 Persistent HUD** — CPU/RAM/DSK system metrics, LIVE command input, and real-time activity feed visible on every page.
 - **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow.
 - **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
 - **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
@@ -138,7 +139,7 @@ The front end boots through **two** scripted phases:
 | Phase | Name | What it shows |
 |-------|---------------------|------------------------------------------------------------------|
 | **1** | **Transmission** | The wireframe icosahedron orb (CosmicOrb + bloom + chromatic aberration), R.A.M.B.O title, operator line, a **"BOOTING UP"** status, a single scan bar (0→100%, no loop), and the boot log typing in beneath it. When the log finishes it shows **"NOW BOOTING UP"** and transitions. |
-| **2** | **Live Console** | Full wireframe orb with bloom + EM pulse network overlay, R.A.M.B.O title stack, command input, and system stat bars. **Left:** Agent Roster + SYSTEMS nav (Learning Log, Round Table). **Right:** System Parameters. |
+| **2** | **Live Console** | Full wireframe orb with bloom + EM pulse network overlay, R.A.M.B.O title stack, LIVE command input (bottom-left), activity feed (bottom-right), CPU/RAM/DSK stat bars (top-left under BY DANIEL). **Left:** Agent Roster + SYSTEMS nav (Learning Log, Round Table). **Right:** System Parameters. |
 
 Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber neon scheme on near-black.
 
@@ -149,7 +150,7 @@ Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber 
 **Front End**
 - React 19 + React Scripts (CRA)
 - `@react-three/fiber` + `three` (WebGL orb)
-- `@react-three/postprocessing` (Bloom, ChromaticAberration)
+- `@react-three/postprocessing` (Bloom)
 - Custom GLSL shaders (simplex noise, wireframe icosahedron, fresnel glow)
 - `react-router-dom` v7 (SPA routing)
 
@@ -201,9 +202,10 @@ R.A.M.B.O/
 │   │       ├── CosmicOrb.jsx         # wireframe icosahedron orb (Tier 1)
 │   │       ├── CosmicOrbShaders.js   # GLSL: simplex noise + fresnel glow
 │   │       ├── RamboOrb3D.jsx        # legacy particle cloud (retained)
+│   │       ├── SharedHUD.js/css       # persistent HUD: stat bars, command input, activity feed
 │   │       ├── AgentPage.js/css      # per-agent detail pages
 │   │       ├── RoundTable.js/css     # council view — orbiting agents
-│   │       └── LearningLog.js/css    # system learning log
+│   │       └── LearningLog.js/css    # system learning log (side-panel layout)
 │   ├── public/
 │   ├── package.json
 │   ├── Dockerfile  Dockerfile.dev
@@ -341,7 +343,7 @@ curl -X POST http://localhost:8000/rambo/execute \
 - **Color scheme:** gold / amber neon (`--accent: #e8b15a`, `--accent-glow: #ffd98a`) on near-black (`#08090b`).
 - **Cosmic orb:** wireframe icosahedron (detail 18) with 3D simplex noise displacement, fresnel rim glow, slow two-axis tumble, and mouse parallax. Gold color with a billboarded glow halo (additive blending).
 - **GLSL shaders:** layered noise displacement (3 octaves + global breath), fresnel-based rim glow (configurable power/bias), radial gradient glow sprite.
-- **Postprocessing:** Bloom (`intensity 0.8`, `radius 0.6`, `threshold 0.55`, `mipmapBlur`) + ChromaticAberration (offset `0.0012`).
+- **Postprocessing:** Bloom (`intensity 0.6`, `radius 0.5`, `threshold 0.7`, `mipmapBlur`). ChromaticAberration removed (06/23/2026) to eliminate screen flickers.
 - **Agent Constellation:** 10 orbiting nodes with billboarded glow sprites, canvas-texture labels, tilted orbit ring, status-driven pulse.
 - **Dispatch beams:** Dynamic cylinder beams from orb center to orbiting agent nodes during task processing.
 - **Processing helix:** 3 tilted golden rings spinning around the orb during active work.
@@ -353,11 +355,11 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 ## Roadmap
 
-See [`ROADMAP_R.A.M.B.O_06-22-2026_13-39.md`](ROADMAP_R.A.M.B.O_06-22-2026_13-39.md) for the full plan. Highlights:
+See [`ROADMAP_R.A.M.B.O_06-23-2026_06-30.md`](ROADMAP_R.A.M.B.O_06-23-2026_06-30.md) for the full plan. Highlights:
 
-- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality.
-- **Short term:** Operator greeting, shutdown sequence, HUD boot transition, task history panel, command palette.
-- **Mid term:** Color presets, modular HUD panels, mission dashboard, data stream visualizer.
+- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality. Shared HUD across all pages. Learning Log side-panel redesign. Flicker mitigations.
+- **Short term:** Personality layer API key integration, operator greeting, shutdown sequence, task history panel.
+- **Mid term:** Color presets, modular HUD panels, mission dashboard, mobile responsive.
 - **Long term:** Secure login, CLI tool, plugin system.
 
 ---
@@ -365,6 +367,18 @@ See [`ROADMAP_R.A.M.B.O_06-22-2026_13-39.md`](ROADMAP_R.A.M.B.O_06-22-2026_13-39
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-23 06:30 ET — Shared HUD, Learning Log redesign, flicker fix, ChromaticAberration removal
+
+- **[SharedHUD]** Created `SharedHUD.js/css` — extracted reusable `StatBars` (CPU/RAM/DSK), `ActivityFeed`, `CommandInput` components and `useSystemStats`/`useActivityFeed` hooks. All four are now present on every page (Splash, Agent, Learning Log, Round Table).
+- **[Stat bars restored]** CPU/RAM/DSK metric bars added to top-left under "BY DANIEL" on all pages. Previously lost when the splash footer was removed.
+- **[Learning Log redesign]** Complete rewrite: removed scrollable center layout, now `height: 100vh; overflow: hidden`. Left panel (System Identity + Operational Learning), right panel (Recent Learnings). SVG bezier branch lines connecting orb edge to panels. Agent quick-switch nav bar added.
+- **[Text readability]** Boosted dim text opacity on agent pages (role, description, objectives, param keys) with dark text-shadow for contrast against the bright orb.
+- **[Activity feed]** Relocated from bottom-center to fixed bottom-right to stop overlapping "TAP OR SAY RAMBO" mic hint.
+- **[Command input]** Relocated to fixed bottom-left, no longer overlapping the orb.
+- **[ChromaticAberration removed]** Stripped from all 4 pages as a flicker test. The RGB color fringing effect was a suspected source of persistent screen flickers.
+- **[Flicker mitigations]** Hoisted per-render `new Vector2()` allocations to stable constants. Removed infinite float animations on `backdrop-filter` panels. Added `will-change: contents` on orb canvases, `powerPreference: 'high-performance'` and `stencil: false` on all WebGL contexts.
+- **[Route fix]** Fixed Learning Log route mismatch: AgentPage navigated to `/learning-log` but route was `/learning`.
 
 ### 2026-06-22 19:30 ET — Tiers 5+6, agent page redesign, voice on all pages
 

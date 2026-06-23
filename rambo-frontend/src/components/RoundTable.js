@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback, Component } from "react";
 import { useNavigate } from "react-router-dom";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
-import { Vector2 } from "three";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput } from "./SharedHUD";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -69,6 +69,8 @@ function RoundTable() {
   const navigate = useNavigate();
   const [statusMap, setStatusMap] = useState({});
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
+  const sysStats = useSystemStats();
+  const { activity, connected } = useActivityFeed();
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -116,7 +118,7 @@ function RoundTable() {
       <div className="rt-orb-bg">
         <OrbErrorBoundary>
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-            dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+            dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance', stencil: false }}>
             <CosmicBackground />
             <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
             <AgentConstellation statusMap={statusMap} />
@@ -124,8 +126,6 @@ function RoundTable() {
             <EffectComposer>
               <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
                 intensity={0.6} radius={0.5} />
-              <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
-                radialModulation={false} modulationOffset={0} />
             </EffectComposer>
           </Canvas>
         </OrbErrorBoundary>
@@ -179,6 +179,10 @@ function RoundTable() {
           })}
         </svg>
       </div>
+
+      <StatBars stats={sysStats} />
+      <CommandInput connected={connected} />
+      <ActivityFeed activity={activity} />
 
       <footer className="rt-footer">
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>

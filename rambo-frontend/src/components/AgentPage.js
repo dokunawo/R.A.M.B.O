@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef, Component } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
-import { Vector2 } from "three";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput } from "./SharedHUD";
 import "./AgentPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -270,6 +270,8 @@ function AgentPage() {
   const navigate = useNavigate();
   const meta = AGENT_META[agentKey];
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
+  const sysStats = useSystemStats();
+  const { activity, connected } = useActivityFeed();
 
   const [status, setStatus] = useState("idle");
 
@@ -323,14 +325,12 @@ function AgentPage() {
       <div className="ap-orb-bg">
         <OrbErrorBoundary>
           <Canvas camera={{ position: [0, 0, 4.2], fov: 45 }}
-            dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}>
+            dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance', stencil: false }}>
             <CosmicBackground />
             <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
             <EffectComposer>
               <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
                 intensity={0.6} radius={0.5} />
-              <ChromaticAberration offset={new Vector2(0.0012, 0.0012)}
-                radialModulation={false} modulationOffset={0} />
             </EffectComposer>
           </Canvas>
         </OrbErrorBoundary>
@@ -409,7 +409,7 @@ function AgentPage() {
         </div>
       </div>
 
-      {/* QUICK SWITCH — bottom agent bar */}
+      {/* QUICK SWITCH — bottom agent bar + system nav */}
       <nav className="ap-quick-switch">
         {Object.entries(AGENT_META).map(([key, a]) => (
           <button
@@ -426,7 +426,22 @@ function AgentPage() {
             <span className="ap-qs-name">{a.name}</span>
           </button>
         ))}
+        <span className="ap-qs-divider" />
+        <button className="ap-qs-btn ap-qs-nav" style={{ "--agent-color": "#e8b15a", borderColor: "rgba(255,255,255,0.1)" }}
+          onClick={() => navigate("/council")} title="Round Table">
+          <span className="ap-qs-avatar">⚔️</span>
+          <span className="ap-qs-name">Council</span>
+        </button>
+        <button className="ap-qs-btn ap-qs-nav" style={{ "--agent-color": "#e8b15a", borderColor: "rgba(255,255,255,0.1)" }}
+          onClick={() => navigate("/learning")} title="Learning Log">
+          <span className="ap-qs-avatar">📜</span>
+          <span className="ap-qs-name">Log</span>
+        </button>
       </nav>
+
+      <StatBars stats={sysStats} />
+      <CommandInput connected={connected} />
+      <ActivityFeed activity={activity} />
 
       <ResponseTree commandLog={commandLog} agentColor={meta.color} />
 
