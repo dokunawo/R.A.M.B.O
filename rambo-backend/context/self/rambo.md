@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 60 commits:
+Last 14 days — 61 commits:
 
-- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (6 minutes ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (10 minutes ago)`
-- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (19 minutes ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (26 minutes ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (39 minutes ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (44 minutes ago)`
-- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (76 minutes ago)`
-- `6179eed Auto-load rambo-backend/.env on startup (81 minutes ago)`
+- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (10 minutes ago)`
+- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (16 minutes ago)`
+- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (20 minutes ago)`
+- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (30 minutes ago)`
+- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (36 minutes ago)`
+- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (49 minutes ago)`
+- `0da4e4b Fix two bugs blocking live model calls; centralize model id (55 minutes ago)`
+- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (86 minutes ago)`
+- `6179eed Auto-load rambo-backend/.env on startup (2 hours ago)`
 - `4bdd746 Tier 5 — handoff system (propose, don't chain) (2 hours ago)`
 - `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (2 hours ago)`
 - `c685b5b Extended 1h cache TTL to survive sparse traffic (5 hours ago)`
 - `ce3bc5c Add prompt caching across the sub-agent team (5 hours ago)`
-- `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (5 hours ago)`
+- `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (6 hours ago)`
 - `13ee09b Note Factory dispatch substring-match risk as known issue in roadmap (6 hours ago)`
 - `4db7acf Wire spawned-agent dispatch into orchestrator + mount FactoryDock everywhere (6 hours ago)`
 - `1d0eeae Add Factory approval UI + document Factory in roadmap/README (6 hours ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (7 hours ago)`
 - `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (8 hours ago)`
 - `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (9 hours ago)`
-- `cf495c9 Shared HUD on all pages, Learning Log redesign, remove ChromaticAberration (10 hours ago)`
-- … and 40 more
+- … and 41 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

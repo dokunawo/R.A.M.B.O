@@ -234,6 +234,7 @@ Funded API key wired up; took the system from "tested in mocks" to "verified liv
 | Feature | Priority |
 |---|---|
 | Native "Hey Rambo" wake word — browser Web Speech only listens while the tab is open/focused and needs per-origin mic permission. A true always-on assistant needs a small native background listener / wake-word engine feeding the backend | Medium |
+| True acoustic echo cancellation (AEC) / barge-in — current voice uses software half-duplex (mic muted while RAMBO speaks + 1.2s `ECHO_COOLDOWN_MS` cooldown), so you can't interrupt it by voice mid-sentence. Real AEC would allow talking over it like Alexa. Also: make the cooldown tunable from a setting | Low |
 | Secure login / operator authentication | High |
 | CLI companion tool (`rambo` command) | Medium |
 | Plugin system for custom agents | Medium |
