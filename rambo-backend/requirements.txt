@@ -5,6 +5,7 @@ psutil
 websockets
 httpx
 anthropic
+aiosqlite
 google-auth
 google-auth-oauthlib
 google-api-python-client

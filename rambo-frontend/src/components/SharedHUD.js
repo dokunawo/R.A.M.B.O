@@ -91,6 +91,123 @@ export function StatBars({ stats }) {
   );
 }
 
+export function useCostDashboard() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const r = await fetch(`${API}/usage`);
+        if (r.ok && !cancelled) setData(await r.json());
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 60000);
+    const onVis = () => { if (!document.hidden) poll(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+  return data;
+}
+
+export function CostIndicator({ data }) {
+  const [expanded, setExpanded] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const close = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setExpanded(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [expanded]);
+
+  if (!data) return null;
+
+  const mtd = data.month_to_date;
+  const costStr = mtd.cost_usd < 0.01 && mtd.cost_usd > 0
+    ? "<$0.01"
+    : `$${mtd.cost_usd.toFixed(2)}`;
+
+  const delta = data.mom_delta_pct;
+  const deltaClass = delta > 0 ? "hud-cost-delta-up" : delta < 0 ? "hud-cost-delta-down" : "";
+  const deltaStr = delta !== 0 ? `${delta > 0 ? "+" : ""}${delta}%` : "";
+
+  return (
+    <div className="hud-cost-wrap" ref={panelRef}>
+      <div className="hud-cost-face" onClick={() => setExpanded(e => !e)}>
+        <span className="hud-cost-tag">API</span>
+        <span className="hud-cost-amount">{costStr}</span>
+        {deltaStr && <span className={`hud-cost-delta ${deltaClass}`}>{deltaStr}</span>}
+      </div>
+
+      {expanded && (
+        <div className="hud-cost-panel">
+          <div className="hud-cost-panel-header">◆ COST DASHBOARD</div>
+
+          <div className="hud-cost-section">
+            <div className="hud-cost-row">
+              <span>Month-to-date</span>
+              <span>${mtd.cost_usd.toFixed(4)}</span>
+            </div>
+            <div className="hud-cost-row">
+              <span>Today</span>
+              <span>${data.today.cost_usd.toFixed(4)}</span>
+            </div>
+            <div className="hud-cost-row">
+              <span>Calls</span>
+              <span>{mtd.call_count}</span>
+            </div>
+            {data.cache_savings_usd > 0 && (
+              <div className="hud-cost-row hud-cost-savings">
+                <span>Cache savings</span>
+                <span>−${data.cache_savings_usd.toFixed(4)}</span>
+              </div>
+            )}
+          </div>
+
+          {data.by_model.length > 0 && (
+            <div className="hud-cost-section">
+              <div className="hud-cost-section-label">BY MODEL</div>
+              {data.by_model.map(m => (
+                <div key={m.model} className="hud-cost-row">
+                  <span>{m.model}</span>
+                  <span>${m.cost.toFixed(4)} ({m.calls})</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {data.by_day.length > 0 && (
+            <div className="hud-cost-section hud-cost-daily">
+              <div className="hud-cost-section-label">DAILY</div>
+              {data.by_day.map(d => (
+                <div key={d.day} className="hud-cost-row">
+                  <span>{d.day}</span>
+                  <span>${d.cost.toFixed(4)} ({d.calls})</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="hud-cost-section">
+            <div className="hud-cost-row hud-cost-tokens">
+              <span>IN {mtd.input_tokens.toLocaleString()}</span>
+              <span>OUT {mtd.output_tokens.toLocaleString()}</span>
+            </div>
+            {(mtd.cache_write_tokens > 0 || mtd.cache_read_tokens > 0) && (
+              <div className="hud-cost-row hud-cost-tokens">
+                <span>C/W {mtd.cache_write_tokens.toLocaleString()}</span>
+                <span>C/R {mtd.cache_read_tokens.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ActivityFeed({ activity }) {
   const feedRef = useRef(null);
   useEffect(() => {

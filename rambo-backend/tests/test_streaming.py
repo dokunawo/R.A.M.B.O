@@ -42,6 +42,13 @@ class FakeStreamEvent:
         self.delta.text = text
 
 
+class FakeUsage:
+    input_tokens = 100
+    output_tokens = 50
+    cache_creation_input_tokens = 0
+    cache_read_input_tokens = 0
+
+
 class FakeStream:
     def __init__(self, events):
         self._events = events
@@ -59,6 +66,9 @@ class FakeStream:
         if not self._events:
             raise StopAsyncIteration
         return self._events.pop(0)
+
+    def get_final_message(self):
+        return MagicMock(model="claude-sonnet-4-20250514", usage=FakeUsage())
 
 
 def setup_llm(orch, text_chunks):

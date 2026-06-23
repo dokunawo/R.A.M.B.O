@@ -43,6 +43,111 @@
   color: var(--text-dim, #7a7a7a);
 }
 
+/* ---- Cost Indicator (below stat bars) ---- */
+.hud-cost-wrap {
+  position: fixed;
+  top: 110px;
+  left: 20px;
+  z-index: 11;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  pointer-events: auto;
+}
+
+.hud-cost-face {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 3px 0;
+  user-select: none;
+}
+
+.hud-cost-tag {
+  color: var(--accent, #e8b15a);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
+}
+
+.hud-cost-amount {
+  color: var(--text-dim, #7a7a7a);
+  font-size: 10px;
+}
+
+.hud-cost-delta {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+}
+.hud-cost-delta-up   { color: #ff5b5b; text-shadow: 0 0 6px rgba(255, 91, 91, 0.5); }
+.hud-cost-delta-down { color: #00ff88; text-shadow: 0 0 6px rgba(0, 255, 136, 0.5); }
+
+.hud-cost-panel {
+  margin-top: 6px;
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: var(--glass-bg, rgba(14, 15, 19, 0.85));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.06));
+}
+
+.hud-cost-panel-header {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent, #e8b15a);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.15);
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
+}
+
+.hud-cost-section {
+  margin-bottom: 8px;
+}
+
+.hud-cost-section-label {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--accent, #e8b15a);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.hud-cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-dim, #7a7a7a);
+  line-height: 1.8;
+}
+
+.hud-cost-savings span:last-child {
+  color: #00ff88;
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+
+.hud-cost-tokens {
+  font-size: 8.5px;
+  opacity: 0.7;
+}
+
+.hud-cost-daily {
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 177, 90, 0.3) transparent;
+}
+.hud-cost-daily::-webkit-scrollbar { width: 6px; }
+.hud-cost-daily::-webkit-scrollbar-thumb { background: rgba(232, 177, 90, 0.3); border-radius: 3px; }
+
+/* Push cost indicator down on agent pages with nav */
+.agent-page-root .hud-cost-wrap,
+.ll-root .hud-cost-wrap {
+  top: 110px;
+}
+
 /* ---- Activity Feed (bottom-right) ---- */
 .hud-activity-feed {
   position: fixed;

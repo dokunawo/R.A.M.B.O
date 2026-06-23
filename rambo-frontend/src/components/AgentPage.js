@@ -5,7 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard } from "./SharedHUD";
 import "./AgentPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -271,6 +271,7 @@ function AgentPage() {
   const meta = AGENT_META[agentKey];
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
   const sysStats = useSystemStats();
+  const costData = useCostDashboard();
   const { activity, connected } = useActivityFeed();
 
   const [status, setStatus] = useState("idle");
@@ -440,6 +441,7 @@ function AgentPage() {
       </nav>
 
       <StatBars stats={sysStats} />
+      <CostIndicator data={costData} />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 

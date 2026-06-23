@@ -64,6 +64,7 @@ agent's status.
 - **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow. Streaming LLM responses with per-sentence segment emission for low-latency speech.
 - **🧬 Self-knowledge system** — auto-generated doc from live code registries, refreshed on every commit via pre-commit hook, drift checker catches stale references, slim summary injected into the agent's system prompt.
 - **🎭 Personality engine** — cold professional voice powered by Claude, with tonal checkpoints and voice cues to prevent filler language.
+- **💰 Cost dashboard** — live tracking of LLM API token usage and cost per call, with always-visible indicator, click-to-expand panel (per-model breakdown, daily trend, cache savings), and `GET /usage` endpoint. Best-effort recording that never breaks conversation flow.
 - **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
 - **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
 - **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.

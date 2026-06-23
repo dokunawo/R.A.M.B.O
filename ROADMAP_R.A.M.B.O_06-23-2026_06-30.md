@@ -127,6 +127,16 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | 800ms artificial command delay removed | Done |
 | 7 streaming tests + full suite (22/22 → 61/61 passing) | Done |
 
+### Cost Dashboard (06/23/2026)
+| Feature | Status |
+|---|---|
+| **Phase 1** — Pricing module: `MODEL_PRICING` table, `compute_cost()` with longest-prefix matching | Done |
+| **Phase 2** — Storage: `usage` SQLite table via `aiosqlite`, `UsageRepo` with `record()` + `usage_since()` | Done |
+| **Phase 3** — Capture: `record_usage()` best-effort helper wired into `_speak()` streaming path, catch-all wrapper | Done |
+| **Phase 4** — Aggregation: `GET /usage` endpoint, MTD/today/per-model/daily/cache-savings/MoM, 60s cache | Done |
+| **Phase 5** — UI: `CostIndicator` component mirroring `StatBars`, click-to-expand panel on all 4 pages | Done |
+| 34 new tests (pricing: 11, repo: 7, capture: 6, dashboard: 10) — 95/95 total passing | Done |
+
 ### Self-Knowledge System (06/23/2026)
 | Feature | Status |
 |---|---|
@@ -153,6 +163,8 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 ### Mid Term (next 2 weeks)
 | Feature | Priority |
 |---|---|
+| Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking | High |
+| Alembic migration framework — versioned schema management as DB tables grow | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |
 | Mission dashboard — aggregated stats across all agents | Medium |
@@ -193,3 +205,14 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | `rambo-backend/tests/test_streaming.py` | **Created** — 7 streaming tests |
 | `rambo-backend/tests/test_self_knowledge_*.py` | **Created** — 30 tests (parser, generators, drift, prompt) |
 | `scripts/install-self-knowledge-hook.sh` | **Created** — idempotent pre-commit hook installer |
+| `rambo-backend/pricing.py` | **Created** — MODEL_PRICING table + compute_cost() with longest-prefix matching |
+| `rambo-backend/usage_repo.py` | **Created** — UsageRepo class, SQLite usage table, record + aggregation |
+| `rambo-backend/usage_capture.py` | **Created** — record_usage() best-effort helper with catch-all |
+| `rambo-backend/usage_dashboard.py` | **Created** — get_dashboard() aggregation with 60s cache |
+| `rambo-backend/main.py` | Modified — startup DB init, GET /usage endpoint |
+| `rambo-backend/tests/test_pricing.py` | **Created** — 11 tests |
+| `rambo-backend/tests/test_usage_repo.py` | **Created** — 7 tests |
+| `rambo-backend/tests/test_usage_capture.py` | **Created** — 6 tests |
+| `rambo-backend/tests/test_usage_dashboard.py` | **Created** — 10 tests |
+| `rambo-frontend/src/components/SharedHUD.js` | Modified — CostIndicator + useCostDashboard |
+| `rambo-frontend/src/components/SharedHUD.css` | Modified — cost indicator + expand panel styles |

@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from orchestrator.orchestrator import Orchestrator
 import sentinel_queue
 import agent_tracker
+from usage_repo import UsageRepo
+from usage_capture import set_usage_repo
+from usage_dashboard import get_dashboard
 
 try:
     import psutil
@@ -19,6 +22,13 @@ except ImportError:
 
 app = FastAPI()
 rambo = Orchestrator()
+_usage_repo = UsageRepo()
+
+
+@app.on_event("startup")
+async def _init_usage_db():
+    await _usage_repo.init_db()
+    set_usage_repo(_usage_repo)
 
 manager = rambo.ws
 
@@ -108,6 +118,11 @@ async def google_auth():
         return {"authenticated": True}
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/usage")
+async def usage_dashboard():
+    return await get_dashboard(_usage_repo)
 
 
 @app.get("/learning/log")

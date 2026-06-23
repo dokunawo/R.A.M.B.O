@@ -13,6 +13,7 @@ except ImportError:
 
 from models.task import Task
 from router import choose_brain
+from usage_capture import record_usage
 from memory.sqlite_store import SQLiteStore
 from skills import match_skill
 import agent_tracker
@@ -262,6 +263,9 @@ class Orchestrator:
                             held_text = sentence
                             held_seq = seq
                             seq += 1
+
+            final_msg = stream.get_final_message()
+            await record_usage(final_msg.model, final_msg.usage)
 
             if token_buf.strip():
                 sentences.append(token_buf.strip())

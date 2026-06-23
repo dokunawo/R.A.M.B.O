@@ -6,7 +6,7 @@ import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard } from "./SharedHUD";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -70,6 +70,7 @@ function RoundTable() {
   const [statusMap, setStatusMap] = useState({});
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
   const sysStats = useSystemStats();
+  const costData = useCostDashboard();
   const { activity, connected } = useActivityFeed();
 
   const fetchStatus = useCallback(async () => {
@@ -181,6 +182,7 @@ function RoundTable() {
       </div>
 
       <StatBars stats={sysStats} />
+      <CostIndicator data={costData} />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 
