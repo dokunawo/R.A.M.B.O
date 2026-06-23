@@ -78,8 +78,8 @@
 }
 
 /* Blocked / permission-denied state */
-.vc-mic-blocked {
-  border-color: rgba(255, 91, 91, 0.7);
+.vc-mic-primary.vc-mic-blocked {
+  border: 1.5px solid rgba(255, 91, 91, 0.7);
   color: #ff8a8a;
   box-shadow: 0 0 20px rgba(255, 91, 91, 0.35),
               inset 0 0 14px rgba(255, 91, 91, 0.1);

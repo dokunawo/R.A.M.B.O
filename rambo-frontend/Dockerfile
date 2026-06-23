@@ -15,6 +15,9 @@ FROM nginx:stable
 # Copy built React app to Nginx html directory
 COPY --from=build /app/build /usr/share/nginx/html
 
+# SPA routing fallback so deep links / refreshes don't 404
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Expose port 80 (Nginx default)
 EXPOSE 80
 

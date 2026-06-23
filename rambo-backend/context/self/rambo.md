@@ -78,14 +78,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 56 commits:
+Last 14 days — 57 commits:
 
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (13 minutes ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (19 minutes ago)`
-- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (50 minutes ago)`
-- `6179eed Auto-load rambo-backend/.env on startup (56 minutes ago)`
-- `4bdd746 Tier 5 — handoff system (propose, don't chain) (67 minutes ago)`
-- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (70 minutes ago)`
+- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (6 minutes ago)`
+- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (20 minutes ago)`
+- `0da4e4b Fix two bugs blocking live model calls; centralize model id (25 minutes ago)`
+- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (56 minutes ago)`
+- `6179eed Auto-load rambo-backend/.env on startup (62 minutes ago)`
+- `4bdd746 Tier 5 — handoff system (propose, don't chain) (74 minutes ago)`
+- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (76 minutes ago)`
 - `c685b5b Extended 1h cache TTL to survive sparse traffic (4 hours ago)`
 - `ce3bc5c Add prompt caching across the sub-agent team (5 hours ago)`
 - `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (5 hours ago)`
@@ -93,14 +94,13 @@ Last 14 days — 56 commits:
 - `4db7acf Wire spawned-agent dispatch into orchestrator + mount FactoryDock everywhere (5 hours ago)`
 - `1d0eeae Add Factory approval UI + document Factory in roadmap/README (5 hours ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (7 hours ago)`
-- `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (7 hours ago)`
+- `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (8 hours ago)`
 - `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (8 hours ago)`
 - `cf495c9 Shared HUD on all pages, Learning Log redesign, remove ChromaticAberration (10 hours ago)`
 - `1ba1078 Fix mic button overlap, neon glass response popups (10 hours ago)`
 - `fa0a3f5 Add percentage-based volume control with voice commands (10 hours ago)`
 - `45c08fb Replace SplashScreen custom mic/sound buttons with VoiceControls component (11 hours ago)`
-- `e105a20 Bottom-center mic button, response card polish, glass on splash controls (11 hours ago)`
-- … and 36 more
+- … and 37 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
