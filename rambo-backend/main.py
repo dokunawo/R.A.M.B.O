@@ -1,3 +1,6 @@
+import asyncio
+from typing import Optional
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -8,6 +11,11 @@ import agent_tracker
 from usage_repo import UsageRepo
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
+from factory.repo import FactoryRepo, State
+from factory.tool_registry import build_default_registry
+from factory.pipeline import SpawnPipeline
+from factory.approval import handle_approve, handle_reject
+from factory.registry_watcher import RegistryWatcher
 
 try:
     import psutil
@@ -23,12 +31,35 @@ except ImportError:
 app = FastAPI()
 rambo = Orchestrator()
 _usage_repo = UsageRepo()
+_factory_repo = FactoryRepo()
+_tool_registry = build_default_registry()
+_pipeline: SpawnPipeline | None = None
+_watcher: RegistryWatcher | None = None
+_IN_FLIGHT: set[asyncio.Task] = set()
 
 
 @app.on_event("startup")
 async def _init_usage_db():
     await _usage_repo.init_db()
     set_usage_repo(_usage_repo)
+
+
+@app.on_event("startup")
+async def _init_factory():
+    global _pipeline, _watcher
+    await _factory_repo.init_db()
+    if rambo.llm:
+        _pipeline = SpawnPipeline(
+            repo=_factory_repo,
+            tool_registry=_tool_registry,
+            llm_client=rambo.llm,
+        )
+        _watcher = RegistryWatcher(
+            repo=_factory_repo,
+            tool_registry=_tool_registry,
+            llm_client=rambo.llm,
+        )
+        _watcher.start()
 
 manager = rambo.ws
 
@@ -141,3 +172,72 @@ async def activity_ws(ws: WebSocket):
         manager.disconnect(ws)
     except Exception:
         manager.disconnect(ws)
+
+
+# ── Factory endpoints ────────────────────────────────────────────
+
+
+class SpawnRequest(BaseModel):
+    name_hint: str
+    role_description: str
+    special_requirements: str = ""
+
+
+class RejectRequest(BaseModel):
+    feedback: Optional[str] = None
+
+
+@app.post("/factory/spawn")
+async def factory_spawn(req: SpawnRequest):
+    if _pipeline is None:
+        return {"error": "LLM client not configured — cannot run Factory"}
+    import uuid
+    task_id = uuid.uuid4().hex
+    await _factory_repo.create_task(
+        task_id=task_id,
+        name_hint=req.name_hint,
+        role_description=req.role_description,
+        special_requirements=req.special_requirements,
+    )
+    task = asyncio.create_task(_pipeline.run(task_id=task_id))
+    _IN_FLIGHT.add(task)
+    task.add_done_callback(_IN_FLIGHT.discard)
+    return {"task_id": task_id, "status": "pending"}
+
+
+@app.get("/factory/pending")
+async def factory_pending():
+    return await _factory_repo.list_by_status(State.AWAITING_APPROVAL)
+
+
+@app.get("/factory/task/{task_id}")
+async def factory_task(task_id: str):
+    task = await _factory_repo.get_task(task_id)
+    if task is None:
+        return {"error": "not found"}
+    return task
+
+
+@app.post("/factory/approve/{task_id}")
+async def factory_approve(task_id: str):
+    async def _notify(slug: str):
+        if _watcher:
+            await _watcher.refresh()
+    return await handle_approve(
+        task_id=task_id, repo=_factory_repo, notify_registry=_notify,
+    )
+
+
+@app.post("/factory/reject/{task_id}")
+async def factory_reject(task_id: str, req: RejectRequest):
+    return await handle_reject(
+        task_id=task_id,
+        repo=_factory_repo,
+        feedback=req.feedback,
+        pipeline=_pipeline,
+    )
+
+
+@app.get("/factory/agents")
+async def factory_agents():
+    return await _factory_repo.list_active_agents()
