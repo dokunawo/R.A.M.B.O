@@ -208,6 +208,134 @@ export function CostIndicator({ data }) {
   );
 }
 
+export function useFactoryPending() {
+  const [pending, setPending] = useState([]);
+
+  const refresh = useCallback(async () => {
+    if (document.hidden) return;
+    try {
+      const r = await fetch(`${API}/factory/pending`);
+      if (r.ok) setPending(await r.json());
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 15000);
+    const onVis = () => { if (!document.hidden) refresh(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, [refresh]);
+
+  return { pending, refresh };
+}
+
+function FactoryCard({ task, onResolved }) {
+  const [busy, setBusy] = useState(false);
+  const [showReject, setShowReject] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const m = task.proposed_manifest || {};
+
+  const approve = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fetch(`${API}/factory/approve/${task.id}`, { method: "POST" });
+      onResolved();
+    } catch {} finally { setBusy(false); }
+  };
+
+  const reject = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fetch(`${API}/factory/reject/${task.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback: feedback.trim() || null }),
+      });
+      setShowReject(false);
+      setFeedback("");
+      onResolved();
+    } catch {} finally { setBusy(false); }
+  };
+
+  return (
+    <div className="hud-factory-card">
+      <div className="hud-factory-card-head">
+        <span className="hud-factory-name">{m.name || task.name_hint}</span>
+        <span className="hud-factory-slug">{m.slug}</span>
+      </div>
+      <div className="hud-factory-specialty">{m.specialty || task.role_description}</div>
+      {m.tool_allowlist && m.tool_allowlist.length > 0 && (
+        <div className="hud-factory-tools">
+          {m.tool_allowlist.map(t => <span key={t} className="hud-factory-tool">{t}</span>)}
+        </div>
+      )}
+      {m.system_prompt && (
+        <div className="hud-factory-prompt">{m.system_prompt.slice(0, 240)}{m.system_prompt.length > 240 ? "…" : ""}</div>
+      )}
+      {task.approval_iterations > 0 && (
+        <div className="hud-factory-iter">revision {task.approval_iterations}</div>
+      )}
+
+      {!showReject ? (
+        <div className="hud-factory-actions">
+          <button className="hud-factory-approve" onClick={approve} disabled={busy}>
+            {busy ? "…" : "APPROVE"}
+          </button>
+          <button className="hud-factory-reject" onClick={() => setShowReject(true)} disabled={busy}>
+            REJECT
+          </button>
+        </div>
+      ) : (
+        <div className="hud-factory-reject-box">
+          <input
+            className="hud-factory-feedback"
+            type="text"
+            value={feedback}
+            onChange={e => setFeedback(e.target.value)}
+            placeholder="Feedback (blank = kill task)"
+            spellCheck={false}
+          />
+          <div className="hud-factory-actions">
+            <button className="hud-factory-reject" onClick={reject} disabled={busy}>
+              {feedback.trim() ? "REVISE" : "KILL"}
+            </button>
+            <button className="hud-factory-cancel" onClick={() => setShowReject(false)} disabled={busy}>
+              CANCEL
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function FactoryDock({ pending, onRefresh }) {
+  const [open, setOpen] = useState(false);
+  if (!pending) return null;
+
+  return (
+    <div className="hud-factory-wrap">
+      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+        <span className="hud-factory-tag">FACTORY</span>
+        <span className="hud-factory-count">{pending.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ PENDING AGENTS</div>
+          {pending.length === 0
+            ? <div className="hud-factory-empty">{"// no agents awaiting approval"}</div>
+            : pending.map(t => (
+                <FactoryCard key={t.id} task={t} onResolved={onRefresh} />
+              ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ActivityFeed({ activity }) {
   const feedRef = useRef(null);
   useEffect(() => {

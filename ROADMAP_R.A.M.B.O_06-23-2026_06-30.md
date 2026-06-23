@@ -146,6 +146,19 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | **Phase 4** — Pre-commit hook auto-refreshes self-knowledge doc + idempotent installer script | Done |
 | **Phase 5** — Slim summary (~291 tokens) injected into system prompt via `build_system_prompt()`, controlled by `RAMBO_SELF_KNOWLEDGE` env var (slim/full/off) | Done |
 
+### Factory — Sub-Agent Spawner (06/23/2026)
+| Feature | Status |
+|---|---|
+| **Tier 0** — SQLite tables (`spawn_tasks`, `spawned_agents`, `research_reports`) with state-machine transitions, daily cap (5/day), reserved slugs (13), slug uniqueness; `ToolRegistry` with `factory_allowed` gating + 5 starter tools | Done |
+| **Tier 1** — Research subagent: `web_search` loop, forced `emit_skills_report` on final iteration, 24h cache, Pydantic-validated `SkillsReport` | Done |
+| **Tier 2** — Spec markdown writer (`agent-specs/<slug>.md`) + system-prompt generator with prompt-injection sanitization + revision support | Done |
+| **Tier 3** — `SpawnPipeline` state machine (PENDING → AWAITING_APPROVAL), always lands terminal, reserved/duplicate slug + injection guards | Done |
+| **Tier 4** — Approval gate: approve creates agent + notifies registry; reject-with-feedback re-runs prompt gen (capped 3 rounds); `GET /factory/pending` page-load hydration | Done |
+| **Tier 5** — `ConfigDrivenAgent` (one generic tool-use loop, zero per-agent code) + `RegistryWatcher` (30s poll + immediate refresh on approve) registering `dispatch_to_<slug>` | Done |
+| **Frontend** — `FactoryDock` + `useFactoryPending` in SharedHUD, approve/reject/revise cards keyed by task_id, mounted on Round Table | Done |
+| API: `POST /factory/spawn`, `GET /factory/pending`, `GET /factory/task/{id}`, approve/reject/agents endpoints; strong refs on in-flight pipeline tasks | Done |
+| 54 backend tests (repo: 14, registry: 6, research: 6, spec: 7, pipeline: 5, approval: 8, config/watcher: 8) — 149/149 total passing | Done |
+
 ---
 
 ## What's Next
@@ -163,8 +176,9 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 ### Mid Term (next 2 weeks)
 | Feature | Priority |
 |---|---|
-| Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking | High |
-| Alembic migration framework — versioned schema management as DB tables grow | Medium |
+| Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking (`ConfigDrivenAgent` now does this for Factory-spawned agents; extend to the 10 hand-rolled specialists) | High |
+| Factory follow-ups — mount `FactoryDock` on all pages, wire `dispatch_to_<slug>` into `choose_brain`/orchestrator, surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent` | Medium |
+| Alembic migration framework — versioned schema management as DB tables grow (now 2 DBs: `usage.db`, `factory.db`) | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |
 | Mission dashboard — aggregated stats across all agents | Medium |

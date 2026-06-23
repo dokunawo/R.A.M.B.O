@@ -65,6 +65,7 @@ agent's status.
 - **🧬 Self-knowledge system** — auto-generated doc from live code registries, refreshed on every commit via pre-commit hook, drift checker catches stale references, slim summary injected into the agent's system prompt.
 - **🎭 Personality engine** — cold professional voice powered by Claude, with tonal checkpoints and voice cues to prevent filler language.
 - **💰 Cost dashboard** — live tracking of LLM API token usage and cost per call, with always-visible indicator, click-to-expand panel (per-model breakdown, daily trend, cache savings), and `GET /usage` endpoint. Best-effort recording that never breaks conversation flow.
+- **🏭 Factory sub-agent spawner** — a meta-agent that mints other agents on demand: it researches a role (web search → structured Skills Report), drafts a spec + system prompt, stages a manifest for human approval, then registers it as a hot-reloadable `dispatch_to_<slug>` agent — no restart, no bespoke class per agent. Every spawned agent is pure config (`ConfigDrivenAgent` runs one generic tool-use loop). Includes a daily spawn cap, reserved-slug guard, prompt-injection sanitization, 3-round revision loop, and a `FactoryDock` approval surface with page-load hydration via `GET /factory/pending`.
 - **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
 - **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
 - **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.
@@ -314,6 +315,13 @@ npm start          # serves on http://localhost:3000
 | `GET` | `/sentinel/approvals`| — | List tasks awaiting manual approval |
 | `POST` | `/sentinel/decision` | `{ "id": "...", "decision": "APPROVE" \| "DENY" }` | Approve or deny a held task |
 | `GET` | `/learning/log` | — | System-wide learning entries |
+| `GET` | `/usage` | — | Cost dashboard (MTD/today/per-model/daily/cache savings) |
+| `POST` | `/factory/spawn` | `{ "name_hint": "...", "role_description": "...", "special_requirements": "" }` | Stage a new sub-agent build |
+| `GET` | `/factory/pending` | — | All tasks awaiting approval (page-load hydration) |
+| `GET` | `/factory/task/{id}` | — | Single spawn-task status + proposed manifest |
+| `POST` | `/factory/approve/{id}` | — | Approve a proposed agent → registers `dispatch_to_<slug>` |
+| `POST` | `/factory/reject/{id}` | `{ "feedback": "..." \| null }` | Reject (feedback = revise, blank = kill) |
+| `GET` | `/factory/agents` | — | List active spawned agents |
 | `WS` | `/ws/activity` | — | Live activity + `STATUS:<agent>:<state>` feed |
 
 **Example — run a goal:**
@@ -381,6 +389,14 @@ See [`ROADMAP_R.A.M.B.O_06-23-2026_06-30.md`](ROADMAP_R.A.M.B.O_06-23-2026_06-30
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-23 — Factory sub-agent spawner (5 tiers + approval UI)
+
+- **[Factory backend]** New `factory/` package: `repo.py` (3 SQLite tables + state machine), `tool_registry.py` (`ToolRegistry` with `factory_allowed` gating, 5 starter tools), `research.py` (Tier 1 web-search loop with forced structured emit + 24h cache), `spec_writer.py` + `sanitize.py` (Tier 2 spec markdown + prompt gen with injection guards), `pipeline.py` (Tier 3 state machine), `approval.py` (Tier 4 approve/reject/revise), `config_agent.py` + `registry_watcher.py` (Tier 5 generic runtime + 30s hot-reload).
+- **[Factory API]** `POST /factory/spawn`, `GET /factory/pending` (page-load hydration), `GET /factory/task/{id}`, `POST /factory/approve/{id}`, `POST /factory/reject/{id}`, `GET /factory/agents`. Strong refs held on in-flight pipeline tasks to prevent GC.
+- **[FactoryDock]** New `useFactoryPending` hook + `FactoryDock` component in SharedHUD — collapsible dock listing pending agents as cards keyed by task_id, each with Approve / Reject / Revise (with feedback) actions. Mounted on Round Table.
+- **[Safety]** Daily spawn cap (5/day), 13 reserved slugs, slug-uniqueness guard, prompt-injection sanitization, 3-round revision cap, full audit trail via `created_by_task_id`.
+- **[Tests]** 54 new backend tests, 149/149 total passing. Frontend production build clean.
 
 ### 2026-06-23 06:30 ET — Shared HUD, Learning Log redesign, flicker fix, ChromaticAberration removal
 
