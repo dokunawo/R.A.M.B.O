@@ -91,8 +91,8 @@ class TestBuildSystemPrompt:
 
     def test_optional_context_appended(self):
         blocks = build_system_prompt("personality", context="Current time: noon")
-        assert len(blocks) == 3
-        assert "noon" in blocks[2]["text"]
+        assert any("noon" in b["text"] for b in blocks)
+        assert blocks[-1]["text"] == "Current time: noon"
 
 
 class TestConversationManager:

@@ -1,6 +1,10 @@
+import os
 from pathlib import Path
 
 PERSONALITY_FILE = Path(__file__).parent / "AGENT.md"
+SELF_KNOWLEDGE_DOC = Path(__file__).parent / "context" / "self" / "rambo.md"
+
+_SELF_KNOWLEDGE_MODE = os.environ.get("RAMBO_SELF_KNOWLEDGE", "slim")
 
 _VOICE_CUE = (
     "[Voice check — R.A.M.B.O mode, not assistant mode. "
@@ -40,6 +44,59 @@ def load_personality() -> str:
     return PERSONALITY_FILE.read_text(encoding="utf-8")
 
 
+def load_self_knowledge(mode: str | None = None) -> str:
+    mode = mode or _SELF_KNOWLEDGE_MODE
+    if mode == "off" or not SELF_KNOWLEDGE_DOC.exists():
+        return ""
+    doc = SELF_KNOWLEDGE_DOC.read_text(encoding="utf-8")
+    if mode == "full":
+        return f"\n## Self-Knowledge\n{doc}"
+    return _build_slim_summary(doc)
+
+
+def _build_slim_summary(doc: str) -> str:
+    import re
+    sections = {}
+    current = None
+    lines_buf = []
+    for line in doc.split("\n"):
+        if line.startswith("## "):
+            if current:
+                sections[current] = "\n".join(lines_buf)
+            current = line[3:].strip()
+            lines_buf = []
+        else:
+            lines_buf.append(line)
+    if current:
+        sections[current] = "\n".join(lines_buf)
+
+    parts = []
+    if "Identity" in sections:
+        identity = sections["Identity"].strip()
+        if len(identity) > 400:
+            identity = identity[:400].rsplit(" ", 1)[0] + "…"
+        parts.append(identity)
+
+    if "Core Principles" in sections:
+        parts.append(sections["Core Principles"].strip())
+
+    cap_section = sections.get("Capabilities at a Glance", "")
+    skill_names = re.findall(r"^\| (\w[\w-]*) \|", cap_section, re.MULTILINE)
+    skill_names = [n for n in skill_names if n != "Skill"]
+    if skill_names:
+        parts.append("Skills: " + ", ".join(skill_names))
+
+    sub_section = sections.get("Sub-agents", "")
+    agent_names = re.findall(r"^\| (\w+) \|", sub_section, re.MULTILINE)
+    agent_names = [n for n in agent_names if n != "Agent"]
+    if agent_names:
+        parts.append("Agents: " + ", ".join(agent_names))
+
+    if not parts:
+        return ""
+    return "\n## Self-Knowledge (slim)\n" + "\n\n".join(parts)
+
+
 def build_system_prompt(personality_text: str, context: str = "") -> list[dict]:
     blocks = [
         {
@@ -52,6 +109,15 @@ def build_system_prompt(personality_text: str, context: str = "") -> list[dict]:
             "text": _TONAL_CHECKPOINT,
         },
     ]
+
+    sk = load_self_knowledge()
+    if sk:
+        blocks.append({
+            "type": "text",
+            "text": sk,
+            "cache_control": {"type": "ephemeral"},
+        })
+
     if context:
         blocks.append({"type": "text", "text": context})
     return blocks

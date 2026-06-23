@@ -24,18 +24,22 @@ function stopGlobalRecognition() {
   }
 }
 
-function speak(text, onStart, onEnd) {
-  const synth = window.speechSynthesis;
-  if (!synth) { onEnd?.(); return; }
-  synth.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const voices = synth.getVoices();
-  const preferred = voices.find(v =>
+function getPreferredVoice() {
+  const voices = window.speechSynthesis?.getVoices() || [];
+  return voices.find(v =>
     /google uk english female|microsoft zira|samantha|karen|victoria|fiona/i.test(v.name)
   ) || voices.find(v =>
     /google us english/i.test(v.name)
   ) || voices.find(v => v.lang.startsWith("en") && /female|natural|premium/i.test(v.name)
   ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
+}
+
+function speak(text, onStart, onEnd) {
+  const synth = window.speechSynthesis;
+  if (!synth) { onEnd?.(); return; }
+  synth.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const preferred = getPreferredVoice();
   if (preferred) utter.voice = preferred;
   utter.rate  = 1.0;
   utter.pitch = 1.05;
@@ -44,6 +48,22 @@ function speak(text, onStart, onEnd) {
   utter.onend   = () => onEnd?.();
   utter.onerror = () => onEnd?.();
   synth.speak(utter);
+}
+
+function speakSegment(text) {
+  return new Promise((resolve) => {
+    const synth = window.speechSynthesis;
+    if (!synth) { resolve(); return; }
+    const utter = new SpeechSynthesisUtterance(text);
+    const preferred = getPreferredVoice();
+    if (preferred) utter.voice = preferred;
+    utter.rate = 1.0;
+    utter.pitch = 1.05;
+    utter.volume = 1.0;
+    utter.onend = resolve;
+    utter.onerror = resolve;
+    synth.speak(utter);
+  });
 }
 
 if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -89,7 +109,53 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
+  const segmentQueueRef = useRef([]);
+  const playingSegmentRef = useRef(false);
+  const activeBaseTurnRef = useRef(null);
+  const followUpRef = useRef(false);
+
+  const finishTurn = useCallback(() => {
+    onSpeakEndRef.current?.();
+    commandBufferRef.current = "";
+    setTranscript("");
+    activeBaseTurnRef.current = null;
+    if (followUpRef.current) {
+      wakeDetectedRef.current = true;
+      setState(CONV_STATES.LISTENING);
+    } else {
+      wakeDetectedRef.current = false;
+      setState(CONV_STATES.IDLE);
+    }
+  }, []);
+
+  const pumpQueue = useCallback(async () => {
+    if (playingSegmentRef.current || segmentQueueRef.current.length === 0) return;
+    const seg = segmentQueueRef.current.shift();
+    playingSegmentRef.current = true;
+    await speakSegment(seg.text);
+    playingSegmentRef.current = false;
+    if (segmentQueueRef.current.length > 0) {
+      pumpQueue();
+    } else if (seg.is_final) {
+      finishTurn();
+    }
+  }, [finishTurn]);
+
+  const handleSpeakSegment = useCallback((msg) => {
+    if (activeBaseTurnRef.current === null && segmentQueueRef.current.length === 0 && !playingSegmentRef.current) {
+      activeBaseTurnRef.current = msg.base_turn_id;
+      setState(CONV_STATES.SPEAKING);
+      onSpeakStartRef.current?.();
+    } else if (msg.base_turn_id !== activeBaseTurnRef.current) {
+      return;
+    }
+    segmentQueueRef.current.push(msg);
+    pumpQueue();
+  }, [pumpQueue]);
+
   const speakResponse = useCallback((text, followUp = false) => {
+    followUpRef.current = followUp;
+    if (activeBaseTurnRef.current) return;
     setState(CONV_STATES.SPEAKING);
     onSpeakStartRef.current?.();
     const fullText = followUp ? text + " ... Is there anything else?" : text;
@@ -163,7 +229,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             silenceTimerRef.current = setTimeout(() => {
               const finalCmd = commandBufferRef.current.trim();
               if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
-            }, 1500);
+            }, 1000);
           }
         } else if (interim) {
           let cmd = interim.trim();
@@ -179,7 +245,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
           silenceTimerRef.current = setTimeout(() => {
             const finalCmd = commandBufferRef.current.trim();
             if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
-          }, 1500);
+          }, 1000);
         }
       }
     };
@@ -249,6 +315,9 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     setMicActive(false);
     wakeDetectedRef.current = false;
     commandBufferRef.current = "";
+    segmentQueueRef.current = [];
+    playingSegmentRef.current = false;
+    activeBaseTurnRef.current = null;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (globalRecognitionOwner === ownerIdRef.current) {
@@ -290,6 +359,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
 
   return {
     levelRef, state, setState, micActive, transcript,
-    startMic, stopMic, toggleMic, speakResponse,
+    startMic, stopMic, toggleMic, speakResponse, handleSpeakSegment,
+    setFollowUp: (v) => { followUpRef.current = !!v; },
   };
 }

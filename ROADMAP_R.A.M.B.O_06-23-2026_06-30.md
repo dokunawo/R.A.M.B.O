@@ -115,6 +115,27 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | **ChromaticAberration removed** | Stripped from all 4 pages (SplashScreen, AgentPage, LearningLog, RoundTable) as a flicker test — the RGB color fringing effect was a suspected source of persistent screen flickers |
 | **Agent nav bar on Learning Log** | Added the full quick-switch agent navigation bar to the Learning Log page with "Log" highlighted as active |
 
+### Voice Latency Optimization (06/23/2026)
+| Feature | Status |
+|---|---|
+| Streaming LLM responses — `messages.stream()` replaces blocking `messages.create()` in `_speak()` | Done |
+| Per-sentence splitting — regex sentence splitter with abbreviation handling (`_split_sentence()`) | Done |
+| Hold-one-ahead pattern — flags `is_final` on last segment without extra round-trip | Done |
+| `speak_segment` WebSocket events — `base_turn_id`, `seq`, `is_final` broadcast to client | Done |
+| Client segment queue — `pumpQueue()` chains `speechSynthesis.speak()` per sentence | Done |
+| VAD silence timer reduced 1500ms → 1000ms | Done |
+| 800ms artificial command delay removed | Done |
+| 7 streaming tests + full suite (22/22 → 61/61 passing) | Done |
+
+### Self-Knowledge System (06/23/2026)
+| Feature | Status |
+|---|---|
+| **Phase 1** — Doc scaffold (`context/self/rambo.md`) + block parser with AUTO markers | Done |
+| **Phase 2** — 5 introspecting generators (capabilities, subagents, integrations, voice, recent activity) reading from live registries | Done |
+| **Phase 3** — Drift checker scanning hand-written sections for stale file/symbol refs + CLI (`--render`, `--refresh`, `--check`, `--check --strict`) + allowlist | Done |
+| **Phase 4** — Pre-commit hook auto-refreshes self-knowledge doc + idempotent installer script | Done |
+| **Phase 5** — Slim summary (~291 tokens) injected into system prompt via `build_system_prompt()`, controlled by `RAMBO_SELF_KNOWLEDGE` env var (slim/full/off) | Done |
+
 ---
 
 ## What's Next
@@ -122,8 +143,9 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 ### Short Term (this week)
 | Feature | Priority |
 |---|---|
-| Evaluate flicker results — if ChromaticAberration removal fixes flickers, keep it removed; if not, investigate further | High |
-| Personality layer API key integration — wire up LLM for genuine agent responses | High |
+| Live voice testing — configure `ANTHROPIC_API_KEY` and measure new latency floor | High |
+| VAD tuning — adjust silence timer after measuring streaming latency | High |
+| Evaluate flicker results — if ChromaticAberration removal fixes flickers, keep it removed; if not, investigate further | Medium |
 | Operator greeting sequence — personalized boot message | Medium |
 | Shutdown / logout sequence | Medium |
 | Task history panel — scrollable log of past executions with timestamps | Medium |
@@ -161,3 +183,13 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | `rambo-frontend/src/components/LearningLog.js` | Modified — complete redesign with side panels, SVG branches, shared HUD, agent nav bar |
 | `rambo-frontend/src/components/LearningLog.css` | Modified — complete rewrite for side-panel layout |
 | `rambo-frontend/src/components/RoundTable.js` | Modified — removed ChromaticAberration, added shared HUD components |
+| `rambo-frontend/src/components/useVoiceReactivity.js` | Modified — segment queue, `speakSegment()`, `pumpQueue()`, `handleSpeakSegment()`, VAD 1500→1000ms |
+| `rambo-frontend/src/components/VoiceControls.jsx` | Modified — WebSocket for `speak_segment` events, removed 800ms delay, `setFollowUpRef` pattern |
+| `rambo-backend/orchestrator/orchestrator.py` | Modified — streaming `_speak()`, `_split_sentence()`, `_emit_segment()`, hold-one-ahead |
+| `rambo-backend/websocket/manager.py` | Modified — added `broadcast_json()` |
+| `rambo-backend/personality.py` | Modified — `load_self_knowledge()`, slim/full/off modes, injected into `build_system_prompt()` |
+| `rambo-backend/self_knowledge/` | **Created** — parser, renderer, drift checker, CLI, 5 generators |
+| `rambo-backend/context/self/rambo.md` | **Created** — self-knowledge document with AUTO blocks |
+| `rambo-backend/tests/test_streaming.py` | **Created** — 7 streaming tests |
+| `rambo-backend/tests/test_self_knowledge_*.py` | **Created** — 30 tests (parser, generators, drift, prompt) |
+| `scripts/install-self-knowledge-hook.sh` | **Created** — idempotent pre-commit hook installer |

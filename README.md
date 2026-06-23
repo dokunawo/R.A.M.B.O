@@ -61,7 +61,9 @@ agent's status.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
 - **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo. Bloom postprocessing for cinematic glow.
 - **📊 Persistent HUD** — CPU/RAM/DSK system metrics, LIVE command input, and real-time activity feed visible on every page.
-- **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow.
+- **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow. Streaming LLM responses with per-sentence segment emission for low-latency speech.
+- **🧬 Self-knowledge system** — auto-generated doc from live code registries, refreshed on every commit via pre-commit hook, drift checker catches stale references, slim summary injected into the agent's system prompt.
+- **🎭 Personality engine** — cold professional voice powered by Claude, with tonal checkpoints and voice cues to prevent filler language.
 - **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
 - **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
 - **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.
@@ -156,9 +158,11 @@ Phases auto-advance on a timeline (no click-to-skip). Both share the gold/amber 
 
 **Back End**
 - FastAPI + Uvicorn
+- Anthropic Claude SDK (streaming LLM for voice responses)
 - Pydantic
 - SQLite (memory store)
 - WebSocket connection manager
+- Self-knowledge system (auto-generated from code registries)
 
 **Infra / Tooling**
 - Docker + Docker Compose
@@ -188,6 +192,15 @@ R.A.M.B.O/
 │   ├── models/                 # Task model, router, sqlite store
 │   ├── memory/                 # SQLite persistence
 │   ├── websocket/              # ConnectionManager (broadcast)
+│   ├── personality.py          # system prompt assembly + voice cues
+│   ├── skills.py               # skill registry (weather, calendar, drive, chief-of-staff)
+│   ├── self_knowledge/         # self-knowledge system
+│   │   ├── parser.py           # AUTO block parser (parse/serialize/render)
+│   │   ├── renderer.py         # wires generators to blocks
+│   │   ├── drift.py            # drift checker for stale references
+│   │   ├── cli.py              # CLI: --render, --refresh, --check, --check --strict
+│   │   └── generators/         # one per AUTO block (capabilities, subagents, integrations, voice, recent_activity)
+│   ├── context/self/rambo.md   # self-knowledge document (auto-refreshed)
 │   ├── sentinel_queue.py       # UUID-tracked approval queue
 │   ├── agent_tracker.py        # per-agent stats, activity, learnings
 │   ├── requirements.txt
@@ -357,8 +370,8 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 See [`ROADMAP_R.A.M.B.O_06-23-2026_06-30.md`](ROADMAP_R.A.M.B.O_06-23-2026_06-30.md) for the full plan. Highlights:
 
-- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality. Shared HUD across all pages. Learning Log side-panel redesign. Flicker mitigations.
-- **Short term:** Personality layer API key integration, operator greeting, shutdown sequence, task history panel.
+- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality. Shared HUD across all pages. Learning Log side-panel redesign. Flicker mitigations. Personality engine (Claude). Voice latency optimization (streaming LLM + per-sentence segments). Self-knowledge system (5 phases).
+- **Short term:** Live voice testing with API key, VAD tuning, operator greeting, shutdown sequence, task history panel.
 - **Mid term:** Color presets, modular HUD panels, mission dashboard, mobile responsive.
 - **Long term:** Secure login, CLI tool, plugin system.
 

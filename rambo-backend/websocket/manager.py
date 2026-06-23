@@ -23,3 +23,8 @@ class ConnectionManager:
                 await ws.send_text(message)
             except Exception:
                 self.disconnect(ws)
+
+    async def broadcast_json(self, data: dict):
+        import json
+        text = json.dumps(data)
+        await self.broadcast(text)

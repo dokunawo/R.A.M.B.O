@@ -1,6 +1,9 @@
 import asyncio
 import json
 import os
+import re
+import time
+import uuid
 
 try:
     import anthropic
@@ -179,6 +182,37 @@ class Orchestrator:
         summary = await self._speak(goal, plan, results)
         return {"response": summary, "agent": "rambo"}
 
+    _SENTENCE_END = re.compile(
+        r'(?<=[.!?])\s+(?=[A-Z"])'
+        r'|(?<=[.!?])$'
+    )
+    _ABBREVS = re.compile(r'\b(?:Mr|Mrs|Ms|Dr|Sr|Jr|e\.g|i\.e|vs|etc)\.\s*$', re.IGNORECASE)
+
+    def _split_sentence(self, buffer: str) -> tuple[str | None, str]:
+        for m in self._SENTENCE_END.finditer(buffer):
+            candidate = buffer[:m.start()].rstrip()
+            if not candidate:
+                continue
+            if self._ABBREVS.search(candidate):
+                continue
+            remainder = buffer[m.end():]
+            return candidate, remainder
+        return None, buffer
+
+    async def _emit_segment(self, text: str, base_turn_id: str, seq: int, is_final: bool, t0: float):
+        segment_id = f"{base_turn_id}::{seq}"
+        await self.ws.broadcast_json({
+            "t": "speak_segment",
+            "turn_id": segment_id,
+            "base_turn_id": base_turn_id,
+            "seq": seq,
+            "text": text,
+            "is_final": is_final,
+        })
+        elapsed = time.monotonic() - t0
+        print(f"[stream] speak_segment base={base_turn_id} seq={seq} "
+              f"chars={len(text)} t_since_start={elapsed:.2f}s final={is_final}")
+
     async def _speak(self, goal: str, plan: list[str], results: list[str]) -> str:
         results_block = "\n".join(f"  - {r}" for r in results)
 
@@ -199,18 +233,53 @@ class Orchestrator:
         append_voice_cue(messages)
         system = build_system_prompt(self.personality_text)
 
+        t0 = time.monotonic()
+        base_turn_id = uuid.uuid4().hex
+        seq = 0
+        held_text = None
+        held_seq = None
+        sentences = []
+        token_buf = ""
+
         try:
-            response = await self.llm.messages.create(
+            async with self.llm.messages.stream(
                 model="claude-sonnet-4-20250514",
                 system=system,
                 messages=messages,
                 max_tokens=1024,
-            )
-            text = "".join(
-                b.text for b in response.content if b.type == "text"
-            )
-        except Exception as e:
+            ) as stream:
+                async for event in stream:
+                    if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                        token_buf += event.delta.text
+                        while True:
+                            sentence, token_buf = self._split_sentence(token_buf)
+                            if sentence is None:
+                                break
+                            sentences.append(sentence)
+                            await self.ws.broadcast_json({"t": "transcript_delta", "text": sentence})
+                            if held_text is not None:
+                                await self._emit_segment(held_text, base_turn_id, held_seq, False, t0)
+                            held_text = sentence
+                            held_seq = seq
+                            seq += 1
+
+            if token_buf.strip():
+                sentences.append(token_buf.strip())
+                await self.ws.broadcast_json({"t": "transcript_delta", "text": token_buf.strip()})
+                if held_text is not None:
+                    await self._emit_segment(held_text, base_turn_id, held_seq, False, t0)
+                held_text = token_buf.strip()
+                held_seq = seq
+                seq += 1
+
+            text = " ".join(s for s in sentences if s)
+
+            if held_text is not None:
+                await self._emit_segment(held_text, base_turn_id, held_seq, True, t0)
+
+        except Exception:
             text = results_block.strip()
+            await self._emit_segment(text, base_turn_id, 0, True, t0)
 
         self.conversation.add_assistant_message(text)
         await self._response("rambo", text)

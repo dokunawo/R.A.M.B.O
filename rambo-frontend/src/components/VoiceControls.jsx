@@ -5,12 +5,16 @@ import "./VoiceControls.css";
 
 const API = "http://localhost:8000";
 
+const VOICE_WS_URL = "ws://localhost:8000/ws/activity";
+
 export function usePageVoice() {
   const [voiceText, setVoiceText] = useState("");
   const [commandLog, setCommandLog] = useState([]);
   const [busy, setBusy] = useState(false);
   const voiceSetStateRef = useRef(null);
   const speakRef = useRef(null);
+  const segmentHandlerRef = useRef(null);
+  const setFollowUpRef = useRef(null);
 
   const executeCommand = useCallback(async (text) => {
     if (!text.trim() || busy) return;
@@ -29,7 +33,6 @@ export function usePageVoice() {
       setCommandLog(prev => prev.map(e =>
         e.id === entry.id ? { ...e, response: responseText, status: "complete" } : e
       ));
-      if (speakRef.current) speakRef.current(responseText, true);
     } catch {
       setCommandLog(prev => prev.map(e =>
         e.id === entry.id ? { ...e, response: "Request failed — backend offline", status: "error" } : e
@@ -70,10 +73,9 @@ export function usePageVoice() {
       if (speakRef.current) speakRef.current(volResponse, true);
       return;
     }
-    setTimeout(() => {
-      executeCommand(text);
-      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
-    }, 800);
+    if (setFollowUpRef.current) setFollowUpRef.current(true);
+    executeCommand(text);
+    if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
   }, [executeCommand, tryVolumeCommand]);
 
   const voice = useVoiceReactivity({
@@ -83,6 +85,31 @@ export function usePageVoice() {
 
   voiceSetStateRef.current = voice.setState;
   speakRef.current = voice.speakResponse;
+  segmentHandlerRef.current = voice.handleSpeakSegment;
+  setFollowUpRef.current = voice.setFollowUp;
+
+  useEffect(() => {
+    let ws;
+    let closed = false;
+    let retry;
+    const connect = () => {
+      try { ws = new WebSocket(VOICE_WS_URL); } catch { return; }
+      ws.onclose = () => { if (!closed) retry = setTimeout(connect, 2500); };
+      ws.onerror = () => { try { ws.close(); } catch {} };
+      ws.onmessage = (e) => {
+        const msg = String(e.data);
+        if (msg.charAt(0) !== "{") return;
+        try {
+          const j = JSON.parse(msg);
+          if (j.t === "speak_segment" && segmentHandlerRef.current) {
+            segmentHandlerRef.current(j);
+          }
+        } catch { /* ignore */ }
+      };
+    };
+    connect();
+    return () => { closed = true; clearTimeout(retry); try { ws?.close(); } catch {} };
+  }, []);
 
   const started = useRef(false);
   useEffect(() => {
