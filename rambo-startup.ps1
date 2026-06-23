@@ -1,23 +1,27 @@
 # rambo-startup.ps1 — seamless boot for R.A.M.B.O
 #
-# Waits for Docker, brings the stack up, waits for the dev frontend to be
+# Waits for Docker, brings the stack up, waits for the frontend to be
 # reachable, then opens the browser. Designed to be run by Task Scheduler at
 # login (see the registration command in the README / your notes).
 #
 # Usage:
-#   .\rambo-startup.ps1            # fast start (reuses images — seconds)
+#   .\rambo-startup.ps1            # fast start, opens PROD frontend (:3000)
+#   .\rambo-startup.ps1 -Dev       # open the DEV frontend (:3001, hot reload)
 #   .\rambo-startup.ps1 -Rebuild   # rebuild changed layers (deps changed)
 #   .\rambo-startup.ps1 -Clean     # full no-cache rebuild (rarely needed)
 
 param(
     [switch]$Rebuild,
     [switch]$Clean,
+    [switch]$Dev,       # open the dev frontend (:3001) instead of prod (:3000)
     [switch]$DevTools   # open Chrome with DevTools panel auto-open
 )
 
 $ErrorActionPreference = "Continue"
 $projectRoot = "C:\Users\dokun\PycharmProjects\R.A.M.B.O"
-$devUrl      = "http://localhost:3001"
+# Default to the prod frontend (:3000) — fast, optimized, for everyday use.
+# Pass -Dev for the hot-reload dev frontend (:3001) while building.
+$url         = if ($Dev) { "http://localhost:3001" } else { "http://localhost:3000" }
 $logFile     = "$projectRoot\rambo-startup.log"
 
 function Log($msg) {
@@ -58,28 +62,28 @@ if ($Clean) {
 }
 if ($LASTEXITCODE -ne 0) { Log "WARNING: docker compose returned non-zero." }
 
-# 3) Wait until the dev frontend actually answers (not just the container up).
-Log "Waiting for $devUrl ..."
+# 3) Wait until the frontend actually answers (not just the container up).
+Log "Waiting for $url ..."
 $frontendReady = $false
 for ($i = 0; $i -lt 36; $i++) {
     try {
-        $r = Invoke-WebRequest -Uri $devUrl -UseBasicParsing -TimeoutSec 4
+        $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 4
         if ($r.StatusCode -eq 200) { $frontendReady = $true; break }
     } catch { Start-Sleep -Seconds 5 }
 }
 if (-not $frontendReady) {
-    Log "WARNING: $devUrl did not respond in time; opening anyway."
+    Log "WARNING: $url did not respond in time; opening anyway."
 }
 
 # 4) Open the browser.
-Log "Opening browser at $devUrl"
+Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 if ((Test-Path $chrome) -and $DevTools) {
-    Start-Process $chrome -ArgumentList "--auto-open-devtools-for-tabs", $devUrl
+    Start-Process $chrome -ArgumentList "--auto-open-devtools-for-tabs", $url
 } elseif (Test-Path $chrome) {
-    Start-Process $chrome -ArgumentList $devUrl
+    Start-Process $chrome -ArgumentList $url
 } else {
-    Start-Process $devUrl   # default browser
+    Start-Process $url   # default browser
 }
 
 Log "=== startup complete ==="
