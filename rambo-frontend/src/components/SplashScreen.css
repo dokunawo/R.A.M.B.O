@@ -12,6 +12,12 @@
   --accent: #e8b15a;
   --accent-glow: #ffd98a;
   --mono: "JetBrains Mono", "Share Tech Mono", monospace;
+  --glass-bg: rgba(14, 15, 19, 0.15);
+  --glass-blur: blur(14px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.06);
+  --teal: #2DD4A8;
+  --teal-glow: rgba(45, 212, 168, 0.5);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* full-screen container */
