@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { audioRunning, isMuted, resumeAudio } from "./audioEngine";
 import "./SharedHUD.css";
 
 const API = "http://localhost:8000";
@@ -444,6 +445,34 @@ export function HandoffDock() {
         </div>
       )}
     </div>
+  );
+}
+
+// Fallback for when the browser blocked autoplay (e.g. the tab opened without a
+// gesture, or Chrome was already running so the --autoplay-policy flag didn't
+// apply). Shows a pill while audio is locked; one click unlocks it and it hides.
+export function SoundGate() {
+  const [needed, setNeeded] = useState(false);
+
+  useEffect(() => {
+    const check = () => setNeeded(!audioRunning() && !isMuted());
+    check();
+    const id = setInterval(check, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!needed) return null;
+
+  const enable = () => {
+    resumeAudio();                         // this click is the user gesture
+    setTimeout(() => setNeeded(!audioRunning() && !isMuted()), 300);
+  };
+
+  return (
+    <button className="hud-soundgate" type="button" onClick={enable}
+      title="Audio is blocked by the browser — click to enable">
+      <span className="hud-soundgate-icon">🔊</span> ENABLE SOUND
+    </button>
   );
 }
 

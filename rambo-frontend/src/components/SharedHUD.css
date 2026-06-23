@@ -496,3 +496,47 @@
   background: rgba(255, 91, 91, 0.22) !important;
   color: #ff5b5b !important;
 }
+
+/* ── Sound gate (autoplay-blocked fallback) ───────────────────── */
+.hud-soundgate {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #f3d9a6;
+  background: rgba(14, 15, 19, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(232, 177, 90, 0.5);
+  box-shadow: 0 0 18px rgba(232, 177, 90, 0.25);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: hudSoundPulse 2.2s ease-in-out infinite;
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.hud-soundgate:hover {
+  color: #ffe9bf;
+  border-color: rgba(232, 177, 90, 0.95);
+  box-shadow: 0 0 28px rgba(232, 177, 90, 0.45);
+}
+
+.hud-soundgate-icon { font-size: 12px; }
+
+@keyframes hudSoundPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(232, 177, 90, 0.2); }
+  50%      { box-shadow: 0 0 26px rgba(232, 177, 90, 0.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-soundgate { animation: none; }
+}
