@@ -32,7 +32,9 @@ from agents.pilot import Pilot
 from websocket.manager import ConnectionManager
 from conversation import ConversationManager
 from personality import load_personality, build_system_prompt, append_voice_cue
+from orchestrator.routing import SmartRouter
 import sentinel_queue
+from skills import SKILLS
 
 
 class Orchestrator:
@@ -61,9 +63,27 @@ class Orchestrator:
 
         self.agent_status = {name: "idle" for name in self.agents}
 
+        # Tier 1 — smart routing brain.
+        self.router = SmartRouter(self.llm)
+
         # Factory wiring — set later by main.py once the DB + registry exist.
         self.factory_repo = None
         self.tool_registry = None
+
+    # One-line ownership for each core agent. Drives the routing roster and
+    # keeps dispatch knowledge centralized in the conductor (not in agents).
+    CORE_OWNERSHIP = {
+        "architect": "planning, decomposition, and specs (precedes implementation)",
+        "engineer":  "building / implementing code and features",
+        "seeker":    "searching, finding, and looking things up",
+        "analyst":   "analyzing data, metrics, and evaluating results",
+        "steward":   "budgeting, cost, and resource planning",
+        "link":      "external integrations (Notion, Slack, APIs)",
+        "keeper":    "storing, recalling, and managing files/memory",
+        "echo":      "summarizing and condensing",
+    }
+    # sentinel + pilot are internal-only (review / queue-building) and are not
+    # offered as routable targets.
 
     def set_factory(self, factory_repo, tool_registry):
         """Give the orchestrator access to spawned agents + their tools."""
@@ -94,28 +114,31 @@ class Orchestrator:
         if matched is None:
             return None
 
-        from factory.config_agent import ConfigDrivenAgent
-
-        await self._set_status("architect", "idle")  # keep core agents idle
-        await self.broadcast(f"[{matched['name']}] Dispatched: {goal}")
-        agent_tracker.record_task_start(matched["slug"], goal)
-        try:
-            agent = ConfigDrivenAgent(
-                row=matched, tool_registry=self.tool_registry, llm_client=self.llm,
-            )
-            result = await agent.run(goal)
-            agent_tracker.record_task_end(matched["slug"], goal, success=True)
-            agent_tracker.add_learning(
-                f"Spawned agent '{matched['name']}' handled: {goal}",
-                source=matched["name"], category="factory-dispatch",
-            )
-        except Exception as e:
-            result = f"[{matched['name']}] error: {e}"
-            agent_tracker.record_task_end(matched["slug"], goal, success=False)
-        await self.broadcast(f"[{matched['name']}] Finished: {goal}")
-
+        result = await self._run_spawned(matched, goal)
         voiced = await self._speak(goal, [f"Agent: {matched['name']}"], [result])
         return {"response": voiced, "agent": "rambo"}
+
+    async def _run_spawned(self, row: dict, goal: str) -> str:
+        """Run a Factory-spawned ConfigDrivenAgent and return its text result."""
+        from factory.config_agent import ConfigDrivenAgent
+
+        await self.broadcast(f"[{row['name']}] Dispatched: {goal}")
+        agent_tracker.record_task_start(row["slug"], goal)
+        try:
+            agent = ConfigDrivenAgent(
+                row=row, tool_registry=self.tool_registry, llm_client=self.llm,
+            )
+            result = await agent.run(goal)
+            agent_tracker.record_task_end(row["slug"], goal, success=True)
+            agent_tracker.add_learning(
+                f"Spawned agent '{row['name']}' handled: {goal}",
+                source=row["name"], category="factory-dispatch",
+            )
+        except Exception as e:
+            result = f"[{row['name']}] error: {e}"
+            agent_tracker.record_task_end(row["slug"], goal, success=False)
+        await self.broadcast(f"[{row['name']}] Finished: {goal}")
+        return result
 
     async def broadcast(self, message: str):
         try:
@@ -144,41 +167,154 @@ class Orchestrator:
     async def _response(self, name: str, text: str):
         await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
 
+    # ── Tier 1: smart-routed entry point ─────────────────────────
+
     async def handle(self, goal: str, ctx: dict = None):
         ctx = ctx or {}
 
-        # Real-world skills run first (weather, etc.). The matched agent flips
-        # WORKING → runs the live skill → IDLE, and its result is returned.
-        skill = match_skill(goal)
-        if skill:
-            agent_name = skill["agent"]
-            await self._set_status(agent_name, "working")
-            agent_tracker.record_task_start(agent_name, goal)
-            await self.broadcast(f"[{agent_name.capitalize()}] Working on: {goal}")
+        roster_lines, valid_targets = await self._build_roster()
+        decision = await self.router.route(goal, roster_lines, valid_targets)
+
+        # Router unavailable or punted → keyword fallback (failure isolation).
+        if decision is None:
+            return await self._legacy_handle(goal, ctx)
+
+        if decision.mode == "clarify":
+            q = decision.question.strip()
+            await self.broadcast(f"[R.A.M.B.O] {q}")
+            return {"response": q, "agent": "rambo", "clarify": True}
+
+        # dispatch: run each ordered step through the right target.
+        plan, results = [], []
+        for step in decision.steps:
+            plan.append(f"{step.target}: {step.task}")
+            res = await self._run_target(step.target, step.task, ctx)
+            results.append(res)
+
+        summary = await self._speak(goal, plan, results)
+        return {"response": summary, "agent": "rambo"}
+
+    async def _build_roster(self):
+        """Return (roster_lines, valid_targets) over core agents, skills, and
+        live Factory-spawned manifests. This is the menu the router routes over."""
+        lines, targets = [], set()
+
+        for name, desc in self.CORE_OWNERSHIP.items():
+            lines.append(f"- {name} (core agent): {desc}")
+            targets.add(name)
+
+        lines.append(
+            "- orchestrate (pipeline): open-ended multi-agent build/research "
+            "goals that need full planning → task queue → multi-agent execution"
+        )
+        targets.add("orchestrate")
+
+        for skill in SKILLS:
+            lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
+            targets.add(skill["name"])
+
+        if self.factory_repo:
             try:
-                result = await skill["run"](goal, ctx)
-                agent_tracker.record_task_end(agent_name, goal, success=True)
-                agent_tracker.add_learning(
-                    f"Completed skill '{skill['name']}' for: {goal}",
-                    source=agent_name.capitalize(), category=skill["name"],
-                )
-            except Exception as e:
-                result = f"[{skill['name']}] error: {e}"
-                agent_tracker.record_task_end(agent_name, goal, success=False)
-            await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
-            await self._set_status(agent_name, "idle")
+                for row in await self.factory_repo.list_active_agents():
+                    lines.append(f"- {row['slug']} (spawned agent): {row['specialty']}")
+                    targets.add(row["slug"])
+            except Exception:
+                pass
 
-            voiced = await self._speak(goal, [f"Skill: {skill['name']}"], [result])
-            return {"response": voiced, "agent": "rambo"}
+        return lines, targets
 
-        # Factory-spawned agents run before the core orchestration flow.
-        spawned = await self._dispatch_spawned(goal)
-        if spawned is not None:
-            return spawned
+    async def _run_target(self, target: str, task: str, ctx: dict) -> str:
+        """Dispatch one routed step. Every branch is isolated so a single
+        target failing never aborts the whole turn (Tier 3)."""
+        try:
+            if target == "orchestrate":
+                plan, results = await self._orchestrate(task)
+                return "\n".join(str(r) for r in results) if results else "(no output)"
 
+            skill = next((s for s in SKILLS if s["name"] == target), None)
+            if skill:
+                return await self._run_skill(skill, task, ctx)
+
+            if self.factory_repo:
+                row = await self.factory_repo.get_agent_by_slug(target)
+                if row and row.get("status") == "active":
+                    return await self._run_spawned(row, task)
+
+            if target in self.agents:
+                return await self._run_core_agent(target, task)
+
+            # Unknown target slipped through → fall back to full pipeline.
+            plan, results = await self._orchestrate(task)
+            return "\n".join(str(r) for r in results) if results else "(no output)"
+        except Exception as e:
+            return f"[{target}] error: {e}"
+
+    async def _run_skill(self, skill: dict, goal: str, ctx: dict) -> str:
+        agent_name = skill["agent"]
+        await self._set_status(agent_name, "working")
+        agent_tracker.record_task_start(agent_name, goal)
+        await self.broadcast(f"[{agent_name.capitalize()}] Working on: {goal}")
+        try:
+            result = await skill["run"](goal, ctx)
+            agent_tracker.record_task_end(agent_name, goal, success=True)
+            agent_tracker.add_learning(
+                f"Completed skill '{skill['name']}' for: {goal}",
+                source=agent_name.capitalize(), category=skill["name"],
+            )
+        except Exception as e:
+            result = f"[{skill['name']}] error: {e}"
+            agent_tracker.record_task_end(agent_name, goal, success=False)
+        await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
+        await self._set_status(agent_name, "idle")
+        return result
+
+    async def _run_core_agent(self, agent_name: str, task_desc: str) -> str:
+        from models.task import Task
+        task = Task(description=task_desc)
+        agent = self.agents[agent_name]
+        await self._contact(agent_name)
+        await self._set_status(agent_name, "working")
+        agent_tracker.record_task_start(agent_name, task_desc)
+        await self.broadcast(f"[{agent_name.capitalize()}] Starting: {task_desc}")
+
+        if agent_name in ("engineer", "steward", "link"):
+            sentinel = self.agents["sentinel"]
+            await self._set_status("sentinel", "working")
+            decision = sentinel.review_task(task)
+            if decision["status"] == "DENY":
+                msg = f"[Sentinel] BLOCKED: {decision['reason']}"
+                await self.broadcast(msg)
+                await self._set_status("sentinel", "idle")
+                await self._set_status(agent_name, "idle")
+                return msg
+            if decision["status"] == "REVIEW":
+                approval = sentinel_queue.add_approval(task, agent_name)
+                msg = f"[Sentinel] HOLD: {approval['description']} (awaiting approval)"
+                await self.broadcast(msg)
+                await self._set_status("sentinel", "idle")
+                await self._set_status(agent_name, "idle")
+                return msg
+            await self._set_status("sentinel", "idle")
+
+        try:
+            output = agent.execute(task)
+        except Exception as e:                       # Tier 3: contain agent crashes
+            output = f"[{agent_name}] ran into trouble: {e}"
+            agent_tracker.record_task_end(agent_name, task_desc, success=False)
+        else:
+            agent_tracker.record_task_end(agent_name, task_desc, success=True)
+
+        await self._response(agent_name, output)
+        await self.broadcast(f"[{agent_name.capitalize()}] Finished: {task_desc}")
+        await self._set_status(agent_name, "idle")
+        return output
+
+    async def _orchestrate(self, goal: str):
+        """The full architect → pilot → multi-agent execution pipeline.
+        Returns (plan, results). agent.execute is wrapped so one core agent
+        throwing can't crash the turn (Tier 3)."""
         architect = self.agents["architect"]
         pilot     = self.agents["pilot"]
-        echo      = self.agents["echo"]
 
         await self._set_status("architect", "working")
         await self.broadcast(f"[Architect] Creating plan for goal: {goal}")
@@ -193,54 +329,32 @@ class Orchestrator:
         await self._set_status("pilot", "idle")
 
         results = []
-
         for task in tasks:
             agent_name = choose_brain(task)
-            agent      = self.agents[agent_name]
-
-            await self._contact(agent_name)
-            await self._set_status(agent_name, "working")
-            agent_tracker.record_task_start(agent_name, task.description)
-            await self.broadcast(f"[{agent_name.capitalize()}] Starting: {task.description}")
-
-            if agent_name in ("engineer", "steward", "link"):
-                sentinel = self.agents["sentinel"]
-                await self._set_status("sentinel", "working")
-                decision = sentinel.review_task(task)
-
-                if decision["status"] == "DENY":
-                    msg = f"[Sentinel] BLOCKED: {decision['reason']}"
-                    await self.broadcast(msg)
-                    await self._set_status("sentinel", "idle")
-                    await self._set_status(agent_name, "idle")
-                    results.append(msg)
-                    continue
-
-                if decision["status"] == "REVIEW":
-                    approval = sentinel_queue.add_approval(task, agent_name)
-                    msg = f"[Sentinel] HOLD: {approval['description']} (awaiting approval)"
-                    await self.broadcast(msg)
-                    await self._set_status("sentinel", "idle")
-                    await self._set_status(agent_name, "idle")
-                    results.append(msg)
-                    continue
-
-                await self._set_status("sentinel", "idle")
-
-            output = agent.execute(task)
+            output = await self._run_core_agent(agent_name, task.description)
             results.append(output)
-            agent_tracker.record_task_end(agent_name, task.description, success=True)
-
-            await self._response(agent_name, output)
-            await self.broadcast(f"[{agent_name.capitalize()}] Finished: {task.description}")
-            await self._set_status(agent_name, "idle")
             await asyncio.sleep(0.15)
 
         agent_tracker.add_learning(
             f"Orchestrated {len(tasks)} tasks for: {goal}",
             source="Pilot", category="orchestration",
         )
+        return plan, results
 
+    async def _legacy_handle(self, goal: str, ctx: dict):
+        """Keyword-routed fallback for when the LLM router is unavailable.
+        Preserves the original skill → spawned → orchestrate behavior."""
+        skill = match_skill(goal)
+        if skill:
+            result = await self._run_skill(skill, goal, ctx)
+            voiced = await self._speak(goal, [f"Skill: {skill['name']}"], [result])
+            return {"response": voiced, "agent": "rambo"}
+
+        spawned = await self._dispatch_spawned(goal)
+        if spawned is not None:
+            return spawned
+
+        plan, results = await self._orchestrate(goal)
         summary = await self._speak(goal, plan, results)
         return {"response": summary, "agent": "rambo"}
 

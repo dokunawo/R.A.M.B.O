@@ -160,6 +160,18 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | API: `POST /factory/spawn`, `GET /factory/pending`, `GET /factory/task/{id}`, approve/reject/agents endpoints; strong refs on in-flight pipeline tasks | Done |
 | 59 backend tests (repo: 14, registry: 6, research: 6, spec: 7, pipeline: 5, approval: 8, config/watcher: 8, dispatch: 5) — 154/154 total passing | Done |
 
+### Orchestration Layer (06/23/2026)
+Mapping the 6-tier orchestration model onto R.A.M.B.O. Tiers 2 & 6 were delivered by the Factory; this entry tracks the rest.
+
+| Tier | Status |
+|---|---|
+| **1 — Smart routing** | **Done** — `orchestrator/routing.py` `SmartRouter`: LLM reads an explicit policy + live roster (core agents + skills + spawned manifests), returns a validated `RoutingDecision` (clarify vs ordered dispatch steps) via forced `emit_routing_decision`. Replaces keyword `choose_brain`/skill-trigger/substring spawned-match in the primary path. Keyword `_legacy_handle` kept as fallback when LLM unavailable. 16 tests. |
+| **2 — Least-privilege + bounded** | Done (Factory `ConfigDrivenAgent`: tool allowlist, `MAX_ITERATIONS`, `max_tokens`, model-per-manifest) |
+| **3 — Failure isolation** | **Done** — boundary try/excepts already pervasive; closed the last hole by wrapping `agent.execute()` in `_run_core_agent` so a core agent crash can't abort the turn. `_run_target` isolates every routed step. |
+| **4 — Confirmation gates** | Partial (Sentinel reviews payment/transfer at task level). TODO: `requires_confirmation` flag on `ToolDef` + router-level gate. |
+| **5 — Handoff system** | TODO — typed propose-don't-chain handoff recommendation (`target_agent`, `reason`, `task`, `artifacts` as refs, `preconditions`, `confidence`) surfaced for human approval. |
+| **6 — Live hot-reload** | Done (Factory `RegistryWatcher` + manifest runtime + `dispatch_to_<slug>`) |
+
 ---
 
 ## What's Next
@@ -179,7 +191,7 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 |---|---|
 | Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking (`ConfigDrivenAgent` now does this for Factory-spawned agents; extend to the 10 hand-rolled specialists) | High |
 | Factory follow-ups — ~~mount `FactoryDock` on all pages~~ ✓, ~~wire dispatch into orchestrator~~ ✓; remaining: surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent`, multi-task spawn matching when a goal names two agents | Medium |
-| **Factory dispatch matching — KNOWN ISSUE** — `Orchestrator._dispatch_spawned()` is first-match-wins by slug/name substring. An agent named with a common word (e.g. "build", "find", "search") will silently intercept unrelated goals that happen to contain that word. Fix: require explicit invocation (e.g. `@slug` prefix or "ask <name> to…" pattern), word-boundary matching instead of substring, and/or score-and-rank when multiple agents match. Watch once real agents exist. | High |
+| **Factory dispatch matching — RESOLVED (primary path)** — replaced by the Tier 1 LLM router (`orchestrator/routing.py`), which routes over the full roster on purpose instead of substring-matching. The old substring `_dispatch_spawned()` now only runs in the keyword *fallback* (`_legacy_handle`) when the LLM is unavailable. Remaining nicety: tighten the fallback's substring match too. | Low |
 | Alembic migration framework — versioned schema management as DB tables grow (now 2 DBs: `usage.db`, `factory.db`) | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |
