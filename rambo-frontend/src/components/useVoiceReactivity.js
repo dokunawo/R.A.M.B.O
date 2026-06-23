@@ -82,6 +82,12 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const wakeDetectedRef = useRef(false);
   const commandBufferRef = useRef("");
   const silenceTimerRef = useRef(null);
+  // Half-duplex echo suppression: stateRef mirrors `state` for the recognition
+  // closure; suppressUntilRef is a timestamp the mic stays muted until (covers
+  // the speaker echo tail right after TTS ends).
+  const stateRef = useRef(CONV_STATES.IDLE);
+  const suppressUntilRef = useRef(0);
+  const ECHO_COOLDOWN_MS = 1200;
   const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -90,6 +96,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const onFinalTranscriptRef = useRef(onFinalTranscript);
   const onSpeakStartRef      = useRef(onSpeakStart);
   const onSpeakEndRef        = useRef(onSpeakEnd);
+  useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { onTranscriptRef.current = onTranscript; }, [onTranscript]);
   useEffect(() => { onFinalTranscriptRef.current = onFinalTranscript; }, [onFinalTranscript]);
   useEffect(() => { onSpeakStartRef.current = onSpeakStart; }, [onSpeakStart]);
@@ -116,6 +123,9 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
 
   const finishTurn = useCallback(() => {
     onSpeakEndRef.current?.();
+    // Keep ignoring the mic for a moment so the speaker echo tail of the last
+    // segment doesn't get picked up as a command.
+    suppressUntilRef.current = Date.now() + ECHO_COOLDOWN_MS;
     commandBufferRef.current = "";
     setTranscript("");
     activeBaseTurnRef.current = null;
@@ -161,6 +171,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     const fullText = followUp ? text + " ... Is there anything else?" : text;
     speak(fullText, null, () => {
       onSpeakEndRef.current?.();
+      suppressUntilRef.current = Date.now() + ECHO_COOLDOWN_MS;
       commandBufferRef.current = "";
       setTranscript("");
       if (followUp) {
@@ -188,6 +199,13 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
 
     recognition.onresult = (event) => {
       if (globalRecognitionOwner !== ownerIdRef.current) return;
+
+      // Half-duplex: while R.A.M.B.O is speaking (and for a brief cooldown
+      // after), discard everything the mic hears — otherwise its own TTS
+      // coming out of the speakers gets transcribed as a new command.
+      if (stateRef.current === CONV_STATES.SPEAKING || Date.now() < suppressUntilRef.current) {
+        return;
+      }
 
       let interim = "";
       let finalText = "";
