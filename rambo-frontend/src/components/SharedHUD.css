@@ -458,3 +458,41 @@
   font-family: inherit;
   font-size: 9px;
 }
+
+/* ── Confirmation + Handoff docks (reuse factory card styles) ──── */
+.hud-confirm-wrap {
+  position: fixed;
+  top: 170px;
+  left: 20px;
+  z-index: 11;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  pointer-events: auto;
+}
+
+.hud-handoff-wrap {
+  position: fixed;
+  top: 200px;
+  left: 20px;
+  z-index: 11;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  pointer-events: auto;
+}
+
+.hud-confirm-tag {
+  color: #ff5b5b;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.hud-handoff-tag {
+  color: #4a9eff;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.hud-count-hot {
+  background: rgba(255, 91, 91, 0.22) !important;
+  color: #ff5b5b !important;
+}

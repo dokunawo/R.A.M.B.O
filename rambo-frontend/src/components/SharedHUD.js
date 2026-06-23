@@ -336,6 +336,117 @@ export function FactoryDock({ pending, onRefresh }) {
   );
 }
 
+// ── Tier 4: confirmation gate dock ──────────────────────────────
+
+function usePolledQueue(path, interval = 12000) {
+  const [items, setItems] = useState([]);
+  const refresh = useCallback(async () => {
+    if (document.hidden) return;
+    try {
+      const r = await fetch(`${API}${path}`);
+      if (r.ok) setItems(await r.json());
+    } catch {}
+  }, [path]);
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, interval);
+    const onVis = () => { if (!document.hidden) refresh(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, [refresh, interval]);
+  return { items, refresh };
+}
+
+async function _post(path, refresh) {
+  try { await fetch(`${API}${path}`, { method: "POST" }); } catch {}
+  refresh();
+}
+
+export function ConfirmationDock() {
+  const { items, refresh } = usePolledQueue("/confirmations");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="hud-confirm-wrap">
+      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+        <span className="hud-confirm-tag">CONFIRM</span>
+        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ ACTIONS AWAITING APPROVAL</div>
+          {items.length === 0
+            ? <div className="hud-factory-empty">{"// no actions awaiting approval"}</div>
+            : items.map(c => (
+                <div key={c.id} className="hud-factory-card">
+                  <div className="hud-factory-card-head">
+                    <span className="hud-factory-name">{c.tool_name}</span>
+                    {c.agent_slug && <span className="hud-factory-slug">{c.agent_slug}</span>}
+                  </div>
+                  <div className="hud-factory-prompt">{JSON.stringify(c.tool_input)}</div>
+                  <div className="hud-factory-actions">
+                    <button className="hud-factory-approve" onClick={() => _post(`/confirmations/${c.id}/approve`, refresh)}>APPROVE</button>
+                    <button className="hud-factory-reject" onClick={() => _post(`/confirmations/${c.id}/reject`, refresh)}>REJECT</button>
+                  </div>
+                </div>
+              ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tier 5: handoff dock ────────────────────────────────────────
+
+export function HandoffDock() {
+  const { items, refresh } = usePolledQueue("/handoffs");
+  const [open, setOpen] = useState(false);
+
+  const confidenceLabel = (c) =>
+    c >= 0.75 ? "high" : c >= 0.4 ? "medium" : "low";
+
+  return (
+    <div className="hud-handoff-wrap">
+      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+        <span className="hud-handoff-tag">HANDOFF</span>
+        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ PROPOSED HANDOFFS</div>
+          {items.length === 0
+            ? <div className="hud-factory-empty">{"// no handoffs proposed"}</div>
+            : items.map(h => (
+                <div key={h.id} className="hud-factory-card">
+                  <div className="hud-factory-card-head">
+                    <span className="hud-factory-name">→ {h.target_agent}</span>
+                    <span className="hud-factory-slug">{confidenceLabel(h.confidence)} ({Math.round(h.confidence * 100)}%)</span>
+                  </div>
+                  {h.from_agent && <div className="hud-factory-slug">from {h.from_agent}</div>}
+                  <div className="hud-factory-specialty">{h.reason}</div>
+                  <div className="hud-factory-prompt">{h.task}</div>
+                  {h.preconditions && h.preconditions.length > 0 && (
+                    <div className="hud-factory-tools">
+                      {h.preconditions.map((p, i) => <span key={i} className="hud-factory-tool">⚠ {p}</span>)}
+                    </div>
+                  )}
+                  {h.artifacts && Object.keys(h.artifacts).length > 0 && (
+                    <div className="hud-factory-tools">
+                      {Object.entries(h.artifacts).map(([k, v]) => <span key={k} className="hud-factory-tool">{k}: {v}</span>)}
+                    </div>
+                  )}
+                  <div className="hud-factory-actions">
+                    <button className="hud-factory-approve" onClick={() => _post(`/handoffs/${h.id}/accept`, refresh)}>ACCEPT</button>
+                    <button className="hud-factory-reject" onClick={() => _post(`/handoffs/${h.id}/reject`, refresh)}>REJECT</button>
+                  </div>
+                </div>
+              ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ActivityFeed({ activity }) {
   const feedRef = useRef(null);
   useEffect(() => {

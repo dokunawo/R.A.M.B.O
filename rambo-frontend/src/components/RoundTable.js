@@ -6,7 +6,7 @@ import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock } from "./SharedHUD";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -185,6 +185,8 @@ function RoundTable() {
       <StatBars stats={sysStats} />
       <CostIndicator data={costData} />
       <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
+      <ConfirmationDock />
+      <HandoffDock />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 

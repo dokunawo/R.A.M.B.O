@@ -11,7 +11,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock } from "./SharedHUD";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -1214,6 +1214,8 @@ export default function SplashScreen({
           <StatBars stats={stats} />
           <CostIndicator data={costData} />
           <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
+          <ConfirmationDock />
+          <HandoffDock />
 
           {/* center title types in LAST, after roster + params */}
           <OrbTitleStack projectLabel={projectLabel} agentName={agentName}
