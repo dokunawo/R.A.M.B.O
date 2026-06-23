@@ -82,19 +82,21 @@ async def test_run_target_isolates_errors():
 
 
 def test_cache_last_message_string_content():
+    import cache_config
     msgs = [{"role": "user", "content": "first"}, {"role": "user", "content": "latest"}]
     Orchestrator._cache_last_message(msgs)
     assert isinstance(msgs[-1]["content"], list)
     assert msgs[-1]["content"][0]["text"] == "latest"
-    assert msgs[-1]["content"][0]["cache_control"] == {"type": "ephemeral"}
+    assert msgs[-1]["content"][0]["cache_control"] == cache_config.cache_control()
     # earlier turns untouched
     assert msgs[0]["content"] == "first"
 
 
 def test_cache_last_message_list_content():
+    import cache_config
     msgs = [{"role": "user", "content": [{"type": "text", "text": "x"}]}]
     Orchestrator._cache_last_message(msgs)
-    assert msgs[-1]["content"][-1]["cache_control"] == {"type": "ephemeral"}
+    assert msgs[-1]["content"][-1]["cache_control"] == cache_config.cache_control()
 
 
 def test_cache_last_message_empty_noop():

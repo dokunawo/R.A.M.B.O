@@ -127,10 +127,11 @@ async def run_research(
 
     # Single cached block: caches tools + system together as a stable prefix
     # re-sent on every iteration of this research loop.
+    import cache_config
     system_prompt = [{
         "type": "text",
         "text": _build_system_prompt(factory_tool_names),
-        "cache_control": {"type": "ephemeral"},
+        "cache_control": cache_config.cache_control(),
     }]
     messages: list[dict[str, Any]] = [
         {"role": "user", "content": f"Research this agent role: {role_description}"},

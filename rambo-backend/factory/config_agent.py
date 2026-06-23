@@ -39,10 +39,11 @@ class ConfigDrivenAgent:
         text = self._row["system_prompt"]
         if not self._cache_prompt:
             return text
+        import cache_config
         return [{
             "type": "text",
             "text": text,
-            "cache_control": {"type": "ephemeral"},
+            "cache_control": cache_config.cache_control(),
         }]
 
     async def run(self, user_message: str) -> str:

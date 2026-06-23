@@ -189,9 +189,10 @@ async def test_research_system_is_cached_block():
         role_description="PDF text extraction",
         factory_tool_names=["read_file"],
     )
+    import cache_config
     system = client.messages.create.call_args.kwargs["system"]
     assert isinstance(system, list)
-    assert system[0]["cache_control"] == {"type": "ephemeral"}
+    assert system[0]["cache_control"] == cache_config.cache_control()
 
 
 def test_normalize_query():

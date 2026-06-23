@@ -97,9 +97,10 @@ async def test_routing_system_is_cached_block():
     client = _client({"mode": "dispatch", "steps": [{"target": "weather", "task": "x"}]})
     router = SmartRouter(client)
     await router.route("weather", ROSTER, TARGETS)
+    import cache_config
     system = client.messages.create.call_args.kwargs["system"]
     assert isinstance(system, list)
-    assert system[0]["cache_control"] == {"type": "ephemeral"}
+    assert system[0]["cache_control"] == cache_config.cache_control()
 
 
 @pytest.mark.asyncio

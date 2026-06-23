@@ -20,6 +20,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+import cache_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +120,7 @@ class SmartRouter:
                 system=[{
                     "type": "text",
                     "text": build_policy(roster_lines),
-                    "cache_control": {"type": "ephemeral"},
+                    "cache_control": cache_config.cache_control(),
                 }],
                 messages=[{"role": "user", "content": f"Route this request: {goal}"}],
                 tools=[_EMIT_TOOL],

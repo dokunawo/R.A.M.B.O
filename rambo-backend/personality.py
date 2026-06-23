@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import cache_config
+
 PERSONALITY_FILE = Path(__file__).parent / "AGENT.md"
 SELF_KNOWLEDGE_DOC = Path(__file__).parent / "context" / "self" / "rambo.md"
 
@@ -102,7 +104,7 @@ def build_system_prompt(personality_text: str, context: str = "") -> list[dict]:
         {
             "type": "text",
             "text": personality_text,
-            "cache_control": {"type": "ephemeral"},
+            "cache_control": cache_config.cache_control(),
         },
         {
             "type": "text",
@@ -115,7 +117,7 @@ def build_system_prompt(personality_text: str, context: str = "") -> list[dict]:
         blocks.append({
             "type": "text",
             "text": sk,
-            "cache_control": {"type": "ephemeral"},
+            "cache_control": cache_config.cache_control(),
         })
 
     if context:

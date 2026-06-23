@@ -72,8 +72,10 @@ class TestAppendVoiceCue:
 
 class TestBuildSystemPrompt:
     def test_personality_block_is_cached(self):
+        import cache_config
         blocks = build_system_prompt("personality text here")
-        assert blocks[0]["cache_control"] == {"type": "ephemeral"}
+        assert blocks[0]["cache_control"] == cache_config.cache_control()
+        assert blocks[0]["cache_control"]["type"] == "ephemeral"
         assert blocks[0]["text"] == "personality text here"
 
     def test_tonal_checkpoint_is_uncached(self):

@@ -183,9 +183,10 @@ Diagnose-then-fix pass: cache the large, identical system+tools prefixes every a
 | **Smart router** (`routing.py`) — policy+roster system cached; `list_active_agents` now `ORDER BY slug` so the cached prefix is byte-stable | Done |
 | **spec_writer** — deliberately left uncached (≈150-token system, no tools → below the ~1024-token min cacheable prefix; would no-op) | Documented |
 | Audit: no volatile bytes (date/UUID) in any cached prefix; tool/roster order made deterministic | Done |
-| 7 cache-shape tests — 177/177 passing | Done |
+| **Extended cache TTL** — `cache_config.py` central helper; default **1h TTL** (`ttl:"1h"` + `extended-cache-ttl-2025-04-11` beta header on the client) so cache writes survive sparse traffic instead of expiring after ~5 min before the next read. Tunable via `RAMBO_CACHE_TTL` (`1h`/`5m`); every cached call site routes through it. | Done |
+| 11 cache tests (7 shape + 4 config) — 181/181 passing | Done |
 
-**⚠️ Verification pending traffic:** `usage.db` is empty (no `ANTHROPIC_API_KEY` configured yet), so the before/after cache-hit numbers can't be measured. Request *shape* is unit-tested; once a key is set and real traffic flows, re-pull the `/usage` cache-read vs full-price split and confirm the uncached share falls. (Note: default cache TTL ~5 min — sparse traffic may show high cache-*write* share until calls cluster within the window.) |
+**⚠️ Verification pending traffic:** `usage.db` is empty (no `ANTHROPIC_API_KEY` configured yet), so the before/after cache-hit numbers can't be measured. Request *shape* + TTL config are unit-tested; once a key is set and real traffic flows, re-pull the `/usage` cache-read vs full-price split and confirm the uncached share falls. (The 1h TTL fixes the sparse-traffic cache-*write* churn; if it ever needs reverting, set `RAMBO_CACHE_TTL=5m`.) |
 
 ---
 

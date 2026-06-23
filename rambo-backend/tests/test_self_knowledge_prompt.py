@@ -53,7 +53,8 @@ class TestBuildSystemPromptWithSK:
         blocks = build_system_prompt(personality)
         sk_blocks = [b for b in blocks if "Self-Knowledge" in b["text"]]
         assert len(sk_blocks) == 1
-        assert sk_blocks[0].get("cache_control") == {"type": "ephemeral"}
+        import cache_config
+        assert sk_blocks[0].get("cache_control") == cache_config.cache_control()
 
     def test_context_still_appended(self):
         personality = load_personality()

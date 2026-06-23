@@ -34,6 +34,7 @@ from conversation import ConversationManager
 from personality import load_personality, build_system_prompt, append_voice_cue
 from orchestrator.routing import SmartRouter
 import sentinel_queue
+import cache_config
 from skills import SKILLS
 
 
@@ -44,7 +45,10 @@ class Orchestrator:
         self.conversation = ConversationManager()
         self.personality_text = load_personality()
         self.llm = (
-            anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+            anthropic.AsyncAnthropic(
+                api_key=os.environ.get("ANTHROPIC_API_KEY"),
+                default_headers=cache_config.beta_headers() or None,
+            )
             if _HAS_ANTHROPIC else None
         )
 
@@ -403,12 +407,12 @@ class Orchestrator:
             last["content"] = [{
                 "type": "text",
                 "text": content,
-                "cache_control": {"type": "ephemeral"},
+                "cache_control": cache_config.cache_control(),
             }]
         elif isinstance(content, list) and content:
             block = content[-1]
             if isinstance(block, dict):
-                block["cache_control"] = {"type": "ephemeral"}
+                block["cache_control"] = cache_config.cache_control()
 
     async def _speak(self, goal: str, plan: list[str], results: list[str]) -> str:
         results_block = "\n".join(f"  - {r}" for r in results)

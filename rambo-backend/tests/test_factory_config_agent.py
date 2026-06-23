@@ -93,15 +93,18 @@ async def test_uses_row_system_prompt():
     await agent.run("test")
     call_kwargs = client.messages.create.call_args.kwargs
     # Caching on by default → system is a cached text block carrying the prompt.
+    import cache_config
     system = call_kwargs["system"]
     assert isinstance(system, list)
     assert system[0]["text"] == "You are Test Bot."
-    assert system[0]["cache_control"] == {"type": "ephemeral"}
+    assert system[0]["cache_control"] == cache_config.cache_control()
+    assert system[0]["cache_control"]["type"] == "ephemeral"
     assert call_kwargs["model"] == "claude-sonnet-4-20250514"
 
 
 @pytest.mark.asyncio
 async def test_cache_on_sends_cached_block():
+    import cache_config
     client = MagicMock()
     client.messages.create = AsyncMock(return_value=_make_text_response("ok"))
     reg = build_default_registry()
@@ -109,7 +112,7 @@ async def test_cache_on_sends_cached_block():
     await agent.run("hi")
     system = client.messages.create.call_args.kwargs["system"]
     assert isinstance(system, list)
-    assert system[0]["cache_control"] == {"type": "ephemeral"}
+    assert system[0]["cache_control"] == cache_config.cache_control()
 
 
 @pytest.mark.asyncio
