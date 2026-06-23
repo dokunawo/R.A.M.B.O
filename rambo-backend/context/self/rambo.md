@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 68 commits:
+Last 14 days — 69 commits:
 
-- `c542188 Remove dead SoundToggle component and its orphaned styles/imports (4 minutes ago)`
-- `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (8 minutes ago)`
-- `08b67d0 Long-press the volume button = full reset to unmuted max volume (10 minutes ago)`
-- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (19 minutes ago)`
-- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (22 minutes ago)`
-- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (30 minutes ago)`
-- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (35 minutes ago)`
-- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (45 minutes ago)`
-- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (51 minutes ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (55 minutes ago)`
-- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (64 minutes ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (70 minutes ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (84 minutes ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (89 minutes ago)`
+- `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (18 minutes ago)`
+- `c542188 Remove dead SoundToggle component and its orphaned styles/imports (21 minutes ago)`
+- `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (25 minutes ago)`
+- `08b67d0 Long-press the volume button = full reset to unmuted max volume (28 minutes ago)`
+- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (36 minutes ago)`
+- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (40 minutes ago)`
+- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (48 minutes ago)`
+- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (52 minutes ago)`
+- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (63 minutes ago)`
+- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (68 minutes ago)`
+- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (73 minutes ago)`
+- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (82 minutes ago)`
+- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (88 minutes ago)`
+- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (2 hours ago)`
+- `0da4e4b Fix two bugs blocking live model calls; centralize model id (2 hours ago)`
 - `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (2 hours ago)`
 - `6179eed Auto-load rambo-backend/.env on startup (2 hours ago)`
-- `4bdd746 Tier 5 — handoff system (propose, don't chain) (2 hours ago)`
-- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (2 hours ago)`
+- `4bdd746 Tier 5 — handoff system (propose, don't chain) (3 hours ago)`
+- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (3 hours ago)`
 - `c685b5b Extended 1h cache TTL to survive sparse traffic (6 hours ago)`
-- `ce3bc5c Add prompt caching across the sub-agent team (6 hours ago)`
-- … and 48 more
+- … and 49 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

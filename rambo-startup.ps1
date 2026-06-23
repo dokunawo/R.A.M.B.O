@@ -75,19 +75,52 @@ if (-not $frontendReady) {
     Log "WARNING: $url did not respond in time; opening anyway."
 }
 
-# 4) Open the browser.
+# 4) Seed the dedicated profile so it skips Chrome's first-run UI and pre-grants
+# geolocation to the RAMBO origins (mic is handled by a launch flag below). This
+# is written fresh each boot so it's deterministic for a kiosk profile.
+$ramboProfile = "$projectRoot\.chrome-profile"
+$prefDir = "$ramboProfile\Default"
+try {
+    New-Item -ItemType Directory -Force -Path $prefDir | Out-Null
+    $prefs = @'
+{
+  "profile": {
+    "content_settings": {
+      "exceptions": {
+        "geolocation": {
+          "http://localhost:3000,*": { "setting": 1 },
+          "http://localhost:3001,*": { "setting": 1 }
+        },
+        "media_stream_mic": {
+          "http://localhost:3000,*": { "setting": 1 },
+          "http://localhost:3001,*": { "setting": 1 }
+        }
+      }
+    }
+  },
+  "browser": { "has_seen_welcome_page": true }
+}
+'@
+    # Write UTF-8 WITHOUT BOM — Chrome's Preferences parser rejects a BOM.
+    [System.IO.File]::WriteAllText("$prefDir\Preferences", $prefs, (New-Object System.Text.UTF8Encoding($false)))
+    Log "Seeded RAMBO Chrome profile (geolocation + mic allowed)."
+} catch {
+    Log "WARNING: could not seed Chrome profile prefs: $_"
+}
+
+# 5) Open the browser.
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-# RAMBO gets its OWN dedicated Chrome profile (--user-data-dir). This is the key
-# to reliable fullscreen: a separate profile always launches a fresh, isolated
-# Chrome instance, so --start-fullscreen is honored EVEN IF your normal Chrome
-# (with other tabs) is already open. Your everyday Chrome is left untouched.
-# One-time: grant the microphone permission once in this RAMBO window.
-$ramboProfile = "$projectRoot\.chrome-profile"
+# RAMBO gets its OWN dedicated Chrome profile (--user-data-dir): a separate,
+# isolated instance, so the flags below are honored even if your normal Chrome
+# is already open. Your everyday Chrome is left untouched.
 $chromeFlags = @(
-    "--user-data-dir=$ramboProfile",         # dedicated, isolated profile
+    "--user-data-dir=$ramboProfile",               # dedicated, isolated profile
+    "--no-first-run",                              # skip the "Sign in to Chrome" welcome
+    "--no-default-browser-check",                  # skip "make Chrome default" prompt
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
-    "--start-fullscreen"                     # F11-style fullscreen on launch
+    "--use-fake-ui-for-media-stream",              # auto-grant the mic (real device) → wake word works
+    "--start-fullscreen"                           # F11-style fullscreen on launch
 )
 # ?boot=1 tells the app this is a fresh machine boot → reset to unmuted/max so a
 # persisted mute never survives a restart. The app strips the flag after reading.
