@@ -115,7 +115,11 @@ class SmartRouter:
             response = await self._llm.messages.create(
                 model=self._model,
                 max_tokens=1024,
-                system=build_policy(roster_lines),
+                system=[{
+                    "type": "text",
+                    "text": build_policy(roster_lines),
+                    "cache_control": {"type": "ephemeral"},
+                }],
                 messages=[{"role": "user", "content": f"Route this request: {goal}"}],
                 tools=[_EMIT_TOOL],
                 tool_choice={"type": "tool", "name": "emit_routing_decision"},

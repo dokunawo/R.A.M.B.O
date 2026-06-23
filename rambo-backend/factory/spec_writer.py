@@ -124,6 +124,10 @@ async def generate_system_prompt(
             revision_feedback=revision_feedback,
         )
 
+    # NOTE: deliberately NOT cached. _META_PROMPT is ~150 tokens with no tools,
+    # well below the model's ~1024-token minimum cacheable prefix, so a
+    # cache_control marker here would silently no-op. Also one call per
+    # spawn/revision (low frequency). Revisit only if this prompt grows large.
     response = await llm_client.messages.create(
         model="claude-sonnet-4-20250514",
         max_tokens=2048,

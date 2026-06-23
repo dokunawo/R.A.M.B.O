@@ -81,6 +81,28 @@ async def test_run_target_isolates_errors():
     assert "error" in out.lower()
 
 
+def test_cache_last_message_string_content():
+    msgs = [{"role": "user", "content": "first"}, {"role": "user", "content": "latest"}]
+    Orchestrator._cache_last_message(msgs)
+    assert isinstance(msgs[-1]["content"], list)
+    assert msgs[-1]["content"][0]["text"] == "latest"
+    assert msgs[-1]["content"][0]["cache_control"] == {"type": "ephemeral"}
+    # earlier turns untouched
+    assert msgs[0]["content"] == "first"
+
+
+def test_cache_last_message_list_content():
+    msgs = [{"role": "user", "content": [{"type": "text", "text": "x"}]}]
+    Orchestrator._cache_last_message(msgs)
+    assert msgs[-1]["content"][-1]["cache_control"] == {"type": "ephemeral"}
+
+
+def test_cache_last_message_empty_noop():
+    msgs = []
+    Orchestrator._cache_last_message(msgs)  # must not raise
+    assert msgs == []
+
+
 @pytest.mark.asyncio
 async def test_build_roster_includes_core_and_skills():
     orch = _orch()

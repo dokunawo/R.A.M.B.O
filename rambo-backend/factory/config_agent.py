@@ -19,13 +19,31 @@ MAX_ITERATIONS = 8
 
 
 class ConfigDrivenAgent:
-    def __init__(self, row: dict, tool_registry: ToolRegistry, llm_client):
+    def __init__(self, row: dict, tool_registry: ToolRegistry, llm_client,
+                 cache_prompt: bool = True):
         self._row = row
         self._tools = tool_registry
         self._llm = llm_client
+        # Caching is on by default. An agent that combines this loop with
+        # context-management/compaction can pass cache_prompt=False to be left
+        # byte-for-byte unchanged.
+        self._cache_prompt = cache_prompt
 
     def _filtered_tools(self) -> list[dict]:
         return self._tools.to_anthropic_tools(names=self._row["tool_allowlist"])
+
+    def _system(self):
+        """Return the system prompt. When caching is on, return it as a single
+        cached text block so tools+system (tools render first) are cached
+        together as one stable prefix every spawned agent re-sends."""
+        text = self._row["system_prompt"]
+        if not self._cache_prompt:
+            return text
+        return [{
+            "type": "text",
+            "text": text,
+            "cache_control": {"type": "ephemeral"},
+        }]
 
     async def run(self, user_message: str) -> str:
         tools = self._filtered_tools()
@@ -37,7 +55,7 @@ class ConfigDrivenAgent:
             response = await self._llm.messages.create(
                 model=self._row.get("model", "claude-sonnet-4-20250514"),
                 max_tokens=4096,
-                system=self._row["system_prompt"],
+                system=self._system(),
                 messages=messages,
                 tools=tools if tools else [],
             )

@@ -125,7 +125,13 @@ async def run_research(
             logger.info("Cache hit for research query: %s", query_key)
             return SkillsReport(**cached["report_json"])
 
-    system_prompt = _build_system_prompt(factory_tool_names)
+    # Single cached block: caches tools + system together as a stable prefix
+    # re-sent on every iteration of this research loop.
+    system_prompt = [{
+        "type": "text",
+        "text": _build_system_prompt(factory_tool_names),
+        "cache_control": {"type": "ephemeral"},
+    }]
     messages: list[dict[str, Any]] = [
         {"role": "user", "content": f"Research this agent role: {role_description}"},
     ]

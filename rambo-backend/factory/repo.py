@@ -275,7 +275,7 @@ class FactoryRepo:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             rows = await db.execute_fetchall(
-                "SELECT * FROM spawned_agents WHERE status = 'active'",
+                "SELECT * FROM spawned_agents WHERE status = 'active' ORDER BY slug",
             )
             result = []
             for r in rows:

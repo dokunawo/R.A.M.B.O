@@ -93,6 +93,16 @@ async def test_empty_steps_falls_back():
 
 
 @pytest.mark.asyncio
+async def test_routing_system_is_cached_block():
+    client = _client({"mode": "dispatch", "steps": [{"target": "weather", "task": "x"}]})
+    router = SmartRouter(client)
+    await router.route("weather", ROSTER, TARGETS)
+    system = client.messages.create.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    assert system[0]["cache_control"] == {"type": "ephemeral"}
+
+
+@pytest.mark.asyncio
 async def test_no_emit_block_returns_none():
     block = MagicMock()
     block.type = "text"

@@ -172,6 +172,21 @@ Mapping the 6-tier orchestration model onto R.A.M.B.O. Tiers 2 & 6 were delivere
 | **5 — Handoff system** | TODO — typed propose-don't-chain handoff recommendation (`target_agent`, `reason`, `task`, `artifacts` as refs, `preconditions`, `confidence`) surfaced for human approval. |
 | **6 — Live hot-reload** | Done (Factory `RegistryWatcher` + manifest runtime + `dispatch_to_<slug>`) |
 
+### Prompt Caching Across Sub-Agents (06/23/2026)
+Diagnose-then-fix pass: cache the large, identical system+tools prefixes every agent re-sends. Audit found the main loop's *system* already cached (`personality.py`); everything else uncached.
+
+| Change | Status |
+|---|---|
+| **Shared sub-agent loop** (`config_agent.py`) — system sent as a cached block (caches tools+system together for every spawned agent); `cache_prompt=True` opt-out flag for any agent combining with context-management | Done |
+| **Main conversation history** (`orchestrator._speak`) — rolling cache breakpoint on the last message via `_cache_last_message()`, so prior turns read from cache (system was already cached → now 2 breakpoints) | Done |
+| **Research loop** (`research.py`) — system+tools cached block (re-sent every iteration ×≤8) | Done |
+| **Smart router** (`routing.py`) — policy+roster system cached; `list_active_agents` now `ORDER BY slug` so the cached prefix is byte-stable | Done |
+| **spec_writer** — deliberately left uncached (≈150-token system, no tools → below the ~1024-token min cacheable prefix; would no-op) | Documented |
+| Audit: no volatile bytes (date/UUID) in any cached prefix; tool/roster order made deterministic | Done |
+| 7 cache-shape tests — 177/177 passing | Done |
+
+**⚠️ Verification pending traffic:** `usage.db` is empty (no `ANTHROPIC_API_KEY` configured yet), so the before/after cache-hit numbers can't be measured. Request *shape* is unit-tested; once a key is set and real traffic flows, re-pull the `/usage` cache-read vs full-price split and confirm the uncached share falls. (Note: default cache TTL ~5 min — sparse traffic may show high cache-*write* share until calls cluster within the window.) |
+
 ---
 
 ## What's Next

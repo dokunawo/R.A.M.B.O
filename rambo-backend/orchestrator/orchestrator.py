@@ -389,6 +389,27 @@ class Orchestrator:
         print(f"[stream] speak_segment base={base_turn_id} seq={seq} "
               f"chars={len(text)} t_since_start={elapsed:.2f}s final={is_final}")
 
+    @staticmethod
+    def _cache_last_message(messages: list[dict]) -> None:
+        """Place a rolling cache breakpoint on the last message so the growing
+        conversation prefix is read from cache on the next turn instead of
+        re-paid at full price. Converts the last message's string content into a
+        single cached text block. No-op on empty history."""
+        if not messages:
+            return
+        last = messages[-1]
+        content = last.get("content")
+        if isinstance(content, str):
+            last["content"] = [{
+                "type": "text",
+                "text": content,
+                "cache_control": {"type": "ephemeral"},
+            }]
+        elif isinstance(content, list) and content:
+            block = content[-1]
+            if isinstance(block, dict):
+                block["cache_control"] = {"type": "ephemeral"}
+
     async def _speak(self, goal: str, plan: list[str], results: list[str]) -> str:
         results_block = "\n".join(f"  - {r}" for r in results)
 
@@ -407,6 +428,7 @@ class Orchestrator:
         self.conversation.add_user_message(execution_report)
         messages = self.conversation.get_messages_for_api()
         append_voice_cue(messages)
+        self._cache_last_message(messages)
         system = build_system_prompt(self.personality_text)
 
         t0 = time.monotonic()

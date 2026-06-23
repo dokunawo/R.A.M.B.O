@@ -92,8 +92,35 @@ async def test_uses_row_system_prompt():
     agent = ConfigDrivenAgent(row=ROW, tool_registry=reg, llm_client=client)
     await agent.run("test")
     call_kwargs = client.messages.create.call_args.kwargs
-    assert call_kwargs["system"] == "You are Test Bot."
+    # Caching on by default → system is a cached text block carrying the prompt.
+    system = call_kwargs["system"]
+    assert isinstance(system, list)
+    assert system[0]["text"] == "You are Test Bot."
+    assert system[0]["cache_control"] == {"type": "ephemeral"}
     assert call_kwargs["model"] == "claude-sonnet-4-20250514"
+
+
+@pytest.mark.asyncio
+async def test_cache_on_sends_cached_block():
+    client = MagicMock()
+    client.messages.create = AsyncMock(return_value=_make_text_response("ok"))
+    reg = build_default_registry()
+    agent = ConfigDrivenAgent(row=ROW, tool_registry=reg, llm_client=client, cache_prompt=True)
+    await agent.run("hi")
+    system = client.messages.create.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    assert system[0]["cache_control"] == {"type": "ephemeral"}
+
+
+@pytest.mark.asyncio
+async def test_cache_off_sends_bare_string():
+    client = MagicMock()
+    client.messages.create = AsyncMock(return_value=_make_text_response("ok"))
+    reg = build_default_registry()
+    agent = ConfigDrivenAgent(row=ROW, tool_registry=reg, llm_client=client, cache_prompt=False)
+    await agent.run("hi")
+    system = client.messages.create.call_args.kwargs["system"]
+    assert system == "You are Test Bot."
 
 
 # ── RegistryWatcher tests ───────────────────────────────────────

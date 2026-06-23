@@ -176,6 +176,24 @@ async def test_report_persisted(tmp_path):
     assert cached is not None
 
 
+@pytest.mark.asyncio
+async def test_research_system_is_cached_block():
+    client = MagicMock()
+    response = MagicMock()
+    response.content = [_make_emit_block(VALID_REPORT)]
+    response.stop_reason = "tool_use"
+    client.messages.create = AsyncMock(return_value=response)
+
+    await run_research(
+        llm_client=client,
+        role_description="PDF text extraction",
+        factory_tool_names=["read_file"],
+    )
+    system = client.messages.create.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    assert system[0]["cache_control"] == {"type": "ephemeral"}
+
+
 def test_normalize_query():
     assert _normalize_query("  PDF  Text  Extraction  ") == "pdf text extraction"
     assert _normalize_query("Hello\n\tWorld") == "hello world"
