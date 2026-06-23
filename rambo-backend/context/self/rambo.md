@@ -78,16 +78,17 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 61 commits:
+Last 14 days — 62 commits:
 
-- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (10 minutes ago)`
-- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (16 minutes ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (20 minutes ago)`
-- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (30 minutes ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (36 minutes ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (49 minutes ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (55 minutes ago)`
-- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (86 minutes ago)`
+- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (5 minutes ago)`
+- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (15 minutes ago)`
+- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (20 minutes ago)`
+- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (25 minutes ago)`
+- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (34 minutes ago)`
+- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (40 minutes ago)`
+- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (54 minutes ago)`
+- `0da4e4b Fix two bugs blocking live model calls; centralize model id (59 minutes ago)`
+- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (2 hours ago)`
 - `6179eed Auto-load rambo-backend/.env on startup (2 hours ago)`
 - `4bdd746 Tier 5 — handoff system (propose, don't chain) (2 hours ago)`
 - `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (2 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 61 commits:
 - `1d0eeae Add Factory approval UI + document Factory in roadmap/README (6 hours ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (7 hours ago)`
 - `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (8 hours ago)`
-- `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (9 hours ago)`
-- … and 41 more
+- … and 42 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

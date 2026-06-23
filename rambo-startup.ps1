@@ -76,12 +76,17 @@ if (-not $frontendReady) {
 }
 
 # 4) Open the browser.
+# --autoplay-policy lets the intro sound play on boot without a click. NOTE:
+# Chrome only applies these flags when it launches a FRESH process — at login
+# Chrome isn't running yet, so this works. If Chrome is already open, the URL
+# opens in the existing window and the flag is ignored (you'd need a gesture).
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+$autoplay = "--autoplay-policy=no-user-gesture-required"
 if ((Test-Path $chrome) -and $DevTools) {
-    Start-Process $chrome -ArgumentList "--auto-open-devtools-for-tabs", $url
+    Start-Process $chrome -ArgumentList $autoplay, "--auto-open-devtools-for-tabs", $url
 } elseif (Test-Path $chrome) {
-    Start-Process $chrome -ArgumentList $url
+    Start-Process $chrome -ArgumentList $autoplay, $url
 } else {
     Start-Process $url   # default browser
 }
