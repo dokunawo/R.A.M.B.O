@@ -179,6 +179,7 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 |---|---|
 | Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking (`ConfigDrivenAgent` now does this for Factory-spawned agents; extend to the 10 hand-rolled specialists) | High |
 | Factory follow-ups — ~~mount `FactoryDock` on all pages~~ ✓, ~~wire dispatch into orchestrator~~ ✓; remaining: surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent`, multi-task spawn matching when a goal names two agents | Medium |
+| **Factory dispatch matching — KNOWN ISSUE** — `Orchestrator._dispatch_spawned()` is first-match-wins by slug/name substring. An agent named with a common word (e.g. "build", "find", "search") will silently intercept unrelated goals that happen to contain that word. Fix: require explicit invocation (e.g. `@slug` prefix or "ask <name> to…" pattern), word-boundary matching instead of substring, and/or score-and-rank when multiple agents match. Watch once real agents exist. | High |
 | Alembic migration framework — versioned schema management as DB tables grow (now 2 DBs: `usage.db`, `factory.db`) | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |

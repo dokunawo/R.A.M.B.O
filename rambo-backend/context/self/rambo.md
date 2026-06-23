@@ -78,9 +78,10 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 45 commits:
+Last 14 days — 46 commits:
 
-- `1d0eeae Add Factory approval UI + document Factory in roadmap/README (7 minutes ago)`
+- `4db7acf Wire spawned-agent dispatch into orchestrator + mount FactoryDock everywhere (3 minutes ago)`
+- `1d0eeae Add Factory approval UI + document Factory in roadmap/README (10 minutes ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (2 hours ago)`
 - `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (2 hours ago)`
 - `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (3 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 45 commits:
 - `4930cd8 Add Chief of Staff skill to R.A.M.B.O backend (17 hours ago)`
 - `07e5dd5 Add Google Drive integration (17 hours ago)`
 - `38b58f7 Add Google Calendar integration (17 hours ago)`
-- `9b74e1c Graceful fallback when ANTHROPIC_API_KEY is not set (19 hours ago)`
-- … and 25 more
+- … and 26 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
