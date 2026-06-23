@@ -53,17 +53,19 @@ class TestAppendVoiceCue:
         result = append_voice_cue(msgs)
         assert result == original
 
-    def test_cue_contains_banned_openers(self):
-        for phrase in ["Great question", "Let me", "Happy to help", "Absolutely"]:
-            assert phrase in _VOICE_CUE
+    def test_cue_bans_generic_chatbot_filler(self):
+        # The signature chatbot tells are still called out as things to avoid.
+        assert "Great question" in _VOICE_CUE
+        assert "I'd be happy to" in _VOICE_CUE
 
-    def test_cue_contains_positive_direction(self):
-        assert "cold professional" in _VOICE_CUE.lower() or "precise" in _VOICE_CUE.lower()
-        assert "Mission-first" in _VOICE_CUE or "mission-first" in _VOICE_CUE.lower()
+    def test_cue_directs_conversational_flow(self):
+        cue = _VOICE_CUE.lower()
+        assert "conversation" in cue or "flow" in cue or "natural" in cue
+        assert "answer first" in cue
 
     def test_cue_contains_voice_examples(self):
-        assert "Done. Three endpoints" in _VOICE_CUE
-        assert "That goal is vague" in _VOICE_CUE
+        assert "All set" in _VOICE_CUE
+        assert "a little vague" in _VOICE_CUE
 
     def test_cue_preserves_warmth_guardrail(self):
         cue_lower = _VOICE_CUE.lower()
@@ -87,7 +89,7 @@ class TestBuildSystemPrompt:
     def test_checkpoint_contains_voice_discipline(self):
         blocks = build_system_prompt("personality")
         text = blocks[1]["text"]
-        assert "Great question" in text
+        assert "FLOW" in text
         assert "LENGTH" in text
         assert "VOICE" in text
 

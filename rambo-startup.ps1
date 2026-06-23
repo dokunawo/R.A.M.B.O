@@ -119,8 +119,9 @@ $chromeFlags = @(
     "--no-first-run",                              # skip the "Sign in to Chrome" welcome
     "--no-default-browser-check",                  # skip "make Chrome default" prompt
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
-    "--use-fake-ui-for-media-stream",              # auto-grant the mic (real device) → wake word works
     "--start-fullscreen"                           # F11-style fullscreen on launch
+    # NOTE: mic is granted via the seeded profile Preferences above (no need for
+    # --use-fake-ui-for-media-stream, which triggers Chrome's "unsupported flag" bar).
 )
 # ?boot=1 tells the app this is a fresh machine boot → reset to unmuted/max so a
 # persisted mute never survives a restart. The app strips the flag after reading.

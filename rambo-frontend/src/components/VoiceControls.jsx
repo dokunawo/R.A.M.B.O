@@ -7,6 +7,26 @@ const API = "http://localhost:8000";
 
 const VOICE_WS_URL = "ws://localhost:8000/ws/activity";
 
+// Phrases that mean "I'm done — stop asking if there's anything else."
+const END_PHRASES = [
+  "no thank you", "no thanks", "thats it", "that's it", "thats it for now",
+  "that's it for now", "thats all", "that's all", "thats all for now",
+  "nothing else", "nothing for now", "im good", "i'm good", "im done",
+  "i'm done", "im fine", "i'm fine", "all good", "we're good", "were good",
+  "that will be all", "that'll be all", "stop", "cancel", "dismiss",
+  "no that's all", "no thats all", "nope", "nah", "negative",
+];
+const SIGN_OFFS = ["Standing by.", "Understood.", "I'm here if you need me.", "Anytime.", "Acknowledged."];
+
+function isEndPhrase(text) {
+  const t = (text || "").toLowerCase().trim().replace(/[.,!?]+$/g, "").trim();
+  if (!t) return false;
+  if (END_PHRASES.includes(t)) return true;
+  // bare "no" / "no thanks rambo" style
+  if (/^(no|nope|nah)\b/.test(t) && t.length <= 18) return true;
+  return false;
+}
+
 export function usePageVoice() {
   const [voiceText, setVoiceText] = useState("");
   const [commandLog, setCommandLog] = useState([]);
@@ -66,6 +86,18 @@ export function usePageVoice() {
 
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
+
+    // Conversation-ender: if the user declines the "anything else?" follow-up,
+    // stop the loop and sign off instead of treating it as a new request.
+    if (isEndPhrase(text)) {
+      if (setFollowUpRef.current) setFollowUpRef.current(false);
+      const signoff = SIGN_OFFS[Math.floor(Math.random() * SIGN_OFFS.length)];
+      const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: signoff, status: "complete" };
+      setCommandLog(prev => [entry, ...prev].slice(0, 50));
+      if (speakRef.current) speakRef.current(signoff, false);   // false = no follow-up, go idle
+      return;
+    }
+
     const volResponse = tryVolumeCommand(text);
     if (volResponse) {
       const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: volResponse, status: "complete" };
