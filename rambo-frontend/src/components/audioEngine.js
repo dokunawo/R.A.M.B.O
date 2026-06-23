@@ -13,7 +13,9 @@ let lastKey = 0; // throttle for the synthesized keystroke click
 const files = {}; // url -> HTMLAudioElement
 
 let muted = false;
+let volume = 50; // 0-100 percentage
 try { muted = localStorage.getItem("rambo-muted") === "1"; } catch { /* ignore */ }
+try { const v = parseInt(localStorage.getItem("rambo-volume"), 10); if (v >= 0 && v <= 100) volume = v; } catch { /* ignore */ }
 
 function ensureCtx() {
   if (typeof window === "undefined") return null;
@@ -22,7 +24,7 @@ function ensureCtx() {
   if (!ctx) {
     try { ctx = new AC(); } catch { return null; }
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : 0.5;
+    master.gain.value = muted ? 0 : volume / 100;
     master.connect(ctx.destination);
   }
   return ctx;
@@ -56,9 +58,29 @@ export function isMuted() { return muted; }
 export function setMuted(v) {
   muted = !!v;
   try { localStorage.setItem("rambo-muted", muted ? "1" : "0"); } catch { /* ignore */ }
-  if (master) master.gain.value = muted ? 0 : 0.5;
+  if (master) master.gain.value = muted ? 0 : volume / 100;
   Object.values(files).forEach(a => { a.muted = muted; });
   return muted;
+}
+
+export function getVolume() { return volume; }
+
+export function setVolume(pct) {
+  volume = Math.max(0, Math.min(100, Math.round(pct)));
+  try { localStorage.setItem("rambo-volume", String(volume)); } catch { /* ignore */ }
+  if (volume === 0) {
+    muted = true;
+    try { localStorage.setItem("rambo-muted", "1"); } catch { /* ignore */ }
+  } else if (muted) {
+    muted = false;
+    try { localStorage.setItem("rambo-muted", "0"); } catch { /* ignore */ }
+  }
+  if (master) master.gain.value = muted ? 0 : volume / 100;
+  Object.values(files).forEach(a => {
+    a.muted = muted;
+    a.volume = volume / 100;
+  });
+  return volume;
 }
 
 /* ---------------- real sound files ---------------- */

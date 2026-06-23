@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
-import { isMuted, setMuted, resumeAudio } from "./audioEngine";
+import { isMuted, setMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
 import "./VoiceControls.css";
 
 const API = "http://localhost:8000";
@@ -39,13 +39,42 @@ export function usePageVoice() {
     }
   }, [busy]);
 
+  const tryVolumeCommand = useCallback((text) => {
+    const t = text.toLowerCase().trim();
+    // "volume 50", "set volume to 75", "volume at 30"
+    let m = t.match(/(?:set\s+)?volume\s+(?:to\s+|at\s+)?(\d{1,3})(?:\s*%)?/);
+    if (m) { const v = setVolume(parseInt(m[1], 10)); return `Volume set to ${v}%`; }
+    // "mute", "unmute"
+    if (/^(?:mute|silence)$/.test(t)) { setVolume(0); return "Muted"; }
+    if (/^unmute$/.test(t)) { setVolume(50); return "Volume restored to 50%"; }
+    // "lower volume by 20", "reduce volume 10"
+    m = t.match(/(?:lower|reduce|decrease|turn\s+down)\s+(?:the\s+)?volume\s+(?:by\s+)?(\d{1,3})(?:\s*%)?/);
+    if (m) { const v = setVolume(getVolume() - parseInt(m[1], 10)); return `Volume lowered to ${v}%`; }
+    // "raise volume by 20", "increase volume 10"
+    m = t.match(/(?:raise|increase|turn\s+up)\s+(?:the\s+)?volume\s+(?:by\s+)?(\d{1,3})(?:\s*%)?/);
+    if (m) { const v = setVolume(getVolume() + parseInt(m[1], 10)); return `Volume raised to ${v}%`; }
+    // bare number while talking about volume context — "50", "75"
+    if (/^\d{1,3}$/.test(t)) {
+      const n = parseInt(t, 10);
+      if (n >= 0 && n <= 100) { const v = setVolume(n); return `Volume set to ${v}%`; }
+    }
+    return null;
+  }, []);
+
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
+    const volResponse = tryVolumeCommand(text);
+    if (volResponse) {
+      const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: volResponse, status: "complete" };
+      setCommandLog(prev => [entry, ...prev].slice(0, 50));
+      if (speakRef.current) speakRef.current(volResponse, true);
+      return;
+    }
     setTimeout(() => {
       executeCommand(text);
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
     }, 800);
-  }, [executeCommand]);
+  }, [executeCommand, tryVolumeCommand]);
 
   const voice = useVoiceReactivity({
     onTranscript: setVoiceText,
@@ -67,11 +96,38 @@ export function usePageVoice() {
   return { ...voice, voiceText, setVoiceText, speakRef, commandLog, executeCommand, busy };
 }
 
+function VolumeSvg({ vol }) {
+  // vol 0-100: muted = X, low (<34) = no arcs, mid (34-66) = 1 arc, high (>66) = 2 arcs
+  const m = vol === 0;
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
+      {m ? (
+        <>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+        </>
+      ) : (
+        <>
+          {vol > 33 && <path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none"/>}
+          {vol > 66 && <path d="M18.5 5.5a9 9 0 0 1 0 13" fill="none"/>}
+        </>
+      )}
+    </svg>
+  );
+}
+
+const VOL_STEPS = [100, 75, 50, 25, 0];
+
 export function VoiceControls({ micActive, toggleMic, convState }) {
-  const [muted, setMutedState] = useState(isMuted());
-  const toggleVolume = () => {
+  const [vol, setVol] = useState(isMuted() ? 0 : getVolume());
+
+  const cycleVolume = () => {
     resumeAudio();
-    setMutedState(setMuted(!muted));
+    const cur = vol;
+    const next = VOL_STEPS.find(s => s < cur) ?? 100;
+    const v = setVolume(next);
+    setVol(v);
   };
 
   const isListening = convState === CONV_STATES.LISTENING;
@@ -99,9 +155,9 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
             </svg>
           )}
         </button>
-        <button className="vc-vol-secondary" type="button" onClick={toggleVolume}
-          title={muted ? "Sound off — click to enable" : "Sound on"}>
-          {muted ? "🔇" : "🔊"}
+        <button className="vc-vol-secondary" type="button" onClick={cycleVolume}
+          title={vol === 0 ? "Muted — click to restore" : `Volume ${vol}% — click to adjust`}>
+          <VolumeSvg vol={vol} />
         </button>
       </div>
       {!isActive && (
