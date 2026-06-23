@@ -47,10 +47,11 @@
   max-height: 45vh;
   display: flex;
   flex-direction: column;
-  background: rgba(8, 9, 11, 0.85);
-  border: 1px solid rgba(232, 177, 90, 0.15);
+  background: var(--glass-bg);
+  border: var(--glass-border);
   border-radius: 4px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   overflow: hidden;
 }
 
@@ -81,8 +82,8 @@
 
 .cmd-log-entry {
   padding: 10px 12px;
-  background: rgba(14, 17, 22, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(14, 15, 19, 0.25);
+  border: var(--glass-border);
   border-radius: 3px;
   font-family: "JetBrains Mono", monospace;
 }
