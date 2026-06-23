@@ -78,19 +78,20 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 65 commits:
+Last 14 days — 66 commits:
 
-- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (9 minutes ago)`
-- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (12 minutes ago)`
-- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (21 minutes ago)`
-- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (25 minutes ago)`
-- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (35 minutes ago)`
-- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (41 minutes ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (45 minutes ago)`
-- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (54 minutes ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (61 minutes ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (74 minutes ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (80 minutes ago)`
+- `08b67d0 Long-press the volume button = full reset to unmuted max volume (2 minutes ago)`
+- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (11 minutes ago)`
+- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (14 minutes ago)`
+- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (23 minutes ago)`
+- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (27 minutes ago)`
+- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (37 minutes ago)`
+- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (43 minutes ago)`
+- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (47 minutes ago)`
+- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (57 minutes ago)`
+- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (63 minutes ago)`
+- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (76 minutes ago)`
+- `0da4e4b Fix two bugs blocking live model calls; centralize model id (82 minutes ago)`
 - `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (2 hours ago)`
 - `6179eed Auto-load rambo-backend/.env on startup (2 hours ago)`
 - `4bdd746 Tier 5 — handoff system (propose, don't chain) (2 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 65 commits:
 - `ce3bc5c Add prompt caching across the sub-agent team (6 hours ago)`
 - `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (6 hours ago)`
 - `13ee09b Note Factory dispatch substring-match risk as known issue in roadmap (6 hours ago)`
-- `4db7acf Wire spawned-agent dispatch into orchestrator + mount FactoryDock everywhere (6 hours ago)`
-- … and 45 more
+- … and 46 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

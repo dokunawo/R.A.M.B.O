@@ -82,14 +82,23 @@ if (-not $frontendReady) {
 # opens in the existing window and the flag is ignored (you'd need a gesture).
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-$autoplay = "--autoplay-policy=no-user-gesture-required"
+# Flags only apply when Chrome launches a FRESH process (at login it isn't
+# running yet, so this works):
+#   --autoplay-policy : let the intro sound play without a click
+#   --new-window      : a dedicated window, not a tab in an existing one
+#   --start-fullscreen: open in F11-style fullscreen (kiosk-like)
+$chromeFlags = @(
+    "--autoplay-policy=no-user-gesture-required",
+    "--new-window",
+    "--start-fullscreen"
+)
 # ?boot=1 tells the app this is a fresh machine boot → reset to unmuted/max so a
 # persisted mute never survives a restart. The app strips the flag after reading.
 $openUrl = "$url/?boot=1"
 if ((Test-Path $chrome) -and $DevTools) {
-    Start-Process $chrome -ArgumentList $autoplay, "--auto-open-devtools-for-tabs", $openUrl
+    Start-Process $chrome -ArgumentList ($chromeFlags + "--auto-open-devtools-for-tabs" + $openUrl)
 } elseif (Test-Path $chrome) {
-    Start-Process $chrome -ArgumentList $autoplay, $openUrl
+    Start-Process $chrome -ArgumentList ($chromeFlags + $openUrl)
 } else {
     Start-Process $openUrl   # default browser
 }
