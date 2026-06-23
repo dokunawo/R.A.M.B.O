@@ -67,6 +67,7 @@ class ConfigDrivenAgent:
                 return self._extract_text(response.content)
 
             tool_results = []
+            pending_confirmations = []
             for block in response.content:
                 if getattr(block, "type", None) != "tool_use":
                     continue
@@ -79,6 +80,26 @@ class ConfigDrivenAgent:
                         "is_error": True,
                     })
                     continue
+
+                # Tier 4: gated tools are NOT executed — stage a confirmation.
+                if getattr(tool_def, "requires_confirmation", False):
+                    from factory import confirmations
+                    rec = confirmations.request_confirmation(
+                        block.name, dict(block.input), agent_slug=self._row.get("slug"),
+                    )
+                    pending_confirmations.append(rec)
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps({
+                            "status": "confirmation_required",
+                            "confirmation_id": rec["id"],
+                            "tool": block.name,
+                            "note": "This action needs human approval and was not executed.",
+                        }),
+                    })
+                    continue
+
                 try:
                     result = await tool_def.execute(**block.input)
                     tool_results.append({
@@ -93,6 +114,13 @@ class ConfigDrivenAgent:
                         "content": json.dumps({"error": str(exc)}),
                         "is_error": True,
                     })
+
+            # If anything needs confirmation, stop here — the action waits for a
+            # human. The agent can resume once approved (out-of-band execution).
+            if pending_confirmations:
+                messages.append({"role": "user", "content": tool_results})
+                names = ", ".join(f"{c['tool_name']} (id={c['id']})" for c in pending_confirmations)
+                return f"⏸ Awaiting your confirmation before running: {names}"
 
             if tool_results:
                 messages.append({"role": "user", "content": tool_results})

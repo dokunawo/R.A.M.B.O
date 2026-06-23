@@ -22,6 +22,9 @@ class ToolDef:
     input_schema: dict
     execute: Callable[..., Awaitable[str]]
     factory_allowed: bool = True
+    # Tier 4 — human-in-the-loop. When True, the tool router stops and asks for
+    # explicit confirmation before this tool runs, instead of executing it.
+    requires_confirmation: bool = False
 
 
 class ToolRegistry:
@@ -140,6 +143,7 @@ def build_default_registry() -> ToolRegistry:
         },
         execute=_write_file,
         factory_allowed=True,
+        requires_confirmation=True,  # writing/overwriting files is irreversible
     ))
 
     reg.register(ToolDef(

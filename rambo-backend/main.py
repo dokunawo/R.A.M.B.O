@@ -242,3 +242,37 @@ async def factory_reject(task_id: str, req: RejectRequest):
 @app.get("/factory/agents")
 async def factory_agents():
     return await _factory_repo.list_active_agents()
+
+
+# ── Tier 4: tool confirmation gate ───────────────────────────────
+
+from factory import confirmations as _confirmations
+
+
+@app.get("/confirmations")
+async def list_confirmations():
+    return _confirmations.list_pending()
+
+
+@app.post("/confirmations/{confirmation_id}/approve")
+async def approve_confirmation(confirmation_id: str):
+    rec = _confirmations.get(confirmation_id)
+    if rec is None or rec["status"] != "pending":
+        return {"error": "not found or already resolved"}
+    tool = _tool_registry.get(rec["tool_name"])
+    if tool is None:
+        return {"error": f"tool '{rec['tool_name']}' no longer registered"}
+    _confirmations.resolve(confirmation_id, "approved")
+    try:
+        result = await tool.execute(**rec["tool_input"])
+        return {"status": "executed", "tool": rec["tool_name"], "result": result}
+    except Exception as e:
+        return {"status": "error", "tool": rec["tool_name"], "error": str(e)}
+
+
+@app.post("/confirmations/{confirmation_id}/reject")
+async def reject_confirmation(confirmation_id: str):
+    rec = _confirmations.resolve(confirmation_id, "rejected")
+    if rec is None:
+        return {"error": "not found or already resolved"}
+    return {"status": "rejected", "id": confirmation_id}
