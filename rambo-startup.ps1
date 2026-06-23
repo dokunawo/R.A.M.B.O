@@ -14,7 +14,9 @@ param(
     [switch]$Rebuild,
     [switch]$Clean,
     [switch]$Dev,       # open the dev frontend (:3001) instead of prod (:3000)
-    [switch]$DevTools   # open Chrome with DevTools panel auto-open
+    [switch]$DevTools,  # open Chrome with DevTools panel auto-open
+    [switch]$Kiosk      # TRUE locked kiosk (no F11/X exit; quit with Alt+F4). Default is
+                        # --start-fullscreen: immersive but F11 / top-edge X still exit.
 )
 
 $ErrorActionPreference = "Continue"
@@ -75,15 +77,16 @@ if (-not $frontendReady) {
     Log "WARNING: $url did not respond in time; opening anyway."
 }
 
-# 4) Seed the dedicated profile so it skips Chrome's first-run UI and pre-grants
-# geolocation to the RAMBO origins (mic is handled by a launch flag below). This
-# is written fresh each boot so it's deterministic for a kiosk profile.
+# 4) Seed the dedicated profile so it: skips Chrome's first-run UI, pre-grants
+# mic + geolocation to the RAMBO origins, and hides the bookmarks bar for a
+# clean kiosk look. Written fresh each boot so it's deterministic.
 $ramboProfile = "$projectRoot\.chrome-profile"
 $prefDir = "$ramboProfile\Default"
 try {
     New-Item -ItemType Directory -Force -Path $prefDir | Out-Null
     $prefs = @'
 {
+  "bookmark_bar": { "show_on_all_tabs": false },
   "profile": {
     "content_settings": {
       "exceptions": {
@@ -114,12 +117,15 @@ $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 # RAMBO gets its OWN dedicated Chrome profile (--user-data-dir): a separate,
 # isolated instance, so the flags below are honored even if your normal Chrome
 # is already open. Your everyday Chrome is left untouched.
+# Fullscreen mode: default --start-fullscreen (immersive, but F11 and the
+# top-edge tab × still let you exit). -Kiosk = truly locked (no F11/X; Alt+F4 only).
+$fullscreenFlag = if ($Kiosk) { "--kiosk" } else { "--start-fullscreen" }
 $chromeFlags = @(
     "--user-data-dir=$ramboProfile",               # dedicated, isolated profile
     "--no-first-run",                              # skip the "Sign in to Chrome" welcome
     "--no-default-browser-check",                  # skip "make Chrome default" prompt
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
-    "--start-fullscreen"                           # F11-style fullscreen on launch
+    $fullscreenFlag
     # NOTE: mic is granted via the seeded profile Preferences above (no need for
     # --use-fake-ui-for-media-stream, which triggers Chrome's "unsupported flag" bar).
 )
