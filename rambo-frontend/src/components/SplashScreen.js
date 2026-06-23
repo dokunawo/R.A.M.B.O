@@ -11,6 +11,7 @@ import DispatchBeams from "./DispatchBeam";
 import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
+import { VoiceControls } from "./VoiceControls";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -1166,14 +1167,8 @@ export default function SplashScreen({
       {/* gold flash during the phase transition (on-theme, not a black cut) */}
       {fading && <div className="phase-flash" />}
 
-      <SoundToggle />
       {phase === "main" && (
-        <button className="mic-toggle" type="button" onClick={toggleMic}
-          aria-label={micActive ? "Disable microphone" : "Enable microphone"}
-          title={micActive ? 'Mic active — say "Rambo" to command' : 'Enable mic — say "Rambo" to activate'}>
-          {micActive ? "🎙️" : "🎤"}
-          {micActive && <span className="mic-state">{convState.toUpperCase()}</span>}
-        </button>
+        <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
       )}
 
       {phase === "transmission" && (
