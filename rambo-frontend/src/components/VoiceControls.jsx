@@ -148,6 +148,8 @@ const VOL_STEPS = [100, 75, 50, 25, 0];
 
 export function VoiceControls({ micActive, toggleMic, convState }) {
   const [vol, setVol] = useState(isMuted() ? 0 : getVolume());
+  const volTimerRef = useRef(null);
+  const volLongPressRef = useRef(false);
 
   const cycleVolume = () => {
     resumeAudio();
@@ -155,6 +157,25 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
     const next = VOL_STEPS.find(s => s < cur) ?? 100;
     const v = setVolume(next);
     setVol(v);
+  };
+
+  // Long-press (600ms) = full reset → unmuted at max volume. Tap = cycle.
+  const fullResetVolume = () => {
+    resumeAudio();
+    const v = setVolume(100);   // volume > 0 also clears the mute flag
+    setVol(v);
+  };
+  const onVolPointerDown = () => {
+    volLongPressRef.current = false;
+    volTimerRef.current = setTimeout(() => {
+      volLongPressRef.current = true;
+      fullResetVolume();
+    }, 600);
+  };
+  const cancelVolPress = () => { if (volTimerRef.current) { clearTimeout(volTimerRef.current); volTimerRef.current = null; } };
+  const onVolClick = () => {
+    if (volLongPressRef.current) { volLongPressRef.current = false; return; }
+    cycleVolume();
   };
 
   const isListening = convState === CONV_STATES.LISTENING;
@@ -201,8 +222,12 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
             </svg>
           )}
         </button>
-        <button className="vc-vol-secondary" type="button" onClick={cycleVolume}
-          title={vol === 0 ? "Muted — click to restore" : `Volume ${vol}% — click to adjust`}>
+        <button className="vc-vol-secondary" type="button"
+          onClick={onVolClick}
+          onPointerDown={onVolPointerDown}
+          onPointerUp={cancelVolPress}
+          onPointerLeave={cancelVolPress}
+          title={vol === 0 ? "Muted — tap to restore · hold to reset to max" : `Volume ${vol}% — tap to adjust · hold to reset to max`}>
           <VolumeSvg vol={vol} />
         </button>
       </div>

@@ -1470,6 +1470,12 @@
   transform: translateY(-1px);
 }
 
+/* Long-press full-reset confirmation flash */
+.sound-toggle-reset {
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 22px rgba(0, 255, 136, 0.6) !important;
+}
+
 .mic-toggle {
   position: fixed;
   right: 60px;
