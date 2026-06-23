@@ -14,8 +14,7 @@ import { VoiceControls } from "./VoiceControls";
 import { StatBars, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
-  loadIntro, playKeyClick, playIntro,
-  isMuted, setMuted, setVolume,
+  loadIntro, playKeyClick,
 } from "./audioEngine";
 import "./SplashScreen.css";
 
@@ -375,54 +374,6 @@ function Topbar({ brandText, clockStr, startBrand, startClock, speed, onCouncil 
         <TopbarClock liveValue={clockStr} startMs={startClock} speed={speed} />
       </div>
     </header>
-  );
-}
-
-// Sound on/off toggle (also doubles as the "enable audio" gesture). Persists.
-// Tap = toggle mute. Long-press (600ms) = full reset → unmuted at max volume.
-function SoundToggle() {
-  const [muted, setMutedState] = useState(isMuted());
-  const [resetFlash, setResetFlash] = useState(false);
-  const timerRef = useRef(null);
-  const longPressedRef = useRef(false);
-
-  const toggle = () => {
-    resumeAudio();                 // the click is a user gesture → unlocks audio
-    setMutedState(setMuted(!muted));
-  };
-
-  const fullReset = () => {
-    resumeAudio();
-    setVolume(100);                // unmutes (volume > 0 clears the mute flag)
-    setMutedState(false);
-    setResetFlash(true);
-    setTimeout(() => setResetFlash(false), 600);
-    try { playIntro(); } catch { /* ignore */ }   // audible confirmation
-  };
-
-  const onPointerDown = () => {
-    longPressedRef.current = false;
-    timerRef.current = setTimeout(() => {
-      longPressedRef.current = true;
-      fullReset();
-    }, 600);
-  };
-  const cancelPress = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } };
-  const onClick = () => {
-    if (longPressedRef.current) { longPressedRef.current = false; return; } // long-press already handled
-    toggle();
-  };
-
-  return (
-    <button className={`sound-toggle${resetFlash ? " sound-toggle-reset" : ""}`} type="button"
-      onClick={onClick}
-      onPointerDown={onPointerDown}
-      onPointerUp={cancelPress}
-      onPointerLeave={cancelPress}
-      aria-label={muted ? "Unmute audio" : "Mute audio"}
-      title={muted ? "Sound off — tap to enable · hold to reset to max" : "Sound on — hold to reset to max volume"}>
-      {muted ? "🔇" : "🔊"}
-    </button>
   );
 }
 

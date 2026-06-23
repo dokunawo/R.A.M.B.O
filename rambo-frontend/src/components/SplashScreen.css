@@ -1443,39 +1443,6 @@
 /*  SOUND TOGGLE (also the "enable audio" gesture)                    */
 /* ================================================================== */
 
-.sound-toggle {
-  position: fixed;
-  right: 18px;
-  bottom: 16px;
-  z-index: 60;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  color: var(--accent-glow);
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
-}
-
-.sound-toggle:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 14px rgba(232, 177, 90, 0.4);
-  transform: translateY(-1px);
-}
-
-/* Long-press full-reset confirmation flash */
-.sound-toggle-reset {
-  border-color: #00ff88 !important;
-  box-shadow: 0 0 22px rgba(0, 255, 136, 0.6) !important;
-}
-
 .mic-toggle {
   position: fixed;
   right: 60px;
