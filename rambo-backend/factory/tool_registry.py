@@ -112,6 +112,26 @@ async def _summarize_text(text: str, **kwargs) -> str:
     })
 
 
+async def _propose_handoff(target_agent: str, reason: str, task: str,
+                           artifacts: dict | None = None,
+                           preconditions: list | None = None,
+                           confidence: float = 0.5, **kwargs) -> str:
+    """Record a handoff recommendation for human approval. Does NOT dispatch."""
+    from factory.handoff import HandoffRecommendation, propose
+    rec = HandoffRecommendation(
+        target_agent=target_agent, reason=reason, task=task,
+        artifacts=artifacts or {}, preconditions=preconditions or [],
+        confidence=confidence,
+    )
+    entry = propose(rec, from_agent=kwargs.get("_from_agent"))
+    return json.dumps({
+        "status": "handoff_proposed",
+        "handoff_id": entry["id"],
+        "note": "Recommendation recorded. A human must approve before the "
+                "target agent runs. You did not dispatch it.",
+    })
+
+
 def build_default_registry() -> ToolRegistry:
     """Populate a registry with the initial set of tools."""
     reg = ToolRegistry()
@@ -185,6 +205,30 @@ def build_default_registry() -> ToolRegistry:
             "required": ["text"],
         },
         execute=_summarize_text,
+        factory_allowed=True,
+    ))
+
+    reg.register(ToolDef(
+        name="propose_handoff",
+        description=(
+            "Recommend the NEXT step and which agent should take it. This does "
+            "NOT run the next agent — it records a proposal for a human to "
+            "approve. Pass artifacts as references (paths/IDs/URLs), not inline "
+            "content."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "target_agent": {"type": "string", "description": "Slug/name of the agent to take the next step"},
+                "reason": {"type": "string", "description": "One sentence on why this handoff helps"},
+                "task": {"type": "string", "description": "The task to pass the next agent verbatim"},
+                "artifacts": {"type": "object", "description": "Map of name → path/ID/URL the next agent should read"},
+                "preconditions": {"type": "array", "items": {"type": "string"}, "description": "Things the human should verify first"},
+                "confidence": {"type": "number", "description": "0–1 confidence in this handoff"},
+            },
+            "required": ["target_agent", "reason", "task"],
+        },
+        execute=_propose_handoff,
         factory_allowed=True,
     ))
 

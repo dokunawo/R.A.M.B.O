@@ -78,8 +78,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 50 commits:
+Last 14 days — 51 commits:
 
+- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (3 minutes ago)`
 - `c685b5b Extended 1h cache TTL to survive sparse traffic (3 hours ago)`
 - `ce3bc5c Add prompt caching across the sub-agent team (3 hours ago)`
 - `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (4 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 50 commits:
 - `adb6f94 Add Trillion UI adaptation implementation plan (10 hours ago)`
 - `0cb94dc Add Trillion UI adaptation design spec (10 hours ago)`
 - `f72fd1f Response branches: tree structure from orb center on agent pages (21 hours ago)`
-- `b81ef90 Add quick-switch agent bar to bottom of agent pages (21 hours ago)`
-- … and 30 more
+- … and 31 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

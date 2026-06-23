@@ -276,3 +276,32 @@ async def reject_confirmation(confirmation_id: str):
     if rec is None:
         return {"error": "not found or already resolved"}
     return {"status": "rejected", "id": confirmation_id}
+
+
+# ── Tier 5: handoff system (propose, don't chain) ────────────────
+
+from factory import handoff as _handoff
+
+
+@app.get("/handoffs")
+async def list_handoffs():
+    return _handoff.list_pending()
+
+
+@app.post("/handoffs/{handoff_id}/accept")
+async def accept_handoff(handoff_id: str):
+    rec = _handoff.get(handoff_id)
+    if rec is None or rec["status"] != "pending":
+        return {"error": "not found or already resolved"}
+    _handoff.resolve(handoff_id, "accepted")
+    # The human approved this edge — NOW dispatch the target with the task.
+    result = await rambo._run_target(rec["target_agent"], rec["task"], {})
+    return {"status": "dispatched", "target": rec["target_agent"], "result": result}
+
+
+@app.post("/handoffs/{handoff_id}/reject")
+async def reject_handoff(handoff_id: str):
+    rec = _handoff.resolve(handoff_id, "rejected")
+    if rec is None:
+        return {"error": "not found or already resolved"}
+    return {"status": "rejected", "id": handoff_id}

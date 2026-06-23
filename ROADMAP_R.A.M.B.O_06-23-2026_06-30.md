@@ -169,7 +169,7 @@ Mapping the 6-tier orchestration model onto R.A.M.B.O. Tiers 2 & 6 were delivere
 | **2 — Least-privilege + bounded** | Done (Factory `ConfigDrivenAgent`: tool allowlist, `MAX_ITERATIONS`, `max_tokens`, model-per-manifest) |
 | **3 — Failure isolation** | **Done** — boundary try/excepts already pervasive; closed the last hole by wrapping `agent.execute()` in `_run_core_agent` so a core agent crash can't abort the turn. `_run_target` isolates every routed step. |
 | **4 — Confirmation gates** | **Done** — `requires_confirmation` flag on `ToolDef` (gate lives in the router, not the tools); `write_file` flagged. `ConfigDrivenAgent` stages a confirmation instead of executing, returns `confirmation_required`, and stops. `factory/confirmations.py` store + `GET /confirmations`, `POST /confirmations/{id}/approve|reject` (approve executes the tool exactly once). 6 tests. |
-| **5 — Handoff system** | TODO — typed propose-don't-chain handoff recommendation (`target_agent`, `reason`, `task`, `artifacts` as refs, `preconditions`, `confidence`) surfaced for human approval. |
+| **5 — Handoff system** | **Done** — typed `HandoffRecommendation` (`target_agent`, `reason`, `task`, `artifacts` as refs, `preconditions`, `confidence`). Agents propose via the `propose_handoff` tool (records, never dispatches). `factory/handoff.py` store + `GET /handoffs`, `POST /handoffs/{id}/accept` (human approval → dispatches via `_run_target`), `/reject`. 6 tests. **All 6 tiers complete.** |
 | **6 — Live hot-reload** | Done (Factory `RegistryWatcher` + manifest runtime + `dispatch_to_<slug>`) |
 
 ### Prompt Caching Across Sub-Agents (06/23/2026)
