@@ -17,6 +17,27 @@ let volume = 50; // 0-100 percentage
 try { muted = localStorage.getItem("rambo-muted") === "1"; } catch { /* ignore */ }
 try { const v = parseInt(localStorage.getItem("rambo-volume"), 10); if (v >= 0 && v <= 100) volume = v; } catch { /* ignore */ }
 
+// Fresh machine boot: the startup script opens the app with ?boot=1 so an
+// accidentally-persisted mute (or low volume) never carries across a restart —
+// it always boots unmuted at max. A normal manual refresh has no ?boot flag, so
+// your in-session volume/mute choices are preserved. The flag is then stripped
+// from the URL so a refresh of the boot tab doesn't keep resetting.
+try {
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("boot") === "1") {
+      muted = false;
+      volume = 100;
+      localStorage.setItem("rambo-muted", "0");
+      localStorage.setItem("rambo-volume", "100");
+      params.delete("boot");
+      const qs = params.toString();
+      const clean = window.location.pathname + (qs ? "?" + qs : "") + window.location.hash;
+      window.history.replaceState({}, "", clean);
+    }
+  }
+} catch { /* ignore */ }
+
 function ensureCtx() {
   if (typeof window === "undefined") return null;
   const AC = window.AudioContext || window.webkitAudioContext;

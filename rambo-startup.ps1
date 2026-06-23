@@ -83,12 +83,15 @@ if (-not $frontendReady) {
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 $autoplay = "--autoplay-policy=no-user-gesture-required"
+# ?boot=1 tells the app this is a fresh machine boot → reset to unmuted/max so a
+# persisted mute never survives a restart. The app strips the flag after reading.
+$openUrl = "$url/?boot=1"
 if ((Test-Path $chrome) -and $DevTools) {
-    Start-Process $chrome -ArgumentList $autoplay, "--auto-open-devtools-for-tabs", $url
+    Start-Process $chrome -ArgumentList $autoplay, "--auto-open-devtools-for-tabs", $openUrl
 } elseif (Test-Path $chrome) {
-    Start-Process $chrome -ArgumentList $autoplay, $url
+    Start-Process $chrome -ArgumentList $autoplay, $openUrl
 } else {
-    Start-Process $url   # default browser
+    Start-Process $openUrl   # default browser
 }
 
 Log "=== startup complete ==="
