@@ -34,13 +34,13 @@ async def test_empty_table_returns_zeroes(repo):
 @pytest.mark.asyncio
 async def test_totals_after_records(repo):
     await repo.record(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-6",
         input_tokens=1000, output_tokens=500,
         cache_creation_input_tokens=0, cache_read_input_tokens=0,
         cost_usd=0.0105,
     )
     await repo.record(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-6",
         input_tokens=2000, output_tokens=1000,
         cache_creation_input_tokens=0, cache_read_input_tokens=0,
         cost_usd=0.021,

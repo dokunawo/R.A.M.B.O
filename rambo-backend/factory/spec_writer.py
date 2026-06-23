@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from factory.schemas import SkillsReport
+import model_config
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ async def generate_system_prompt(
     # cache_control marker here would silently no-op. Also one call per
     # spawn/revision (low frequency). Revisit only if this prompt grows large.
     response = await llm_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model=model_config.default_model(),
         max_tokens=2048,
         system=_META_PROMPT,
         messages=[{"role": "user", "content": user_content}],

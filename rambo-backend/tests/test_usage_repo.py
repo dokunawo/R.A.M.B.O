@@ -46,7 +46,7 @@ async def test_timestamp_index_exists(repo):
 @pytest.mark.asyncio
 async def test_record_and_read_back(repo):
     await repo.record(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-6",
         input_tokens=1000,
         output_tokens=500,
         cache_creation_input_tokens=200,
@@ -62,7 +62,7 @@ async def test_record_and_read_back(repo):
     assert result["total_cost"] == pytest.approx(0.012)
     assert result["call_count"] == 1
     assert len(result["by_model"]) == 1
-    assert result["by_model"][0]["model"] == "claude-sonnet-4-20250514"
+    assert result["by_model"][0]["model"] == "claude-sonnet-4-6"
 
 
 @pytest.mark.asyncio

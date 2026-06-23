@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 from factory.tool_registry import ToolRegistry
+import model_config
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class ConfigDrivenAgent:
 
         for _ in range(MAX_ITERATIONS):
             response = await self._llm.messages.create(
-                model=self._row.get("model", "claude-sonnet-4-20250514"),
+                model=self._row.get("model") or model_config.default_model(),
                 max_tokens=4096,
                 system=self._system(),
                 messages=messages,

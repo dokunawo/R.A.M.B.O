@@ -11,6 +11,7 @@ import logging
 import uuid
 
 from factory.repo import FactoryRepo, State
+import model_config
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def handle_approve(
         "specialty": p["specialty"],
         "system_prompt": p["system_prompt"],
         "tool_allowlist": p.get("tool_allowlist", []),
-        "model": p.get("model", "claude-sonnet-4-20250514"),
+        "model": p.get("model") or model_config.default_model(),
         "status": "active",
         "created_by_task_id": task_id,
     }

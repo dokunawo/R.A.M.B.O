@@ -38,7 +38,7 @@ ROW = {
     "specialty": "testing",
     "system_prompt": "You are Test Bot.",
     "tool_allowlist": ["read_file"],
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
 }
 
 
@@ -99,7 +99,7 @@ async def test_uses_row_system_prompt():
     assert system[0]["text"] == "You are Test Bot."
     assert system[0]["cache_control"] == cache_config.cache_control()
     assert system[0]["cache_control"]["type"] == "ephemeral"
-    assert call_kwargs["model"] == "claude-sonnet-4-20250514"
+    assert call_kwargs["model"] == "claude-sonnet-4-6"
 
 
 @pytest.mark.asyncio

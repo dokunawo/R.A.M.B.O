@@ -21,6 +21,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 import cache_config
+import model_config
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +101,9 @@ def build_policy(roster_lines: list[str]) -> str:
 
 
 class SmartRouter:
-    def __init__(self, llm_client, model: str = "claude-sonnet-4-20250514"):
+    def __init__(self, llm_client, model: str | None = None):
         self._llm = llm_client
-        self._model = model
+        self._model = model or model_config.default_model()
 
     async def route(
         self,

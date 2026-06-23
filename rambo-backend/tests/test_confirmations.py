@@ -32,7 +32,7 @@ def _text(t):
 ROW = {
     "slug": "writer-bot", "name": "Writer", "specialty": "x",
     "system_prompt": "You are Writer.", "tool_allowlist": ["write_file", "read_file"],
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
 }
 
 

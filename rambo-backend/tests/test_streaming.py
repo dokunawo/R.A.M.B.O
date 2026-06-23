@@ -67,8 +67,8 @@ class FakeStream:
             raise StopAsyncIteration
         return self._events.pop(0)
 
-    def get_final_message(self):
-        return MagicMock(model="claude-sonnet-4-20250514", usage=FakeUsage())
+    async def get_final_message(self):
+        return MagicMock(model="claude-sonnet-4-6", usage=FakeUsage())
 
 
 def setup_llm(orch, text_chunks):

@@ -10,7 +10,7 @@ class TestResolveModel:
         assert rates["input"] == 3.00
 
     def test_version_suffix_prefix_match(self):
-        rates = _resolve_model("claude-sonnet-4-20250514")
+        rates = _resolve_model("claude-sonnet-4-6")
         assert rates is not None
         assert rates["input"] == 3.00
 
@@ -53,7 +53,7 @@ class TestComputeCost:
         assert "mystery-model-9000" in caplog.text
 
     def test_version_suffixed_model(self):
-        cost = compute_cost("claude-sonnet-4-20250514", input_tokens=1000, output_tokens=500)
+        cost = compute_cost("claude-sonnet-4-6", input_tokens=1000, output_tokens=500)
         expected = (1000 * 3.00 + 500 * 15.00) / 1_000_000
         assert cost == pytest.approx(expected)
 

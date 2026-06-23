@@ -14,7 +14,7 @@ MANIFEST = {
     "specialty": "testing",
     "system_prompt": "You are Test Bot.",
     "tool_allowlist": ["read_file"],
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
 }
 
 

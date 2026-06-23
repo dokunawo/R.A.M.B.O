@@ -22,11 +22,11 @@ async def test_record_usage_computes_cost_and_calls_repo(mock_repo):
         cache_creation_input_tokens=200,
         cache_read_input_tokens=300,
     )
-    await record_usage("claude-sonnet-4-20250514", usage)
+    await record_usage("claude-sonnet-4-6", usage)
 
     mock_repo.record.assert_called_once()
     call_kwargs = mock_repo.record.call_args.kwargs
-    assert call_kwargs["model"] == "claude-sonnet-4-20250514"
+    assert call_kwargs["model"] == "claude-sonnet-4-6"
     assert call_kwargs["input_tokens"] == 1000
     assert call_kwargs["output_tokens"] == 500
     assert call_kwargs["cache_creation_input_tokens"] == 200

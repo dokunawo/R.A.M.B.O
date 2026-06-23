@@ -128,6 +128,7 @@ async def run_research(
     # Single cached block: caches tools + system together as a stable prefix
     # re-sent on every iteration of this research loop.
     import cache_config
+    import model_config
     system_prompt = [{
         "type": "text",
         "text": _build_system_prompt(factory_tool_names),
@@ -142,7 +143,7 @@ async def run_research(
         is_last = iteration == MAX_ITERATIONS - 1
 
         kwargs: dict[str, Any] = {
-            "model": "claude-sonnet-4-20250514",
+            "model": model_config.default_model(),
             "max_tokens": 4096,
             "system": system_prompt,
             "messages": messages,

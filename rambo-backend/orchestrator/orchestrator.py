@@ -35,6 +35,7 @@ from personality import load_personality, build_system_prompt, append_voice_cue
 from orchestrator.routing import SmartRouter
 import sentinel_queue
 import cache_config
+import model_config
 from skills import SKILLS
 
 
@@ -445,7 +446,7 @@ class Orchestrator:
 
         try:
             async with self.llm.messages.stream(
-                model="claude-sonnet-4-20250514",
+                model=model_config.default_model(),
                 system=system,
                 messages=messages,
                 max_tokens=1024,
@@ -465,7 +466,7 @@ class Orchestrator:
                             held_seq = seq
                             seq += 1
 
-            final_msg = stream.get_final_message()
+            final_msg = await stream.get_final_message()
             await record_usage(final_msg.model, final_msg.usage)
 
             if token_buf.strip():

@@ -17,6 +17,7 @@ from factory.sanitize import sanitize_role_input
 from factory.schemas import SkillsReport
 from factory.spec_writer import generate_system_prompt, write_spec_markdown
 from factory.tool_registry import ToolRegistry
+import model_config
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class SpawnPipeline:
             "specialty": report.domain,
             "system_prompt": system_prompt,
             "tool_allowlist": report.tools_available,
-            "model": "claude-sonnet-4-20250514",
+            "model": model_config.default_model(),
         }
         await self._repo.set_proposed_manifest(task_id, manifest)
 
