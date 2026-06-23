@@ -83,7 +83,7 @@ function ResponseBranch({ entry, index, agentColor, onDismiss }) {
       </svg>
       <div className="ap-branch-panel" style={{ left: pos.x, top: pos.y, borderColor: `${agentColor}66` }}>
         <div className="ap-branch-head" onPointerDown={beginDrag}>
-          <span className="ap-branch-title" style={{ color: agentColor }}>
+          <span className="ap-branch-title">
             R.A.M.B.O · RESPONSE
           </span>
           <button className="ap-branch-close" type="button" onClick={() => onDismiss(entry.id)} aria-label="Close">✕</button>

@@ -12,6 +12,16 @@
   pointer-events: none;
 }
 
+/* Push mic bar above the quick-switch nav on agent pages */
+.agent-page-root .vc-bar {
+  bottom: 70px;
+}
+
+/* Push mic bar above the footer on SplashScreen */
+.splash-root .vc-bar {
+  bottom: 160px;
+}
+
 .vc-bar-center {
   display: flex;
   align-items: center;

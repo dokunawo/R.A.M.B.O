@@ -957,9 +957,16 @@ function ResultBranch({ result, anchorEl, onClose }) {
         <svg className="branch-line" xmlns="http://www.w3.org/2000/svg">
           <path
             d={`M ${start.x} ${start.y} C ${(start.x + end.x) / 2} ${start.y}, ${(start.x + end.x) / 2} ${end.y}, ${end.x} ${end.y}`}
-            fill="none" stroke="var(--accent)" strokeWidth="1.4" opacity="0.75" />
-          <circle cx={start.x} cy={start.y} r="3" fill="var(--accent-glow)" />
-          <circle cx={end.x} cy={end.y} r="3" fill="var(--accent-glow)" />
+            fill="none" stroke="var(--teal)" strokeWidth="1.4" opacity="0.75"
+            filter="url(#branchGlow)" />
+          <defs>
+            <filter id="branchGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx={start.x} cy={start.y} r="3" fill="var(--teal)" />
+          <circle cx={end.x} cy={end.y} r="3" fill="var(--teal)" />
         </svg>
       )}
       <div className="branch-panel" style={{ left: pos.x, top: pos.y }}>
