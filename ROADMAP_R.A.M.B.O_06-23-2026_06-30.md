@@ -188,6 +188,20 @@ Diagnose-then-fix pass: cache the large, identical system+tools prefixes every a
 
 **⚠️ Verification pending traffic:** `usage.db` is empty (no `ANTHROPIC_API_KEY` configured yet), so the before/after cache-hit numbers can't be measured. Request *shape* + TTL config are unit-tested; once a key is set and real traffic flows, re-pull the `/usage` cache-read vs full-price split and confirm the uncached share falls. (The 1h TTL fixes the sparse-traffic cache-*write* churn; if it ever needs reverting, set `RAMBO_CACHE_TTL=5m`.) |
 
+### Go-Live: key wiring, bug fixes, polish (06/23/2026)
+Funded API key wired up; took the system from "tested in mocks" to "verified live."
+
+| Item | Status |
+|---|---|
+| **`.env` auto-load** (`env_setup.py`) — loads `rambo-backend/.env` before the orchestrator imports; dependency-optional (python-dotenv or built-in parser); never overwrites real env. `.env` gitignored (verified). | Done |
+| **Model id fix** — everything hardcoded the now-deprecated `claude-sonnet-4-20250514` (404s live). Centralized into `model_config.py` (default `claude-sonnet-4-6`, env-tunable `RAMBO_MODEL`); replaced at every call site. | Done |
+| **Await bug fix** — `_speak` called `stream.get_final_message()` without `await`; the swallowed `AttributeError` made every turn fall back to stub with zero usage. Now awaited. | Done |
+| **Live end-to-end verified** — real R.A.M.B.O-voiced turns, usage recorded, **prompt caching confirmed** (cache_read ≫ full-price input; cache savings > spend). ~$0.001–0.003/turn. | Done |
+| **Confirmation + Handoff frontend docks** — `ConfirmationDock` / `HandoffDock` in SharedHUD (poll `/confirmations`, `/handoffs`; Approve/Reject/Accept), mounted on all 4 pages. | Done |
+| **Mic redesign** — black blob → glass + gold-ring glow button; visible **red "MIC BLOCKED"** state instead of silent `getUserMedia` failure. | Done |
+| **Nginx SPA fallback** (`rambo-frontend/nginx.conf`) — prod (`:3000`) deep links / refreshes (`/console`, `/council`, …) no longer 404. | Done |
+| **Seamless startup** (`rambo-startup.ps1`) — waits for Docker → `compose up` → waits for frontend → opens browser. Register via Task Scheduler at login + Docker Desktop auto-start. | Done |
+
 ---
 
 ## What's Next
@@ -208,6 +222,7 @@ Diagnose-then-fix pass: cache the large, identical system+tools prefixes every a
 | Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking (`ConfigDrivenAgent` now does this for Factory-spawned agents; extend to the 10 hand-rolled specialists) | High |
 | Factory follow-ups — ~~mount `FactoryDock` on all pages~~ ✓, ~~wire dispatch into orchestrator~~ ✓; remaining: surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent`, multi-task spawn matching when a goal names two agents | Medium |
 | **Factory dispatch matching — RESOLVED (primary path)** — replaced by the Tier 1 LLM router (`orchestrator/routing.py`), which routes over the full roster on purpose instead of substring-matching. The old substring `_dispatch_spawned()` now only runs in the keyword *fallback* (`_legacy_handle`) when the LLM is unavailable. Remaining nicety: tighten the fallback's substring match too. | Low |
+| Persist human-in-the-loop queues — confirmations + handoffs (and Sentinel) are in-memory and reset on restart; move to SQLite like usage/factory so pending approvals survive a reboot (important for daily use) | High |
 | Alembic migration framework — versioned schema management as DB tables grow (now 2 DBs: `usage.db`, `factory.db`) | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |
@@ -218,6 +233,7 @@ Diagnose-then-fix pass: cache the large, identical system+tools prefixes every a
 ### Long Term
 | Feature | Priority |
 |---|---|
+| Native "Hey Rambo" wake word — browser Web Speech only listens while the tab is open/focused and needs per-origin mic permission. A true always-on assistant needs a small native background listener / wake-word engine feeding the backend | Medium |
 | Secure login / operator authentication | High |
 | CLI companion tool (`rambo` command) | Medium |
 | Plugin system for custom agents | Medium |

@@ -66,6 +66,9 @@ agent's status.
 - **🎭 Personality engine** — cold professional voice powered by Claude, with tonal checkpoints and voice cues to prevent filler language.
 - **💰 Cost dashboard** — live tracking of LLM API token usage and cost per call, with always-visible indicator, click-to-expand panel (per-model breakdown, daily trend, cache savings), and `GET /usage` endpoint. Best-effort recording that never breaks conversation flow.
 - **🏭 Factory sub-agent spawner** — a meta-agent that mints other agents on demand: it researches a role (web search → structured Skills Report), drafts a spec + system prompt, stages a manifest for human approval, then registers it as a hot-reloadable `dispatch_to_<slug>` agent — no restart, no bespoke class per agent. Every spawned agent is pure config (`ConfigDrivenAgent` runs one generic tool-use loop). Includes a daily spawn cap, reserved-slug guard, prompt-injection sanitization, 3-round revision loop, and a `FactoryDock` approval surface with page-load hydration via `GET /factory/pending`.
+- **🧭 Smart orchestration layer** — an LLM router picks the right agent on purpose (decomposes multi-step requests, asks one clarifying question when ambiguous); least-privilege per-agent tool allowlists with bounded loops; failure isolated at every boundary; **human-in-the-loop gates** — tool-level confirmation for risky actions (`ConfirmationDock`) and propose-don't-chain agent handoffs (`HandoffDock`).
+- **⚡ Prompt caching** — shared sub-agent loop, conversation history, router, and research all cache their stable prefixes (extended 1h TTL for sparse traffic); verified live with cache-reads far exceeding full-price input.
+- **🚀 Seamless startup** — `rambo-startup.ps1` waits for Docker, brings the stack up, waits for the frontend, and opens the browser; register it with Task Scheduler at login for a one-and-done boot.
 - **🌠 Agent Constellation** — 10 agent nodes orbiting the orb in 3D with status-driven glow, dispatch beams, and processing helix rings.
 - **⚡ Performance adaptive** — auto-detects battery level, tab visibility, and `prefers-reduced-motion` to scale rendering quality.
 - **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.
@@ -350,6 +353,9 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 | Where | Setting | Default |
 |------------------------------|----------------------------------|------------------------|
+| `rambo-backend/.env` | `ANTHROPIC_API_KEY` (required for live LLM) — gitignored, auto-loaded on startup | _(none)_ |
+| `rambo-backend/.env` | `RAMBO_MODEL` — LLM model id | `claude-sonnet-4-6` |
+| `rambo-backend/.env` | `RAMBO_CACHE_TTL` — prompt cache TTL (`1h`/`5m`) | `1h` |
 | `rambo-backend/main.py` | CORS allowed origins | `localhost:3000`, `localhost:3001` |
 | `docker-compose.yml` | Dev frontend host port | `3001 → 3000` |
 | `docker-compose.yml` | Prod frontend host port | `3000 → 80` |
@@ -389,6 +395,14 @@ See [`ROADMAP_R.A.M.B.O_06-23-2026_06-30.md`](ROADMAP_R.A.M.B.O_06-23-2026_06-30
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-23 — Orchestration tiers 4–5, prompt caching, go-live fixes, seamless startup
+
+- **[Orchestration]** Completed the 6-tier model: Tier 1 smart LLM router (`orchestrator/routing.py`), Tier 3 failure isolation hole closed, **Tier 4 tool confirmation gates** (`requires_confirmation` + `factory/confirmations.py` + `/confirmations` endpoints), **Tier 5 handoff system** (`factory/handoff.py`, `propose_handoff` tool, `/handoffs` endpoints — propose-don't-chain).
+- **[Frontend]** `ConfirmationDock` + `HandoffDock` (and `FactoryDock`) on all four pages; **mic button redesigned** (glass + gold-ring glow) with a visible red **MIC BLOCKED** state instead of silent failure.
+- **[Prompt caching]** Cached the shared sub-agent loop, main conversation history, research loop, and router; `cache_config.py` with extended **1h TTL** for sparse traffic (`RAMBO_CACHE_TTL`). Verified live: cache_read ≫ full-price input.
+- **[Go-live fixes]** `.env` auto-load (`env_setup.py`); model id centralized to `claude-sonnet-4-6` (`model_config.py`) after the old one started 404ing; fixed an unawaited `get_final_message()` that silently broke every real turn.
+- **[Infra]** Nginx **SPA fallback** (`nginx.conf`) so prod deep links/refreshes don't 404; **`rambo-startup.ps1`** for seamless boot (wait for Docker → compose up → wait for frontend → open browser).
 
 ### 2026-06-23 — Factory sub-agent spawner (5 tiers + approval UI)
 
