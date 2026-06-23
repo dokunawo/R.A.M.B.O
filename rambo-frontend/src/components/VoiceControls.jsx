@@ -74,17 +74,39 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
     setMutedState(setMuted(!muted));
   };
 
+  const isListening = convState === CONV_STATES.LISTENING;
+  const isProcessing = convState === CONV_STATES.PROCESSING;
+  const isActive = micActive && (isListening || isProcessing);
+
   return (
-    <div className="voice-controls">
-      <button className="vc-btn" type="button" onClick={toggleVolume}
-        title={muted ? "Sound off — click to enable" : "Sound on"}>
-        {muted ? "🔇" : "🔊"}
-      </button>
-      <button className="vc-btn" type="button" onClick={toggleMic}
-        title={micActive ? 'Mic active — say "Rambo" to command' : 'Enable mic'}>
-        {micActive ? "🎙️" : "🎤"}
-        {micActive && <span className="vc-state">{convState.toUpperCase()}</span>}
-      </button>
+    <div className="vc-bar">
+      <div className="vc-bar-center">
+        <button
+          className={`vc-mic-primary${isActive ? " vc-mic-active" : ""}${isProcessing ? " vc-mic-processing" : ""}`}
+          type="button"
+          onClick={toggleMic}
+          title={micActive ? 'Mic active — say "Rambo" to command' : "Enable mic"}
+        >
+          {isActive ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="3" width="10" height="10" rx="1.5" fill="white"/>
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          )}
+        </button>
+        <button className="vc-vol-secondary" type="button" onClick={toggleVolume}
+          title={muted ? "Sound off — click to enable" : "Sound on"}>
+          {muted ? "🔇" : "🔊"}
+        </button>
+      </div>
+      {!isActive && (
+        <span className="vc-hint">TAP OR SAY 'RAMBO'</span>
+      )}
     </div>
   );
 }

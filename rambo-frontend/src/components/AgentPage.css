@@ -278,7 +278,13 @@
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: 0 0 30px rgba(232, 177, 90, 0.15);
   font-family: var(--mono, "JetBrains Mono", monospace);
-  animation: apBranchPop 0.3s ease;
+  border-top: 2px solid var(--teal);
+  animation: apBranchPop 0.3s var(--ease-smooth, ease) forwards, apResponseFloat 4s ease-in-out 0.3s infinite;
+}
+
+@keyframes apResponseFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes apBranchPop {

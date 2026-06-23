@@ -1,40 +1,113 @@
-.voice-controls {
+/* ---- Bottom-Center Mic Bar ---- */
+.vc-bar {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  bottom: 24px;
+  left: 0;
+  right: 0;
   z-index: 60;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
+  pointer-events: none;
 }
 
-.vc-btn {
-  height: 34px;
-  border-radius: 17px;
-  border: 1px solid rgba(232, 177, 90, 0.3);
-  background: rgba(8, 9, 11, 0.6);
-  backdrop-filter: blur(8px);
-  color: #e8b15a;
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
+.vc-bar-center {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  transition: all 0.15s;
+  gap: 12px;
 }
-.vc-btn:hover {
-  border-color: #e8b15a;
-  box-shadow: 0 0 14px rgba(232, 177, 90, 0.4);
-  transform: translateY(-1px);
+
+.vc-mic-primary {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #16171D;
+  color: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  transition: border-color 0.2s var(--ease-smooth),
+              box-shadow 0.2s var(--ease-smooth),
+              background 0.2s var(--ease-smooth);
+  position: relative;
 }
-.vc-state {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: #e8b15a;
-  text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
+
+.vc-mic-primary:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
+}
+
+.vc-mic-active {
+  border-color: var(--teal);
+  box-shadow: 0 0 24px var(--teal-glow);
+}
+
+.vc-mic-active:hover {
+  border-color: var(--teal);
+  box-shadow: 0 0 32px var(--teal-glow);
+}
+
+.vc-mic-active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--teal);
+  animation: vcPulseRing 1.4s var(--ease-smooth) infinite;
+  pointer-events: none;
+}
+
+@keyframes vcPulseRing {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.vc-mic-processing {
+  border-color: var(--teal);
+  box-shadow: 0 0 16px var(--teal-glow);
+}
+.vc-mic-processing::after {
+  display: none;
+}
+
+.vc-vol-secondary {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  color: var(--accent, #e8b15a);
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.vc-vol-secondary:hover {
+  border-color: var(--accent, #e8b15a);
+  box-shadow: 0 0 10px rgba(232, 177, 90, 0.3);
+}
+
+.vc-hint {
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-mic-active::after {
+    animation: none;
+    display: none;
+  }
 }
 
 /* ---- Command Log ---- */
