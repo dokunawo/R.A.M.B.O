@@ -11,7 +11,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending } from "./SharedHUD";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -1072,6 +1072,7 @@ export default function SplashScreen({
           dispatches, processing, dismissBeam } = useRamboLive();
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
+  const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
 
   // Build status map for constellation: { architect: "active", scout: "idle", ... }
   const agentStatusMap = useMemo(() => {
@@ -1212,6 +1213,7 @@ export default function SplashScreen({
           <div className="byline">{byline}</div>
           <StatBars stats={stats} />
           <CostIndicator data={costData} />
+          <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
 
           {/* center title types in LAST, after roster + params */}
           <OrbTitleStack projectLabel={projectLabel} agentName={agentName}

@@ -5,7 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending } from "./SharedHUD";
 import "./LearningLog.css";
 import "./AgentPage.css";
 
@@ -90,6 +90,7 @@ function LearningLog() {
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef } = usePageVoice();
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
+  const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
   const { activity, connected } = useActivityFeed();
   const [learnings, setLearnings] = useState([]);
 
@@ -212,6 +213,7 @@ function LearningLog() {
 
       <StatBars stats={sysStats} />
       <CostIndicator data={costData} />
+      <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 

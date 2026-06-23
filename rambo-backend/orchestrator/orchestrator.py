@@ -61,6 +61,62 @@ class Orchestrator:
 
         self.agent_status = {name: "idle" for name in self.agents}
 
+        # Factory wiring — set later by main.py once the DB + registry exist.
+        self.factory_repo = None
+        self.tool_registry = None
+
+    def set_factory(self, factory_repo, tool_registry):
+        """Give the orchestrator access to spawned agents + their tools."""
+        self.factory_repo = factory_repo
+        self.tool_registry = tool_registry
+
+    async def _dispatch_spawned(self, goal: str):
+        """If the goal names a Factory-spawned agent, run it and return a
+        result dict; otherwise return None so normal routing proceeds."""
+        if not self.factory_repo or not self.tool_registry or not self.llm:
+            return None
+        try:
+            agents = await self.factory_repo.list_active_agents()
+        except Exception:
+            return None
+        if not agents:
+            return None
+
+        g = goal.lower()
+        matched = None
+        for row in agents:
+            slug = row["slug"].lower()
+            name = row["name"].lower()
+            slug_spaced = slug.replace("-", " ")
+            if slug in g or slug_spaced in g or name in g:
+                matched = row
+                break
+        if matched is None:
+            return None
+
+        from factory.config_agent import ConfigDrivenAgent
+
+        await self._set_status("architect", "idle")  # keep core agents idle
+        await self.broadcast(f"[{matched['name']}] Dispatched: {goal}")
+        agent_tracker.record_task_start(matched["slug"], goal)
+        try:
+            agent = ConfigDrivenAgent(
+                row=matched, tool_registry=self.tool_registry, llm_client=self.llm,
+            )
+            result = await agent.run(goal)
+            agent_tracker.record_task_end(matched["slug"], goal, success=True)
+            agent_tracker.add_learning(
+                f"Spawned agent '{matched['name']}' handled: {goal}",
+                source=matched["name"], category="factory-dispatch",
+            )
+        except Exception as e:
+            result = f"[{matched['name']}] error: {e}"
+            agent_tracker.record_task_end(matched["slug"], goal, success=False)
+        await self.broadcast(f"[{matched['name']}] Finished: {goal}")
+
+        voiced = await self._speak(goal, [f"Agent: {matched['name']}"], [result])
+        return {"response": voiced, "agent": "rambo"}
+
     async def broadcast(self, message: str):
         try:
             await self.ws.broadcast(message)
@@ -114,6 +170,11 @@ class Orchestrator:
 
             voiced = await self._speak(goal, [f"Skill: {skill['name']}"], [result])
             return {"response": voiced, "agent": "rambo"}
+
+        # Factory-spawned agents run before the core orchestration flow.
+        spawned = await self._dispatch_spawned(goal)
+        if spawned is not None:
+            return spawned
 
         architect = self.agents["architect"]
         pilot     = self.agents["pilot"]

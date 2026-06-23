@@ -78,8 +78,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 44 commits:
+Last 14 days — 45 commits:
 
+- `1d0eeae Add Factory approval UI + document Factory in roadmap/README (7 minutes ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (2 hours ago)`
 - `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (2 hours ago)`
 - `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (3 hours ago)`
@@ -87,20 +88,19 @@ Last 14 days — 44 commits:
 - `1ba1078 Fix mic button overlap, neon glass response popups (5 hours ago)`
 - `fa0a3f5 Add percentage-based volume control with voice commands (5 hours ago)`
 - `45c08fb Replace SplashScreen custom mic/sound buttons with VoiceControls component (5 hours ago)`
-- `e105a20 Bottom-center mic button, response card polish, glass on splash controls (5 hours ago)`
+- `e105a20 Bottom-center mic button, response card polish, glass on splash controls (6 hours ago)`
 - `521d5cf Apply glass-morphism across all UI panels (6 hours ago)`
 - `ea349c4 Add glass-morphism and teal CSS variables to :root (6 hours ago)`
 - `adb6f94 Add Trillion UI adaptation implementation plan (6 hours ago)`
 - `0cb94dc Add Trillion UI adaptation design spec (6 hours ago)`
-- `f72fd1f Response branches: tree structure from orb center on agent pages (16 hours ago)`
+- `f72fd1f Response branches: tree structure from orb center on agent pages (17 hours ago)`
 - `b81ef90 Add quick-switch agent bar to bottom of agent pages (17 hours ago)`
 - `d9dd0e8 Restore agent page info as Phase 2-style side panels (17 hours ago)`
 - `4930cd8 Add Chief of Staff skill to R.A.M.B.O backend (17 hours ago)`
 - `07e5dd5 Add Google Drive integration (17 hours ago)`
 - `38b58f7 Add Google Calendar integration (17 hours ago)`
 - `9b74e1c Graceful fallback when ANTHROPIC_API_KEY is not set (19 hours ago)`
-- `471be2f Add anthropic to requirements.txt (19 hours ago)`
-- … and 24 more
+- … and 25 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

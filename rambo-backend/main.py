@@ -60,6 +60,7 @@ async def _init_factory():
             llm_client=rambo.llm,
         )
         _watcher.start()
+        rambo.set_factory(_factory_repo, _tool_registry)
 
 manager = rambo.ws
 

@@ -155,9 +155,10 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | **Tier 3** — `SpawnPipeline` state machine (PENDING → AWAITING_APPROVAL), always lands terminal, reserved/duplicate slug + injection guards | Done |
 | **Tier 4** — Approval gate: approve creates agent + notifies registry; reject-with-feedback re-runs prompt gen (capped 3 rounds); `GET /factory/pending` page-load hydration | Done |
 | **Tier 5** — `ConfigDrivenAgent` (one generic tool-use loop, zero per-agent code) + `RegistryWatcher` (30s poll + immediate refresh on approve) registering `dispatch_to_<slug>` | Done |
-| **Frontend** — `FactoryDock` + `useFactoryPending` in SharedHUD, approve/reject/revise cards keyed by task_id, mounted on Round Table | Done |
+| **Frontend** — `FactoryDock` + `useFactoryPending` in SharedHUD, approve/reject/revise cards keyed by task_id, mounted on **all pages** (Splash, Agent, Learning Log, Round Table) | Done |
+| **Dispatch** — `Orchestrator._dispatch_spawned()` matches a goal to a spawned agent by slug/name and runs its `ConfigDrivenAgent`; wired before core orchestration in `handle()` | Done |
 | API: `POST /factory/spawn`, `GET /factory/pending`, `GET /factory/task/{id}`, approve/reject/agents endpoints; strong refs on in-flight pipeline tasks | Done |
-| 54 backend tests (repo: 14, registry: 6, research: 6, spec: 7, pipeline: 5, approval: 8, config/watcher: 8) — 149/149 total passing | Done |
+| 59 backend tests (repo: 14, registry: 6, research: 6, spec: 7, pipeline: 5, approval: 8, config/watcher: 8, dispatch: 5) — 154/154 total passing | Done |
 
 ---
 
@@ -177,7 +178,7 @@ Created: 06/23/2026 at 06:30 (supersedes ROADMAP 06/22/2026 13:39)
 | Feature | Priority |
 |---|---|
 | Sub-agent independent LLM calls — give each agent its own `messages.stream()` with per-agent `source` label for cost tracking (`ConfigDrivenAgent` now does this for Factory-spawned agents; extend to the 10 hand-rolled specialists) | High |
-| Factory follow-ups — mount `FactoryDock` on all pages, wire `dispatch_to_<slug>` into `choose_brain`/orchestrator, surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent` | Medium |
+| Factory follow-ups — ~~mount `FactoryDock` on all pages~~ ✓, ~~wire dispatch into orchestrator~~ ✓; remaining: surface tool-wishlist as a build backlog, capture `record_usage(source=...)` inside `ConfigDrivenAgent`, multi-task spawn matching when a goal names two agents | Medium |
 | Alembic migration framework — versioned schema management as DB tables grow (now 2 DBs: `usage.db`, `factory.db`) | Medium |
 | Color presets / theme switcher | Medium |
 | Modular HUD panel system (drag, resize, dock) | Medium |
