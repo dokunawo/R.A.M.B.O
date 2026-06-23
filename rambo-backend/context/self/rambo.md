@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 51 commits:
+Last 14 days — 52 commits:
 
-- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (3 minutes ago)`
+- `4bdd746 Tier 5 — handoff system (propose, don't chain) (12 minutes ago)`
+- `6fe3149 Tier 4 — tool-level human-in-the-loop confirmation gates (15 minutes ago)`
 - `c685b5b Extended 1h cache TTL to survive sparse traffic (3 hours ago)`
-- `ce3bc5c Add prompt caching across the sub-agent team (3 hours ago)`
+- `ce3bc5c Add prompt caching across the sub-agent team (4 hours ago)`
 - `96bc0c3 Tier 1 smart routing (LLM router) + close Tier 3 failure-isolation hole (4 hours ago)`
 - `13ee09b Note Factory dispatch substring-match risk as known issue in roadmap (4 hours ago)`
 - `4db7acf Wire spawned-agent dispatch into orchestrator + mount FactoryDock everywhere (4 hours ago)`
 - `1d0eeae Add Factory approval UI + document Factory in roadmap/README (4 hours ago)`
 - `df21089 Add Factory sub-agent spawner (5-tier config-driven agent system) (6 hours ago)`
-- `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (6 hours ago)`
+- `dd3e1b7 Cost dashboard: live LLM token usage and cost tracking (7 hours ago)`
 - `d0f7518 Voice streaming, self-knowledge system, roadmap and README updates (7 hours ago)`
-- `cf495c9 Shared HUD on all pages, Learning Log redesign, remove ChromaticAberration (8 hours ago)`
+- `cf495c9 Shared HUD on all pages, Learning Log redesign, remove ChromaticAberration (9 hours ago)`
 - `1ba1078 Fix mic button overlap, neon glass response popups (9 hours ago)`
 - `fa0a3f5 Add percentage-based volume control with voice commands (9 hours ago)`
-- `45c08fb Replace SplashScreen custom mic/sound buttons with VoiceControls component (9 hours ago)`
+- `45c08fb Replace SplashScreen custom mic/sound buttons with VoiceControls component (10 hours ago)`
 - `e105a20 Bottom-center mic button, response card polish, glass on splash controls (10 hours ago)`
 - `521d5cf Apply glass-morphism across all UI panels (10 hours ago)`
 - `ea349c4 Add glass-morphism and teal CSS variables to :root (10 hours ago)`
 - `adb6f94 Add Trillion UI adaptation implementation plan (10 hours ago)`
 - `0cb94dc Add Trillion UI adaptation design spec (10 hours ago)`
-- `f72fd1f Response branches: tree structure from orb center on agent pages (21 hours ago)`
-- … and 31 more
+- … and 32 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

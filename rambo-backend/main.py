@@ -1,6 +1,11 @@
 import asyncio
 from typing import Optional
 
+# Load .env BEFORE importing anything that reads os.environ (the orchestrator
+# checks ANTHROPIC_API_KEY at import time).
+from env_setup import load_env
+load_env()
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
