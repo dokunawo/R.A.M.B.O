@@ -193,12 +193,15 @@ function useRamboLive() {
     });
   }, []);
 
+  // Dismiss ALL accumulated response cards at once.
+  const clearResponses = useCallback(() => setResponses({}), []);
+
   const dismissBeam = useCallback((beamId) => {
     setDispatches(prev => prev.filter(d => d.id !== beamId));
   }, []);
 
   return { statusData, stats, activity, connected, responses, dismissResponse,
-           dispatches, processing, dismissBeam };
+           clearResponses, dispatches, processing, dismissBeam };
 }
 
 // Typewriter that waits `startMs` before typing `text` one char at a time.
@@ -1001,13 +1004,20 @@ export default function SplashScreen({
   const voiceSetStateRef = useRef(null);
   const speakRef = useRef(null);
   const stopListeningRef = useRef(null);
+  const clearAllRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
+    const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
     // Hard stop: "stop listening" / "pause" turns the mic fully off and keeps it
     // off across refreshes so it stops picking up ambient audio.
-    const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
     if (/(stop listening|pause listening|stop the mic|mute the mic|mic off|go to sleep|stop the microphone|pause the mic)/.test(t)) {
       if (stopListeningRef.current) stopListeningRef.current();
+      return;
+    }
+    // Clear all response cards by voice.
+    if (/(clear everything|clear responses|clear all|clear the screen|clear the responses|clear cards|dismiss all)/.test(t)) {
+      if (clearAllRef.current) clearAllRef.current();
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }
     setTimeout(() => {
@@ -1101,7 +1111,15 @@ export default function SplashScreen({
 
   // Live backend link: status + system stats + WebSocket activity feed.
   const { statusData, stats, activity, connected, responses, dismissResponse,
-          processing } = useRamboLive();
+          clearResponses, processing } = useRamboLive();
+
+  // Clear ALL accumulated response cards (the per-agent cards + the result
+  // branch) at once. Wired to a button and the "clear everything" voice command.
+  const clearAll = useCallback(() => {
+    clearResponses();
+    setResult(null);
+  }, [clearResponses]);
+  clearAllRef.current = clearAll;
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();
@@ -1251,6 +1269,13 @@ export default function SplashScreen({
           <ConfirmationDock />
           <HandoffDock />
           <SoundGate />
+
+          {(Object.keys(responses).length > 0 || result) && (
+            <button className="hud-clear-btn" onClick={clearAll}
+              title='Dismiss all response cards (or say "clear everything")'>
+              ✕ CLEAR
+            </button>
+          )}
 
           {/* center title types in LAST, after roster + params */}
           <OrbTitleStack projectLabel={projectLabel} agentName={agentName}

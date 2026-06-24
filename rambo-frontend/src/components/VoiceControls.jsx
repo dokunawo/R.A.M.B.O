@@ -34,6 +34,12 @@ function isStopListening(text) {
   return /(stop listening|pause listening|stop the mic|mute the mic|mic off|go to sleep|stop the microphone|pause the mic)/.test(t);
 }
 
+// Voice command to dismiss all accumulated response cards.
+function isClearCommand(text) {
+  const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+  return /(clear everything|clear responses|clear all|clear the screen|clear the responses|clear cards|dismiss all)/.test(t);
+}
+
 export function usePageVoice() {
   const [voiceText, setVoiceText] = useState("");
   const [commandLog, setCommandLog] = useState([]);
@@ -101,6 +107,13 @@ export function usePageVoice() {
       const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: 'Listening paused. Say "Operator" to resume.', status: "complete" };
       setCommandLog(prev => [entry, ...prev].slice(0, 50));
       if (stopListeningRef.current) stopListeningRef.current();
+      return;
+    }
+
+    // Clear all accumulated response cards on this page.
+    if (isClearCommand(text)) {
+      setCommandLog([]);
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }
 
@@ -172,7 +185,9 @@ export function usePageVoice() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { ...voice, voiceText, setVoiceText, speakRef, commandLog, executeCommand, busy };
+  const clearCommandLog = useCallback(() => setCommandLog([]), []);
+
+  return { ...voice, voiceText, setVoiceText, speakRef, commandLog, clearCommandLog, executeCommand, busy };
 }
 
 function VolumeSvg({ vol }) {
