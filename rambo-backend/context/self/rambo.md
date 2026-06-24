@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 87 commits:
+Last 14 days — 88 commits:
 
-- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (4 minutes ago)`
-- `5097876 feat: add ElevenLabsTTS best-effort client (9 minutes ago)`
-- `2afd7e6 docs: implementation plan for ElevenLabs neural voice (19 minutes ago)`
-- `e0a94ac docs: design for ElevenLabs neural voice (40 minutes ago)`
-- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (59 minutes ago)`
-- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (65 minutes ago)`
-- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (67 minutes ago)`
-- `7b53f24 feat: inject dispatch context into router and voice (70 minutes ago)`
-- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (73 minutes ago)`
-- `5814b92 feat: add DispatchRepo.format_for_prompt context block (76 minutes ago)`
-- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (79 minutes ago)`
-- `1976e26 feat: route on the fast model tier (81 minutes ago)`
-- `8832f42 feat: add fast_model tier to model_config (85 minutes ago)`
-- `a0716de docs: implementation plan for dispatch memory + model split (88 minutes ago)`
+- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (7 minutes ago)`
+- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (11 minutes ago)`
+- `5097876 feat: add ElevenLabsTTS best-effort client (17 minutes ago)`
+- `2afd7e6 docs: implementation plan for ElevenLabs neural voice (27 minutes ago)`
+- `e0a94ac docs: design for ElevenLabs neural voice (47 minutes ago)`
+- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (66 minutes ago)`
+- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (72 minutes ago)`
+- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (75 minutes ago)`
+- `7b53f24 feat: inject dispatch context into router and voice (78 minutes ago)`
+- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (80 minutes ago)`
+- `5814b92 feat: add DispatchRepo.format_for_prompt context block (83 minutes ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (86 minutes ago)`
+- `1976e26 feat: route on the fast model tier (89 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (2 hours ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (2 hours ago)`
 - `da27915 docs: design for persistent dispatch memory + fast/deep model split (2 hours ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (14 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (14 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (14 hours ago)`
-- `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (14 hours ago)`
-- `c542188 Remove dead SoundToggle component and its orphaned styles/imports (15 hours ago)`
-- … and 67 more
+- `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (15 hours ago)`
+- … and 68 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

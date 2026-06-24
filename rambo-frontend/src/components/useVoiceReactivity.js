@@ -50,7 +50,69 @@ function speak(text, onStart, onEnd) {
   synth.speak(utter);
 }
 
-function speakSegment(text) {
+// Shared context for TTS playback so the orb can react to RAMBO's own voice.
+let ttsCtx = null;
+let ttsAnalyser = null;
+export const ttsLevel = { value: 0 };
+
+function ensureTtsCtx() {
+  if (typeof window === "undefined") return null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!ttsCtx) {
+    ttsCtx = new AC();
+    ttsAnalyser = ttsCtx.createAnalyser();
+    ttsAnalyser.fftSize = 256;
+    ttsAnalyser.connect(ttsCtx.destination);
+  }
+  return ttsCtx;
+}
+
+function base64ToArrayBuffer(b64) {
+  const bin = atob(b64);
+  const len = bin.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+// Resolves when playback ends. Updates ttsLevel.value with the RMS of the
+// playing audio so the orb can pulse to RAMBO's voice.
+function playAudioSegment(b64) {
+  return new Promise((resolve) => {
+    const ctx = ensureTtsCtx();
+    if (!ctx) { resolve(false); return; }
+    let settled = false;
+    const done = (ok) => { if (!settled) { settled = true; ttsLevel.value = 0; resolve(ok); } };
+    try {
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      ctx.decodeAudioData(base64ToArrayBuffer(b64), (buf) => {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ttsAnalyser);
+        const data = new Uint8Array(ttsAnalyser.frequencyBinCount);
+        let raf;
+        const sample = () => {
+          ttsAnalyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            const v = (data[i] - 128) / 128;
+            sum += v * v;
+          }
+          ttsLevel.value = Math.sqrt(sum / data.length);
+          raf = requestAnimationFrame(sample);
+        };
+        src.onended = () => { cancelAnimationFrame(raf); done(true); };
+        src.start();
+        sample();
+      }, () => done(false));
+    } catch {
+      done(false);
+    }
+  });
+}
+
+function speakViaSynth(text) {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
     if (!synth) { resolve(); return; }
@@ -64,6 +126,18 @@ function speakSegment(text) {
     utter.onerror = resolve;
     synth.speak(utter);
   });
+}
+
+function speakSegment(seg) {
+  const text = typeof seg === "string" ? seg : seg.text;
+  const audio = typeof seg === "string" ? null : seg.audio;
+  if (audio) {
+    return playAudioSegment(audio).then((ok) => {
+      if (ok) return;
+      return speakViaSynth(text); // fallback if decode/playback failed
+    });
+  }
+  return speakViaSynth(text);
 }
 
 if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -111,8 +185,13 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
     const rms = Math.sqrt(sum / data.length) / 255;
     const prev = levelRef.current;
-    const alpha = rms > prev ? SMOOTH_UP : SMOOTH_DOWN;
-    levelRef.current = prev + alpha * (rms - prev);
+    // While RAMBO is speaking, drive the orb from its own voice instead of mic.
+    if (ttsLevel.value > 0) {
+      levelRef.current = levelRef.current + 0.3 * (ttsLevel.value - levelRef.current);
+    } else {
+      const alpha = rms > prev ? SMOOTH_UP : SMOOTH_DOWN;
+      levelRef.current = prev + alpha * (rms - prev);
+    }
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
@@ -142,7 +221,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     if (playingSegmentRef.current || segmentQueueRef.current.length === 0) return;
     const seg = segmentQueueRef.current.shift();
     playingSegmentRef.current = true;
-    await speakSegment(seg.text);
+    await speakSegment(seg);
     playingSegmentRef.current = false;
     if (segmentQueueRef.current.length > 0) {
       pumpQueue();
