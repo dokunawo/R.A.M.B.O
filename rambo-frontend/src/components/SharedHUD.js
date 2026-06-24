@@ -209,6 +209,79 @@ export function CostIndicator({ data }) {
   );
 }
 
+/* ---- ElevenLabs voice-credit tracker ---- */
+
+function formatK(n) {
+  if (n == null) return "—";
+  if (n >= 1000) {
+    const k = n / 1000;
+    return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
+  }
+  return `${n}`;
+}
+
+export function useElevenLabsUsage() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const r = await fetch(`${API}/usage/tts`);
+        if (r.ok && !cancelled) setData(await r.json());
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 60000);
+    const onVis = () => { if (!document.hidden) poll(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+  return data;
+}
+
+export function VoiceCostIndicator({ data }) {
+  const [expanded, setExpanded] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const close = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setExpanded(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [expanded]);
+
+  if (!data) return null;
+
+  const block = data.real ?? data.local;
+  if (!block) return null;
+  const sourceTag = data.source === "real" ? "REAL" : "LIVE";
+
+  return (
+    <div className="hud-cost-wrap" ref={panelRef}>
+      <div className="hud-cost-face" onClick={() => setExpanded(e => !e)}>
+        <span className="hud-cost-tag">VOICE</span>
+        <span className="hud-cost-amount">{formatK(block.remaining)}</span>
+        <span className="hud-cost-delta">{formatK(block.used)}/{formatK(block.limit)}</span>
+        <span className="hud-voice-src">{sourceTag}</span>
+      </div>
+
+      {expanded && (
+        <div className="hud-cost-panel">
+          <div className="hud-cost-panel-header">◆ VOICE CREDITS</div>
+          <div className="hud-cost-section">
+            <div className="hud-cost-row"><span>Remaining</span><span>{block.remaining.toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>Used</span><span>{block.used.toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>Limit</span><span>{block.limit.toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>Resets</span><span>{data.reset_date}</span></div>
+            <div className="hud-cost-row"><span>Source</span><span>{data.source === "real" ? "ElevenLabs" : "Local count"}</span></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function useFactoryPending() {
   const [pending, setPending] = useState([]);
 

@@ -80,6 +80,7 @@ class Orchestrator:
 
         # TTS client — set later via set_tts (best-effort, may be None).
         self.tts = None
+        self.tts_usage_repo = None
 
     # One-line ownership for each core agent. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
@@ -108,6 +109,10 @@ class Orchestrator:
     def set_tts(self, tts):
         """Give the orchestrator a best-effort TTS client (or None)."""
         self.tts = tts
+
+    def set_tts_usage_repo(self, repo):
+        """Give the orchestrator a best-effort ElevenLabs character-usage log."""
+        self.tts_usage_repo = repo
 
     async def _dispatch_spawned(self, goal: str):
         """If the goal names a Factory-spawned agent, run it and return a
@@ -454,10 +459,21 @@ class Orchestrator:
             data = await tts.synthesize(text)
             if not data:
                 return None
+            await self._record_tts_usage(text, getattr(tts, "model", ""))
             import base64
             return base64.b64encode(data).decode("ascii")
         except Exception:
             return None
+
+    async def _record_tts_usage(self, text: str, model: str) -> None:
+        """Best-effort: log characters sent to ElevenLabs for the credit HUD."""
+        repo = getattr(self, "tts_usage_repo", None)
+        if not repo:
+            return
+        try:
+            await repo.record(len(text), model)
+        except Exception:
+            pass
 
     async def _emit_segment(self, text: str, base_turn_id: str, seq: int, is_final: bool, t0: float):
         segment_id = f"{base_turn_id}::{seq}"

@@ -96,3 +96,57 @@ def test_from_env_overrides(monkeypatch):
     t = ElevenLabsTTS.from_env()
     assert t.voice_id == "myvoice"
     assert t.model == "mymodel"
+
+
+# --- get_subscription -----------------------------------------------------
+
+class _SubResponse:
+    def __init__(self, status_code, payload=None):
+        self.status_code = status_code
+        self._payload = payload or {}
+    def json(self):
+        return self._payload
+
+
+class _SubClient:
+    """Async-context httpx stand-in exposing get()."""
+    status = 200
+    payload = {"character_count": 8420, "character_limit": 10000}
+    def __init__(self, *a, **k): pass
+    async def __aenter__(self): return self
+    async def __aexit__(self, *e): return False
+    async def get(self, url, headers=None):
+        _SubClient.last = {"url": url, "headers": headers}
+        return _SubResponse(_SubClient.status, _SubClient.payload)
+
+
+@pytest.mark.asyncio
+async def test_subscription_none_without_key():
+    assert await tts_module.get_subscription(None) is None
+
+
+@pytest.mark.asyncio
+async def test_subscription_success(monkeypatch):
+    _SubClient.status = 200
+    _SubClient.payload = {"character_count": 8420, "character_limit": 10000}
+    monkeypatch.setattr(tts_module.httpx, "AsyncClient", _SubClient)
+    out = await tts_module.get_subscription("key")
+    assert out == {"used": 8420, "limit": 10000}
+    assert _SubClient.last["url"] == "https://api.elevenlabs.io/v1/user/subscription"
+    assert _SubClient.last["headers"]["xi-api-key"] == "key"
+
+
+@pytest.mark.asyncio
+async def test_subscription_401_returns_none(monkeypatch):
+    _SubClient.status = 401
+    monkeypatch.setattr(tts_module.httpx, "AsyncClient", _SubClient)
+    assert await tts_module.get_subscription("key") is None
+
+
+@pytest.mark.asyncio
+async def test_subscription_exception_returns_none(monkeypatch):
+    class _Boom(_SubClient):
+        async def get(self, url, headers=None):
+            raise RuntimeError("down")
+    monkeypatch.setattr(tts_module.httpx, "AsyncClient", _Boom)
+    assert await tts_module.get_subscription("key") is None

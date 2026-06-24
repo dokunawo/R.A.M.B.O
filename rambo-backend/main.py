@@ -17,6 +17,8 @@ import agent_tracker
 from usage_repo import UsageRepo
 from dispatch_repo import DispatchRepo
 from tts import ElevenLabsTTS
+from tts_usage_repo import TTSUsageRepo
+from tts_dashboard import get_tts_dashboard
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from factory.repo import FactoryRepo, State
@@ -40,6 +42,7 @@ app = FastAPI()
 rambo = Orchestrator()
 _usage_repo = UsageRepo()
 _dispatch_repo = DispatchRepo()
+_tts_usage_repo = TTSUsageRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -61,6 +64,8 @@ async def _init_dispatch_db():
 
 @app.on_event("startup")
 async def _init_tts():
+    await _tts_usage_repo.init_db()
+    rambo.set_tts_usage_repo(_tts_usage_repo)
     if os.environ.get("ELEVENLABS_API_KEY"):
         rambo.set_tts(ElevenLabsTTS.from_env())
 
@@ -176,6 +181,11 @@ async def google_auth():
 @app.get("/usage")
 async def usage_dashboard():
     return await get_dashboard(_usage_repo)
+
+
+@app.get("/usage/tts")
+async def tts_usage_dashboard():
+    return await get_tts_dashboard(_tts_usage_repo, os.environ.get("ELEVENLABS_API_KEY"))
 
 
 @app.get("/learning/log")

@@ -58,3 +58,44 @@ async def test_segment_audio_swallows_synth_error():
     o = Orchestrator.__new__(Orchestrator)
     o.tts = _Boom()
     assert await o._segment_audio("x") is None
+
+
+# --- ElevenLabs character-usage recording ---------------------------------
+
+class _RecordingRepo:
+    def __init__(self):
+        self.records = []
+    async def record(self, characters, model=""):
+        self.records.append((characters, model))
+
+
+@pytest.mark.asyncio
+async def test_segment_audio_records_characters_on_success():
+    o = Orchestrator.__new__(Orchestrator)
+    o.tts = _StubTTS(b"AUDIO")
+    o.tts.model = "eleven_turbo_v2_5"
+    repo = _RecordingRepo()
+    o.tts_usage_repo = repo
+    out = await o._segment_audio("Hello sir.")
+    assert out is not None
+    assert repo.records == [(len("Hello sir."), "eleven_turbo_v2_5")]
+
+
+@pytest.mark.asyncio
+async def test_segment_audio_no_record_when_synth_none():
+    o = Orchestrator.__new__(Orchestrator)
+    o.tts = _StubTTS(None)
+    repo = _RecordingRepo()
+    o.tts_usage_repo = repo
+    out = await o._segment_audio("Hello sir.")
+    assert out is None
+    assert repo.records == []
+
+
+@pytest.mark.asyncio
+async def test_segment_audio_no_repo_does_not_raise():
+    o = Orchestrator.__new__(Orchestrator)
+    o.tts = _StubTTS(b"AUDIO")
+    # no tts_usage_repo attribute at all
+    out = await o._segment_audio("Hi.")
+    assert out is not None

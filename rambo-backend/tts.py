@@ -14,6 +14,26 @@ DEFAULT_VOICE_ID = "jCv6DMvHrCxAiWzQcSEl"
 DEFAULT_MODEL = "eleven_turbo_v2_5"
 
 _API_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+_SUB_URL = "https://api.elevenlabs.io/v1/user/subscription"
+
+
+async def get_subscription(api_key: str | None) -> dict | None:
+    """Fetch the real ElevenLabs balance. Returns {"used", "limit"} on success,
+    or None when there's no key, the key lacks User:Read (401), or any error.
+    Best-effort: never raises."""
+    if not api_key:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(_SUB_URL, headers={"xi-api-key": api_key})
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        used = int(data.get("character_count", 0))
+        limit = int(data.get("character_limit", 0))
+        return {"used": used, "limit": limit}
+    except Exception:
+        return None
 
 
 class ElevenLabsTTS:
