@@ -78,10 +78,11 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 74 commits:
+Last 14 days — 75 commits:
 
-- `a0716de docs: implementation plan for dispatch memory + model split (3 minutes ago)`
-- `da27915 docs: design for persistent dispatch memory + fast/deep model split (9 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (4 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (7 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (13 minutes ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (12 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (13 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 74 commits:
 - `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (14 hours ago)`
 - `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (14 hours ago)`
 - `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (14 hours ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (15 hours ago)`
-- … and 54 more
+- … and 55 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

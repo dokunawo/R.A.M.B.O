@@ -68,8 +68,8 @@ class Orchestrator:
 
         self.agent_status = {name: "idle" for name in self.agents}
 
-        # Tier 1 — smart routing brain.
-        self.router = SmartRouter(self.llm)
+        # Tier 1 — smart routing brain (fast model: routing is a quick decision).
+        self.router = SmartRouter(self.llm, model=model_config.fast_model())
 
         # Factory wiring — set later by main.py once the DB + registry exist.
         self.factory_repo = None
