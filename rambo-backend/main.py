@@ -14,6 +14,7 @@ from orchestrator.orchestrator import Orchestrator
 import sentinel_queue
 import agent_tracker
 from usage_repo import UsageRepo
+from dispatch_repo import DispatchRepo
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from factory.repo import FactoryRepo, State
@@ -36,6 +37,7 @@ except ImportError:
 app = FastAPI()
 rambo = Orchestrator()
 _usage_repo = UsageRepo()
+_dispatch_repo = DispatchRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -47,6 +49,12 @@ _IN_FLIGHT: set[asyncio.Task] = set()
 async def _init_usage_db():
     await _usage_repo.init_db()
     set_usage_repo(_usage_repo)
+
+
+@app.on_event("startup")
+async def _init_dispatch_db():
+    await _dispatch_repo.init_db()
+    rambo.set_dispatch_repo(_dispatch_repo)
 
 
 @app.on_event("startup")
