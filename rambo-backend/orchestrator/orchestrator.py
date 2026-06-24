@@ -182,26 +182,29 @@ class Orchestrator:
     # ── Dispatch log helpers (best-effort — never raise) ──────────
 
     async def _register_dispatch(self, goal: str, plan: list[str]) -> "int | None":
-        if not self.dispatch_repo:
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo:
             return None
         try:
-            return await self.dispatch_repo.register(goal, "; ".join(plan))
+            return await repo.register(goal, "; ".join(plan))
         except Exception:
             return None
 
     async def _close_dispatch(self, dispatch_id, status: str, summary: str):
-        if not self.dispatch_repo or dispatch_id is None:
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo or dispatch_id is None:
             return
         try:
-            await self.dispatch_repo.update_status(dispatch_id, status, summary[:500])
+            await repo.update_status(dispatch_id, status, summary[:500])
         except Exception:
             pass
 
     async def _dispatch_context(self) -> str:
-        if not self.dispatch_repo:
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo:
             return ""
         try:
-            return await self.dispatch_repo.format_for_prompt()
+            return await repo.format_for_prompt()
         except Exception:
             return ""
 
