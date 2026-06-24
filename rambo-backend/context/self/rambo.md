@@ -80,29 +80,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 102 commits:
+Last 14 days — 103 commits:
 
-- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (14 minutes ago)`
-- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (28 minutes ago)`
-- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (37 minutes ago)`
-- `b3194fd feat: sound on by default + Settings panel with Sound toggle (46 minutes ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (57 minutes ago)`
-- `36477a6 fix: never surface ask-frequency / repeat-count to the operator (2 hours ago)`
+- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (12 minutes ago)`
+- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (25 minutes ago)`
+- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (39 minutes ago)`
+- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (49 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (58 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (69 minutes ago)`
+- `36477a6 fix: never surface ask-frequency / repeat-count to the operator (3 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (3 hours ago)`
-- `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (4 hours ago)`
+- `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (5 hours ago)`
 - `4edbecb docs: design for ElevenLabs voice-credit tracker (5 hours ago)`
 - `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (5 hours ago)`
 - `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (5 hours ago)`
 - `825e783 feat: add converse target + prefer action over clarifying (6 hours ago)`
 - `f53d45a docs: document ELEVENLABS_* env vars in .env.example (6 hours ago)`
 - `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (6 hours ago)`
-- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (6 hours ago)`
-- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (6 hours ago)`
-- `5097876 feat: add ElevenLabsTTS best-effort client (6 hours ago)`
+- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (7 hours ago)`
+- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (7 hours ago)`
+- `5097876 feat: add ElevenLabsTTS best-effort client (7 hours ago)`
 - `2afd7e6 docs: implementation plan for ElevenLabs neural voice (7 hours ago)`
 - `e0a94ac docs: design for ElevenLabs neural voice (7 hours ago)`
-- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (7 hours ago)`
-- … and 82 more
+- … and 83 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
