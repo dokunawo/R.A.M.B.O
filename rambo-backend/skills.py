@@ -108,6 +108,51 @@ async def weather_skill(goal: str, ctx: dict) -> str:
     )
 
 
+async def web_search_skill(goal: str, ctx: dict) -> str:
+    """Live web search via Anthropic's native server-side web_search tool.
+    Uses the existing ANTHROPIC_API_KEY — no extra search-API key needed.
+    Reports DEGRADED on missing key or failure (errors are surfaced, not
+    swallowed)."""
+    import os
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        return "[Seeker DEGRADED] Web search needs ANTHROPIC_API_KEY on the backend."
+    try:
+        import anthropic
+        import model_config
+        client = anthropic.AsyncAnthropic(api_key=key)
+        resp = await client.messages.create(
+            model=model_config.default_model(),
+            max_tokens=1024,
+            system=(
+                "You are R.A.M.B.O's web researcher (the Seeker). Search the web and "
+                "answer the operator concisely with current, accurate facts. Cite key "
+                "sources inline. If searches return nothing useful, say so plainly."
+            ),
+            messages=[{"role": "user", "content": goal}],
+            tools=[{"name": "web_search", "type": "web_search_20250305"}],
+        )
+        parts = [b.text for b in resp.content if getattr(b, "type", None) == "text"]
+        text = "\n".join(p for p in parts if p).strip()
+        return text or "[Seeker] Search ran but returned no usable text."
+    except Exception as e:
+        return f"[Seeker DEGRADED] Web search failed: {e}"
+
+
+async def notify_skill(goal: str, ctx: dict) -> str:
+    """Echo outbound messaging — send an email notification. Degrades cleanly
+    when SMTP isn't configured (reports OFFLINE instead of failing silently)."""
+    from echo_messaging import send_email, is_configured
+    if not is_configured():
+        return ("[Echo OFFLINE] No messaging backend configured. Set SMTP_HOST, "
+                "SMTP_USER, SMTP_PASS, SMTP_FROM (and ECHO_DEFAULT_TO) to enable email.")
+    # Strip the leading trigger so the body is the actual message.
+    body = re.sub(r"^\s*(?:echo\s+)?(?:please\s+)?(?:email|notify|message|text|send)\s+(?:me|us)?\s*",
+                  "", goal, flags=re.IGNORECASE).strip() or goal
+    result = send_email(subject="R.A.M.B.O notification", body=body)
+    return f"[Echo] {result['detail']}"
+
+
 # The registry. Add new real-world skills here.
 SKILLS = [
     {
@@ -115,6 +160,25 @@ SKILLS = [
         "agent": "seeker",
         "match": lambda g: any(w in g.lower() for w in ("weather", "temperature", "forecast", "how hot", "how cold")),
         "run": weather_skill,
+    },
+    {
+        "name": "web_search",
+        "agent": "seeker",
+        "match": lambda g: any(w in g.lower() for w in (
+            "search the web", "web search", "search online", "look online",
+            "look up", "search for", "google ", "latest news", "what's the latest",
+            "whats the latest", "current news", "look it up", "find online",
+        )),
+        "run": web_search_skill,
+    },
+    {
+        "name": "notify",
+        "agent": "echo",
+        "match": lambda g: any(w in g.lower() for w in (
+            "email me", "notify me", "send me an email", "send an email",
+            "email this", "message me", "send a notification",
+        )),
+        "run": notify_skill,
     },
 ]
 

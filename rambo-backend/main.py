@@ -225,6 +225,39 @@ async def keeper_read(key: str):
     return entry or {"error": "not found", "key": key}
 
 
+# ── Agent / integration health ───────────────────────────────────────
+@app.get("/integrations/status")
+async def integrations_status():
+    from google_auth import integration_status
+    from echo_messaging import status as echo_status
+    return {
+        "google": integration_status(),
+        "echo": echo_status(),
+        "elevenlabs": {"status": "CONNECTED" if os.environ.get("ELEVENLABS_API_KEY") else "OFFLINE"},
+        "anthropic": {"status": "CONNECTED" if os.environ.get("ANTHROPIC_API_KEY") else "OFFLINE"},
+    }
+
+
+@app.get("/agents/health")
+async def agents_health():
+    from google_auth import integration_status
+    from echo_messaging import status as echo_status
+
+    seeker = {
+        "agent": "seeker",
+        "backend": "Anthropic web_search + Open-Meteo (weather)",
+        "status": "LIVE" if os.environ.get("ANTHROPIC_API_KEY") else "DEGRADED",
+    }
+    try:
+        info = await _keeper_repo.confirm()
+        keeper = {"agent": "keeper", "backend": "SQLite (data/keeper.db)",
+                  "status": "CONNECTED", "entries": info["count"]}
+    except Exception as e:
+        keeper = {"agent": "keeper", "backend": "SQLite", "status": "DEGRADED", "reason": str(e)}
+
+    return {"agents": [seeker, keeper, integration_status(), echo_status()]}
+
+
 @app.get("/learning/log")
 async def get_learning_log():
     return agent_tracker.get_learnings()
