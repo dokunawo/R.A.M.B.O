@@ -105,6 +105,10 @@ owns.
 look up something the operator told you ALWAYS routes to "keeper" — never to \
 "converse" and never answered conversationally. "Remember X", "save this", \
 "what did I tell you about X", "what's my X" → keeper.
+9. MESSAGING: any request to email, notify, message, or text the operator \
+("email me X", "send me a reminder", "notify me when...") ALWAYS routes to \
+"notify" — never converse, never claim the backend is unavailable yourself \
+(the skill reports its own status).
 
 ROSTER:
 {roster}
