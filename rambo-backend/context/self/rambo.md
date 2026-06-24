@@ -78,18 +78,19 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 91 commits:
+Last 14 days — 92 commits:
 
-- `825e783 feat: add converse target + prefer action over clarifying (39 minutes ago)`
-- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (73 minutes ago)`
-- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (76 minutes ago)`
-- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (84 minutes ago)`
-- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (87 minutes ago)`
+- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (5 minutes ago)`
+- `825e783 feat: add converse target + prefer action over clarifying (44 minutes ago)`
+- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (78 minutes ago)`
+- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (81 minutes ago)`
+- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (89 minutes ago)`
+- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (2 hours ago)`
 - `5097876 feat: add ElevenLabsTTS best-effort client (2 hours ago)`
 - `2afd7e6 docs: implementation plan for ElevenLabs neural voice (2 hours ago)`
 - `e0a94ac docs: design for ElevenLabs neural voice (2 hours ago)`
 - `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (2 hours ago)`
-- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (2 hours ago)`
+- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (3 hours ago)`
 - `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (3 hours ago)`
 - `7b53f24 feat: inject dispatch context into router and voice (3 hours ago)`
 - `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (3 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 91 commits:
 - `8832f42 feat: add fast_model tier to model_config (3 hours ago)`
 - `a0716de docs: implementation plan for dispatch memory + model split (3 hours ago)`
 - `da27915 docs: design for persistent dispatch memory + fast/deep model split (3 hours ago)`
-- `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (15 hours ago)`
-- … and 71 more
+- … and 72 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
