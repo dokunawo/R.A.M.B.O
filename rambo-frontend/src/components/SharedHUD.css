@@ -580,3 +580,29 @@
   border-radius: 2px;
   padding: 0 3px;
 }
+
+/* ---- Clear-all-responses button (top center) ---- */
+.hud-clear-btn {
+  position: fixed;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--accent, #e8b15a);
+  background: var(--glass-bg, rgba(14, 15, 19, 0.85));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  border-radius: 3px;
+  padding: 4px 12px;
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(232, 177, 90, 0.5);
+  transition: background 0.15s, border-color 0.15s;
+}
+.hud-clear-btn:hover {
+  background: rgba(232, 177, 90, 0.15);
+  border-color: rgba(232, 177, 90, 0.6);
+}

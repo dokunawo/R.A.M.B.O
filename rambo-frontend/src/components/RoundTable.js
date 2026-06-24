@@ -68,7 +68,7 @@ function LiveClock() {
 function RoundTable() {
   const navigate = useNavigate();
   const [statusMap, setStatusMap] = useState({});
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice();
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();
@@ -199,6 +199,12 @@ function RoundTable() {
         <span>R.A.M.B.O — Accuracy · Precision · Execution</span>
       </footer>
 
+      {commandLog.length > 0 && (
+        <button className="hud-clear-btn" onClick={clearCommandLog}
+          title='Dismiss all response cards (or say "clear everything")'>
+          ✕ CLEAR
+        </button>
+      )}
       <CommandLog commandLog={commandLog} agentColor="#e8b15a" />
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
     </div>

@@ -269,7 +269,7 @@ function AgentPage() {
   const { agentKey } = useParams();
   const navigate = useNavigate();
   const meta = AGENT_META[agentKey];
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice();
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();
@@ -454,6 +454,12 @@ function AgentPage() {
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 
+      {commandLog.length > 0 && (
+        <button className="hud-clear-btn" onClick={clearCommandLog}
+          title='Dismiss all response cards (or say "clear everything")'>
+          ✕ CLEAR
+        </button>
+      )}
       <ResponseTree commandLog={commandLog} agentColor={meta.color} />
 
       <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
