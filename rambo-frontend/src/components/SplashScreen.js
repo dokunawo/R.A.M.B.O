@@ -10,7 +10,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
@@ -1269,6 +1269,7 @@ export default function SplashScreen({
           <ConfirmationDock />
           <HandoffDock />
           <SoundGate />
+          <SettingsPanel />
 
           {(Object.keys(responses).length > 0 || result) && (
             <button className="hud-clear-btn" onClick={clearAll}

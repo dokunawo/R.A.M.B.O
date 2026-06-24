@@ -74,6 +74,24 @@ export function audioRunning() {
   return !!ctx && ctx.state === "running";
 }
 
+// Sound on by default: auto-enable audio on the EARLIEST user interaction
+// anywhere in the app (browsers require one gesture before audio can start, so
+// this grabs the first one — a click, tap, or keypress you'd make anyway). The
+// kiosk launcher unlocks autoplay so this isn't even needed there; in a normal
+// tab it means the "ENABLE SOUND" gate self-dismisses on first interaction
+// instead of needing a deliberate click.
+if (typeof window !== "undefined") {
+  const _armEvents = ["pointerdown", "keydown", "touchstart", "click"];
+  const _armOnce = () => {
+    if (muted) return;            // respect an explicit disable
+    resumeAudio();
+    if (audioRunning()) {
+      _armEvents.forEach(ev => window.removeEventListener(ev, _armOnce));
+    }
+  };
+  _armEvents.forEach(ev => window.addEventListener(ev, _armOnce, { passive: true }));
+}
+
 export function isMuted() { return muted; }
 
 export function setMuted(v) {

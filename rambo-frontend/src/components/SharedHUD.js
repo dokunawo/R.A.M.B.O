@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { audioRunning, isMuted, resumeAudio } from "./audioEngine";
+import { audioRunning, isMuted, setMuted, resumeAudio } from "./audioEngine";
 import "./SharedHUD.css";
 
 const API = "http://localhost:8000";
@@ -546,6 +546,46 @@ export function SoundGate() {
       title="Audio is blocked by the browser — click to enable">
       <span className="hud-soundgate-icon">🔊</span> ENABLE SOUND
     </button>
+  );
+}
+
+// Settings popover (gear button). Holds operator toggles — starting with Sound.
+// Extend by adding more rows inside the panel.
+export function SettingsPanel() {
+  const [open, setOpen] = useState(false);
+  const [soundOn, setSoundOn] = useState(!isMuted());
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setMuted(!next);          // persisted in audioEngine
+    if (next) resumeAudio();
+  };
+
+  return (
+    <div className="hud-settings" ref={ref}>
+      <button className="hud-settings-btn" type="button" onClick={() => setOpen(o => !o)} title="Settings">⚙</button>
+      {open && (
+        <div className="hud-settings-panel">
+          <div className="hud-cost-panel-header">◆ SETTINGS</div>
+          <div className="hud-settings-row">
+            <span>Sound</span>
+            <button className={`hud-toggle ${soundOn ? "hud-toggle-on" : "hud-toggle-off"}`}
+              type="button" onClick={toggleSound}>
+              {soundOn ? "ON" : "OFF"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
