@@ -78,12 +78,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 76 commits:
+Last 14 days — 77 commits:
 
-- `1976e26 feat: route on the fast model tier (3 minutes ago)`
-- `8832f42 feat: add fast_model tier to model_config (6 minutes ago)`
-- `a0716de docs: implementation plan for dispatch memory + model split (9 minutes ago)`
-- `da27915 docs: design for persistent dispatch memory + fast/deep model split (16 minutes ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (3 minutes ago)`
+- `1976e26 feat: route on the fast model tier (6 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (9 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (12 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (18 minutes ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (13 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (13 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
@@ -91,7 +92,7 @@ Last 14 days — 76 commits:
 - `c542188 Remove dead SoundToggle component and its orphaned styles/imports (13 hours ago)`
 - `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (13 hours ago)`
 - `08b67d0 Long-press the volume button = full reset to unmuted max volume (13 hours ago)`
-- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (13 hours ago)`
+- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (14 hours ago)`
 - `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (14 hours ago)`
 - `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (14 hours ago)`
 - `0cec625 Roadmap: note true AEC/barge-in voice follow-up (14 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 76 commits:
 - `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (14 hours ago)`
 - `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (14 hours ago)`
 - `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (14 hours ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (14 hours ago)`
-- … and 56 more
+- … and 57 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -69,3 +69,25 @@ async def test_init_db_idempotent(tmp_path):
     await r.init_db()
     await r.register("g")
     assert len(await r.get_active()) == 1
+
+
+@pytest.mark.asyncio
+async def test_format_for_prompt_empty(repo):
+    assert await repo.format_for_prompt() == ""
+
+
+@pytest.mark.asyncio
+async def test_format_for_prompt_active(repo):
+    await repo.register("build the dashboard")
+    out = await repo.format_for_prompt()
+    assert "CURRENTLY WORKING ON:" in out
+    assert "build the dashboard" in out
+
+
+@pytest.mark.asyncio
+async def test_format_for_prompt_completed(repo):
+    did = await repo.register("research pricing")
+    await repo.update_status(did, "completed", "Compared 3 vendors")
+    out = await repo.format_for_prompt()
+    assert "RECENTLY COMPLETED:" in out
+    assert "Compared 3 vendors" in out

@@ -75,3 +75,20 @@ class DispatchRepo:
                 (limit,),
             )
             return [dict(r) for r in rows]
+
+    async def format_for_prompt(self) -> str:
+        active = await self.get_active()
+        recent = await self.get_recent(3)
+        completed = [r for r in recent if r["status"] in _DONE]
+
+        parts: list[str] = []
+        if active:
+            lines = [f"  - [working] {r['goal']}" for r in active]
+            parts.append("CURRENTLY WORKING ON:\n" + "\n".join(lines))
+        if completed:
+            lines = []
+            for r in completed[:2]:
+                tail = f": {r['summary']}" if r["summary"] else ""
+                lines.append(f"  - {r['goal']}{tail}")
+            parts.append("RECENTLY COMPLETED:\n" + "\n".join(lines))
+        return "\n".join(parts)
