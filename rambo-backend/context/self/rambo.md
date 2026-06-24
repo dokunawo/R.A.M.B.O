@@ -78,20 +78,21 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 84 commits:
+Last 14 days — 85 commits:
 
-- `e0a94ac docs: design for ElevenLabs neural voice (21 minutes ago)`
-- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (39 minutes ago)`
-- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (46 minutes ago)`
-- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (48 minutes ago)`
-- `7b53f24 feat: inject dispatch context into router and voice (51 minutes ago)`
-- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (54 minutes ago)`
-- `5814b92 feat: add DispatchRepo.format_for_prompt context block (57 minutes ago)`
-- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (59 minutes ago)`
-- `1976e26 feat: route on the fast model tier (62 minutes ago)`
-- `8832f42 feat: add fast_model tier to model_config (66 minutes ago)`
-- `a0716de docs: implementation plan for dispatch memory + model split (69 minutes ago)`
-- `da27915 docs: design for persistent dispatch memory + fast/deep model split (75 minutes ago)`
+- `2afd7e6 docs: implementation plan for ElevenLabs neural voice (10 minutes ago)`
+- `e0a94ac docs: design for ElevenLabs neural voice (31 minutes ago)`
+- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (50 minutes ago)`
+- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (56 minutes ago)`
+- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (58 minutes ago)`
+- `7b53f24 feat: inject dispatch context into router and voice (61 minutes ago)`
+- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (64 minutes ago)`
+- `5814b92 feat: add DispatchRepo.format_for_prompt context block (67 minutes ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (69 minutes ago)`
+- `1976e26 feat: route on the fast model tier (72 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (76 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (79 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (85 minutes ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (14 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (14 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (14 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 84 commits:
 - `c542188 Remove dead SoundToggle component and its orphaned styles/imports (14 hours ago)`
 - `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (14 hours ago)`
 - `08b67d0 Long-press the volume button = full reset to unmuted max volume (14 hours ago)`
-- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (14 hours ago)`
-- … and 64 more
+- … and 65 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
