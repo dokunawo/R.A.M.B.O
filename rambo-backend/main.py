@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Optional
 
 # Load .env BEFORE importing anything that reads os.environ (the orchestrator
@@ -15,6 +16,7 @@ import sentinel_queue
 import agent_tracker
 from usage_repo import UsageRepo
 from dispatch_repo import DispatchRepo
+from tts import ElevenLabsTTS
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from factory.repo import FactoryRepo, State
@@ -55,6 +57,12 @@ async def _init_usage_db():
 async def _init_dispatch_db():
     await _dispatch_repo.init_db()
     rambo.set_dispatch_repo(_dispatch_repo)
+
+
+@app.on_event("startup")
+async def _init_tts():
+    if os.environ.get("ELEVENLABS_API_KEY"):
+        rambo.set_tts(ElevenLabsTTS.from_env())
 
 
 @app.on_event("startup")
