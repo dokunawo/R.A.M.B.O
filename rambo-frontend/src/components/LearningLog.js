@@ -5,7 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import "./LearningLog.css";
 import "./AgentPage.css";
 
@@ -221,6 +221,7 @@ function LearningLog() {
       <ConfirmationDock />
       <HandoffDock />
       <SoundGate />
+      <SettingsPanel />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 
