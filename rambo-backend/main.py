@@ -19,6 +19,7 @@ from dispatch_repo import DispatchRepo
 from tts import ElevenLabsTTS
 from tts_usage_repo import TTSUsageRepo
 from tts_dashboard import get_tts_dashboard
+from keeper_repo import KeeperRepo
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from factory.repo import FactoryRepo, State
@@ -43,6 +44,7 @@ rambo = Orchestrator()
 _usage_repo = UsageRepo()
 _dispatch_repo = DispatchRepo()
 _tts_usage_repo = TTSUsageRepo()
+_keeper_repo = KeeperRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -68,6 +70,11 @@ async def _init_tts():
     rambo.set_tts_usage_repo(_tts_usage_repo)
     if os.environ.get("ELEVENLABS_API_KEY"):
         rambo.set_tts(ElevenLabsTTS.from_env())
+
+
+@app.on_event("startup")
+async def _init_keeper():
+    await _keeper_repo.init_db()
 
 
 @app.on_event("startup")
@@ -186,6 +193,35 @@ async def usage_dashboard():
 @app.get("/usage/tts")
 async def tts_usage_dashboard():
     return await get_tts_dashboard(_tts_usage_repo, os.environ.get("ELEVENLABS_API_KEY"))
+
+
+# ── Keeper memory store ──────────────────────────────────────────────
+class KeeperWrite(BaseModel):
+    key: str
+    value: str
+    tags: str = ""
+
+
+@app.post("/keeper")
+async def keeper_write(entry: KeeperWrite):
+    rid = await _keeper_repo.write(entry.key, entry.value, entry.tags)
+    return {"id": rid, "key": entry.key, "stored": True}
+
+
+@app.get("/keeper/confirm")
+async def keeper_confirm():
+    return await _keeper_repo.confirm()
+
+
+@app.get("/keeper")
+async def keeper_query(search: str = "", limit: int = 50):
+    return {"entries": await _keeper_repo.query(search, limit)}
+
+
+@app.get("/keeper/{key}")
+async def keeper_read(key: str):
+    entry = await _keeper_repo.read(key)
+    return entry or {"error": "not found", "key": key}
 
 
 @app.get("/learning/log")
