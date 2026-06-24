@@ -261,6 +261,13 @@ class Orchestrator:
             targets.add(name)
 
         lines.append(
+            "- converse (conversation): greetings, small talk, opinions, and "
+            "direct questions you can answer yourself in conversation without "
+            "agents or tools. The default home for anything chatty or answerable."
+        )
+        targets.add("converse")
+
+        lines.append(
             "- orchestrate (pipeline): open-ended multi-agent build/research "
             "goals that need full planning → task queue → multi-agent execution"
         )
@@ -284,6 +291,11 @@ class Orchestrator:
         """Dispatch one routed step. Every branch is isolated so a single
         target failing never aborts the whole turn (Tier 3)."""
         try:
+            if target == "converse":
+                # No agent work — the goal is answerable in conversation. Returning
+                # an empty marker lets _speak() voice a direct LLM reply.
+                return ""
+
             if target == "orchestrate":
                 plan, results = await self._orchestrate(task)
                 return "\n".join(str(r) for r in results) if results else "(no output)"

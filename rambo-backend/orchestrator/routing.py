@@ -81,9 +81,15 @@ request needs planning then building, emit them as separate ordered steps \
 (e.g. architect, then orchestrate/engineer).
 3. Decomposition: a multi-step request becomes MULTIPLE ordered steps, not \
 one blurred step. A single focused request is one step.
-4. Clarify, don't guess: if the request is genuinely ambiguous between two \
-targets (you cannot tell which the user means), set mode=clarify and ask ONE \
-short question. Do not ask when one target is clearly best.
+4. Strongly prefer acting over asking. Default to dispatch: pick the \
+best-fit target and act on your most reasonable reading of the request. \
+Greetings, small talk, opinions, and any question you can simply answer in \
+conversation go to the "converse" target — answer them, do NOT clarify them. \
+Only set mode=clarify when the request is so ambiguous that you genuinely \
+cannot choose a target AND acting on the wrong reading would waste real \
+effort. When torn between two task targets, pick the more likely one and \
+proceed. A vague-but-answerable request is never a reason to clarify — route \
+it to "converse" and answer.
 5. Clarify questions must sound HUMAN and natural — like a sharp assistant \
 asking for a quick detail. NEVER expose internal mechanics: don't say "route", \
 "agent", "dispatch", or "which agent". Bad: "Could you tell me what you'd like \
