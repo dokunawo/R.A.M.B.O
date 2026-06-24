@@ -12,7 +12,12 @@ from __future__ import annotations
 import os
 
 DEFAULT_MODEL = "claude-sonnet-4-6"
+FAST_MODEL = "claude-haiku-4-5"
 
 
 def default_model() -> str:
     return os.environ.get("RAMBO_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+
+
+def fast_model() -> str:
+    return os.environ.get("RAMBO_FAST_MODEL", FAST_MODEL).strip() or FAST_MODEL
