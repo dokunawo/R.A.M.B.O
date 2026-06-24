@@ -10,7 +10,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
 import {
   resumeAudio, audioRunning, startHum, stopHum,
   loadIntro, playKeyClick,
@@ -1094,6 +1094,7 @@ export default function SplashScreen({
           processing } = useRamboLive();
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
+  const voiceUsage = useElevenLabsUsage();
   const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
 
   // Build status map for constellation: { architect: "active", scout: "idle", ... }
@@ -1233,7 +1234,10 @@ export default function SplashScreen({
 
           <div className="byline">{byline}</div>
           <StatBars stats={stats} />
-          <CostIndicator data={costData} />
+          <div className="hud-cost-stack">
+            <CostIndicator data={costData} />
+            <VoiceCostIndicator data={voiceUsage} />
+          </div>
           <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
           <ConfirmationDock />
           <HandoffDock />
