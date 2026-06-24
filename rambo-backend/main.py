@@ -20,6 +20,7 @@ from tts import ElevenLabsTTS
 from tts_usage_repo import TTSUsageRepo
 from tts_dashboard import get_tts_dashboard
 from keeper_repo import KeeperRepo
+from morning_brief import brief_scheduler, run_brief
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from factory.repo import FactoryRepo, State
@@ -76,6 +77,15 @@ async def _init_tts():
 async def _init_keeper():
     await _keeper_repo.init_db()
     rambo.set_keeper_repo(_keeper_repo)
+
+
+_brief_task = None
+
+
+@app.on_event("startup")
+async def _start_morning_brief():
+    global _brief_task
+    _brief_task = asyncio.create_task(brief_scheduler(rambo))
 
 
 @app.on_event("startup")
@@ -236,6 +246,13 @@ async def integrations_status():
         "elevenlabs": {"status": "CONNECTED" if os.environ.get("ELEVENLABS_API_KEY") else "OFFLINE"},
         "anthropic": {"status": "CONNECTED" if os.environ.get("ANTHROPIC_API_KEY") else "OFFLINE"},
     }
+
+
+@app.post("/brief/run")
+async def brief_run():
+    """Generate the morning brief now — displays it on screen and emails it."""
+    brief = await run_brief(rambo)
+    return {"delivered": True, "brief": brief}
 
 
 @app.get("/agents/health")
