@@ -14,7 +14,6 @@ except ImportError:
 from models.task import Task
 from router import choose_brain
 from usage_capture import record_usage
-from memory.sqlite_store import SQLiteStore
 from skills import match_skill
 import agent_tracker
 
@@ -41,7 +40,7 @@ from skills import SKILLS
 
 class Orchestrator:
     def __init__(self):
-        self.store = SQLiteStore()
+        self.keeper_repo = None   # set by main.py once the DB exists
         self.ws = ConnectionManager()
         self.conversation = ConversationManager()
         self.personality_text = load_personality()
@@ -61,7 +60,7 @@ class Orchestrator:
             "sentinel":  Sentinel(),
             "steward":   Steward(),
             "link":      Link(),
-            "keeper":    Keeper(self.store),
+            "keeper":    Keeper(),
             "echo":      Echo(),
             "pilot":     Pilot(),
         }
@@ -113,6 +112,66 @@ class Orchestrator:
     def set_tts_usage_repo(self, repo):
         """Give the orchestrator a best-effort ElevenLabs character-usage log."""
         self.tts_usage_repo = repo
+
+    def set_keeper_repo(self, repo):
+        """Give the Keeper agent a durable memory store."""
+        self.keeper_repo = repo
+
+    async def _run_keeper(self, text: str) -> str:
+        """Persist or recall a memory via the Keeper store. Save intents
+        ('remember X is Y') write; recall intents ('what is my X') read back."""
+        repo = getattr(self, "keeper_repo", None)
+        if not repo:
+            return "[Keeper] No memory store is wired."
+        t = (text or "").strip()
+        low = t.lower()
+
+        # Save intent.
+        m = re.search(r"\b(?:remember|save|store|note|keep|memorize)\b\s*(?:that\s+)?(.+)", low)
+        if m:
+            body = t[m.start(1):].strip().rstrip(".")
+            kv = re.match(r"(.+?)\s+(?:is|are|=|equals|:)\s+(.+)", body, re.IGNORECASE)
+            if kv:
+                key = re.sub(r"^(my|the|our)\s+", "", kv.group(1).strip(), flags=re.IGNORECASE)
+                value = kv.group(2).strip()
+            else:
+                key, value = body[:48], body
+            slug = re.sub(r"[^a-z0-9]+", "_", key.lower()).strip("_") or "note"
+            try:
+                await repo.write(slug, value, tags="keeper")
+            except Exception as e:
+                return f"[Keeper] Couldn't store that: {e}"
+            return f"[Keeper] Stored — {key}: {value}"
+
+        # Recall intent.
+        m = re.search(r"\b(?:what(?:'s| is| are)?|recall|remember|tell me|do you (?:know|have))\b\s*(?:my|the|our|about)?\s*(.+)", low)
+        if m:
+            term = re.sub(r"[?.!]+$", "", m.group(1)).strip()
+            hits = await repo.query(term, limit=5)
+            if not hits:
+                # Fall back to matching individual significant words (handles
+                # phrasing/plural drift, e.g. "dog's name" vs stored "dog_s_name").
+                stop = {"the", "my", "our", "your", "is", "are", "was", "were",
+                        "what", "whats", "name", "value", "about", "for", "of", "a", "an"}
+                words = [w for w in re.findall(r"[a-z0-9]+", term.lower())
+                         if len(w) > 2 and w not in stop]
+                seen = {}
+                for w in words:
+                    forms = {w, w[:-1]} if w.endswith("s") and len(w) > 3 else {w}
+                    for f in forms:
+                        for h in await repo.query(f, limit=5):
+                            seen[h["key"]] = h
+                hits = list(seen.values())[:5]
+            if hits:
+                return "[Keeper] " + "; ".join(f"{h['key']}: {h['value']}" for h in hits)
+            return f'[Keeper] Nothing stored about "{term}".'
+
+        # Default: report what's stored.
+        info = await repo.confirm()
+        if info["count"] == 0:
+            return "[Keeper] Memory is empty."
+        items = ", ".join(h["key"] for h in info["recent"])
+        return f"[Keeper] {info['count']} stored. Recent: {items}"
 
     async def _dispatch_spawned(self, goal: str):
         """If the goal names a Factory-spawned agent, run it and return a
@@ -371,7 +430,10 @@ class Orchestrator:
             await self._set_status("sentinel", "idle")
 
         try:
-            output = agent.execute(task)
+            if agent_name == "keeper":
+                output = await self._run_keeper(task_desc)
+            else:
+                output = agent.execute(task)
         except Exception as e:                       # Tier 3: contain agent crashes
             output = f"[{agent_name}] ran into trouble: {e}"
             agent_tracker.record_task_end(agent_name, task_desc, success=False)

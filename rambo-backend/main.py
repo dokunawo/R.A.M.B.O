@@ -75,6 +75,7 @@ async def _init_tts():
 @app.on_event("startup")
 async def _init_keeper():
     await _keeper_repo.init_db()
+    rambo.set_keeper_repo(_keeper_repo)
 
 
 @app.on_event("startup")

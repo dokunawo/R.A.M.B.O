@@ -101,6 +101,10 @@ something else?"
 full planning pipeline. Use a single core agent only for a focused task it \
 owns.
 7. Keep each step's task in natural language, phrased for that target.
+8. MEMORY: any request to remember, save, store, note, memorize, recall, or \
+look up something the operator told you ALWAYS routes to "keeper" — never to \
+"converse" and never answered conversationally. "Remember X", "save this", \
+"what did I tell you about X", "what's my X" → keeper.
 
 ROSTER:
 {roster}
