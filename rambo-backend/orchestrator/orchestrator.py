@@ -75,6 +75,9 @@ class Orchestrator:
         self.factory_repo = None
         self.tool_registry = None
 
+        # Dispatch log — set later via set_dispatch_repo (best-effort, may be None).
+        self.dispatch_repo = None
+
     # One-line ownership for each core agent. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
     CORE_OWNERSHIP = {
@@ -94,6 +97,10 @@ class Orchestrator:
         """Give the orchestrator access to spawned agents + their tools."""
         self.factory_repo = factory_repo
         self.tool_registry = tool_registry
+
+    def set_dispatch_repo(self, dispatch_repo):
+        """Give the orchestrator a durable dispatch log (best-effort)."""
+        self.dispatch_repo = dispatch_repo
 
     async def _dispatch_spawned(self, goal: str):
         """If the goal names a Factory-spawned agent, run it and return a
@@ -172,6 +179,24 @@ class Orchestrator:
     async def _response(self, name: str, text: str):
         await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
 
+    # ── Dispatch log helpers (best-effort — never raise) ──────────
+
+    async def _register_dispatch(self, goal: str, plan: list[str]) -> "int | None":
+        if not self.dispatch_repo:
+            return None
+        try:
+            return await self.dispatch_repo.register(goal, "; ".join(plan))
+        except Exception:
+            return None
+
+    async def _close_dispatch(self, dispatch_id, status: str, summary: str):
+        if not self.dispatch_repo or dispatch_id is None:
+            return
+        try:
+            await self.dispatch_repo.update_status(dispatch_id, status, summary[:500])
+        except Exception:
+            pass
+
     # ── Tier 1: smart-routed entry point ─────────────────────────
 
     async def handle(self, goal: str, ctx: dict = None):
@@ -193,11 +218,18 @@ class Orchestrator:
         plan, results = [], []
         for step in decision.steps:
             plan.append(f"{step.target}: {step.task}")
-            res = await self._run_target(step.target, step.task, ctx)
-            results.append(res)
 
-        summary = await self._speak(goal, plan, results)
-        return {"response": summary, "agent": "rambo"}
+        dispatch_id = await self._register_dispatch(goal, plan)
+        try:
+            for step in decision.steps:
+                res = await self._run_target(step.target, step.task, ctx)
+                results.append(res)
+            summary = await self._speak(goal, plan, results)
+            await self._close_dispatch(dispatch_id, "completed", summary)
+            return {"response": summary, "agent": "rambo"}
+        except Exception as e:
+            await self._close_dispatch(dispatch_id, "failed", str(e))
+            raise
 
     async def _build_roster(self):
         """Return (roster_lines, valid_targets) over core agents, skills, and
