@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 71 commits:
+Last 14 days — 82 commits:
 
-- `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (6 minutes ago)`
-- `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (19 minutes ago)`
-- `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (37 minutes ago)`
-- `c542188 Remove dead SoundToggle component and its orphaned styles/imports (40 minutes ago)`
-- `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (44 minutes ago)`
-- `08b67d0 Long-press the volume button = full reset to unmuted max volume (47 minutes ago)`
-- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (55 minutes ago)`
-- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (59 minutes ago)`
-- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (67 minutes ago)`
-- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (71 minutes ago)`
-- `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (82 minutes ago)`
-- `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (87 minutes ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (2 hours ago)`
-- `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (2 hours ago)`
-- `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (2 hours ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (2 hours ago)`
-- `0da4e4b Fix two bugs blocking live model calls; centralize model id (2 hours ago)`
-- `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (3 hours ago)`
-- `6179eed Auto-load rambo-backend/.env on startup (3 hours ago)`
-- `4bdd746 Tier 5 — handoff system (propose, don't chain) (3 hours ago)`
-- … and 51 more
+- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (6 minutes ago)`
+- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (9 minutes ago)`
+- `7b53f24 feat: inject dispatch context into router and voice (12 minutes ago)`
+- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (14 minutes ago)`
+- `5814b92 feat: add DispatchRepo.format_for_prompt context block (17 minutes ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (20 minutes ago)`
+- `1976e26 feat: route on the fast model tier (23 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (26 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (29 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (36 minutes ago)`
+- `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (13 hours ago)`
+- `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (13 hours ago)`
+- `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
+- `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (13 hours ago)`
+- `c542188 Remove dead SoundToggle component and its orphaned styles/imports (14 hours ago)`
+- `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (14 hours ago)`
+- `08b67d0 Long-press the volume button = full reset to unmuted max volume (14 hours ago)`
+- `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (14 hours ago)`
+- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (14 hours ago)`
+- `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (14 hours ago)`
+- … and 62 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

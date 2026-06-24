@@ -68,12 +68,15 @@ class Orchestrator:
 
         self.agent_status = {name: "idle" for name in self.agents}
 
-        # Tier 1 — smart routing brain.
-        self.router = SmartRouter(self.llm)
+        # Tier 1 — smart routing brain (fast model: routing is a quick decision).
+        self.router = SmartRouter(self.llm, model=model_config.fast_model())
 
         # Factory wiring — set later by main.py once the DB + registry exist.
         self.factory_repo = None
         self.tool_registry = None
+
+        # Dispatch log — set later via set_dispatch_repo (best-effort, may be None).
+        self.dispatch_repo = None
 
     # One-line ownership for each core agent. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
@@ -94,6 +97,10 @@ class Orchestrator:
         """Give the orchestrator access to spawned agents + their tools."""
         self.factory_repo = factory_repo
         self.tool_registry = tool_registry
+
+    def set_dispatch_repo(self, dispatch_repo):
+        """Give the orchestrator a durable dispatch log (best-effort)."""
+        self.dispatch_repo = dispatch_repo
 
     async def _dispatch_spawned(self, goal: str):
         """If the goal names a Factory-spawned agent, run it and return a
@@ -172,13 +179,44 @@ class Orchestrator:
     async def _response(self, name: str, text: str):
         await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
 
+    # ── Dispatch log helpers (best-effort — never raise) ──────────
+
+    async def _register_dispatch(self, goal: str, plan: list[str]) -> "int | None":
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo:
+            return None
+        try:
+            return await repo.register(goal, "; ".join(plan))
+        except Exception:
+            return None
+
+    async def _close_dispatch(self, dispatch_id, status: str, summary: str):
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo or dispatch_id is None:
+            return
+        try:
+            await repo.update_status(dispatch_id, status, summary[:500])
+        except Exception:
+            pass
+
+    async def _dispatch_context(self) -> str:
+        repo = getattr(self, "dispatch_repo", None)
+        if not repo:
+            return ""
+        try:
+            return await repo.format_for_prompt()
+        except Exception:
+            return ""
+
     # ── Tier 1: smart-routed entry point ─────────────────────────
 
     async def handle(self, goal: str, ctx: dict = None):
         ctx = ctx or {}
 
         roster_lines, valid_targets = await self._build_roster()
-        decision = await self.router.route(goal, roster_lines, valid_targets)
+        dispatch_ctx = await self._dispatch_context()
+        routed_goal = f"{dispatch_ctx}\n\n{goal}" if dispatch_ctx else goal
+        decision = await self.router.route(routed_goal, roster_lines, valid_targets)
 
         # Router unavailable or punted → keyword fallback (failure isolation).
         if decision is None:
@@ -193,11 +231,18 @@ class Orchestrator:
         plan, results = [], []
         for step in decision.steps:
             plan.append(f"{step.target}: {step.task}")
-            res = await self._run_target(step.target, step.task, ctx)
-            results.append(res)
 
-        summary = await self._speak(goal, plan, results)
-        return {"response": summary, "agent": "rambo"}
+        dispatch_id = await self._register_dispatch(goal, plan)
+        try:
+            for step in decision.steps:
+                res = await self._run_target(step.target, step.task, ctx)
+                results.append(res)
+            summary = await self._speak(goal, plan, results)
+            await self._close_dispatch(dispatch_id, "completed", summary)
+            return {"response": summary, "agent": "rambo"}
+        except Exception as e:
+            await self._close_dispatch(dispatch_id, "failed", str(e))
+            raise
 
     async def _build_roster(self):
         """Return (roster_lines, valid_targets) over core agents, skills, and
@@ -429,6 +474,9 @@ class Orchestrator:
             f"Plan:\n" + "\n".join(f"  - {s}" for s in plan) + "\n\n"
             f"Agent results:\n" + results_block
         )
+        dispatch_ctx = await self._dispatch_context()
+        if dispatch_ctx:
+            execution_report = f"{dispatch_ctx}\n\n{execution_report}"
 
         self.conversation.add_user_message(execution_report)
         messages = self.conversation.get_messages_for_api()
