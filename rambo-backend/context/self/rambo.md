@@ -80,14 +80,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 103 commits:
+Last 14 days — 104 commits:
 
-- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (12 minutes ago)`
-- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (25 minutes ago)`
-- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (39 minutes ago)`
-- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (49 minutes ago)`
-- `b3194fd feat: sound on by default + Settings panel with Sound toggle (58 minutes ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (69 minutes ago)`
+- `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (7 minutes ago)`
+- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (19 minutes ago)`
+- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (32 minutes ago)`
+- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (46 minutes ago)`
+- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (56 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (65 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (76 minutes ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (3 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (3 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (5 hours ago)`
@@ -96,13 +97,12 @@ Last 14 days — 103 commits:
 - `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (5 hours ago)`
 - `825e783 feat: add converse target + prefer action over clarifying (6 hours ago)`
 - `f53d45a docs: document ELEVENLABS_* env vars in .env.example (6 hours ago)`
-- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (6 hours ago)`
+- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (7 hours ago)`
 - `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (7 hours ago)`
 - `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (7 hours ago)`
 - `5097876 feat: add ElevenLabsTTS best-effort client (7 hours ago)`
 - `2afd7e6 docs: implementation plan for ElevenLabs neural voice (7 hours ago)`
-- `e0a94ac docs: design for ElevenLabs neural voice (7 hours ago)`
-- … and 83 more
+- … and 84 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
