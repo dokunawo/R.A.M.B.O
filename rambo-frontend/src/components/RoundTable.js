@@ -6,7 +6,7 @@ import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -71,6 +71,7 @@ function RoundTable() {
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
+  const voiceUsage = useElevenLabsUsage();
   const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
   const { activity, connected } = useActivityFeed();
 
@@ -183,7 +184,10 @@ function RoundTable() {
       </div>
 
       <StatBars stats={sysStats} />
-      <CostIndicator data={costData} />
+      <div className="hud-cost-stack">
+        <CostIndicator data={costData} />
+        <VoiceCostIndicator data={voiceUsage} />
+      </div>
       <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
       <ConfirmationDock />
       <HandoffDock />

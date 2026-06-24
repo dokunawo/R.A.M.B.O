@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
+import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { isMuted, setMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
 import "./VoiceControls.css";
 
@@ -27,6 +27,13 @@ function isEndPhrase(text) {
   return false;
 }
 
+// Voice command to fully stop listening (mic off, stays off). Distinct from the
+// "anything else?" enders above — this kills the mic entirely.
+function isStopListening(text) {
+  const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+  return /(stop listening|pause listening|stop the mic|mute the mic|mic off|go to sleep|stop the microphone|pause the mic)/.test(t);
+}
+
 export function usePageVoice() {
   const [voiceText, setVoiceText] = useState("");
   const [commandLog, setCommandLog] = useState([]);
@@ -35,6 +42,7 @@ export function usePageVoice() {
   const speakRef = useRef(null);
   const segmentHandlerRef = useRef(null);
   const setFollowUpRef = useRef(null);
+  const stopListeningRef = useRef(null);
 
   const executeCommand = useCallback(async (text) => {
     if (!text.trim() || busy) return;
@@ -87,6 +95,15 @@ export function usePageVoice() {
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
 
+    // Soft pause: drop to wake-gated idle and ignore ambient audio until the
+    // operator says the wake word again. Mic stays on so it can hear it.
+    if (isStopListening(text)) {
+      const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: 'Listening paused. Say "Operator" to resume.', status: "complete" };
+      setCommandLog(prev => [entry, ...prev].slice(0, 50));
+      if (stopListeningRef.current) stopListeningRef.current();
+      return;
+    }
+
     // Conversation-ender: if the user declines the "anything else?" follow-up,
     // stop the loop and sign off instead of treating it as a new request.
     if (isEndPhrase(text)) {
@@ -119,6 +136,7 @@ export function usePageVoice() {
   speakRef.current = voice.speakResponse;
   segmentHandlerRef.current = voice.handleSpeakSegment;
   setFollowUpRef.current = voice.setFollowUp;
+  stopListeningRef.current = voice.pauseListening;
 
   useEffect(() => {
     let ws;
@@ -147,7 +165,9 @@ export function usePageVoice() {
   useEffect(() => {
     if (!started.current) {
       started.current = true;
-      setTimeout(() => voice.startMic(), 1200);
+      // Respect a persisted "stop listening" — don't auto-start the mic if the
+      // operator turned it off.
+      if (listeningEnabled()) setTimeout(() => voice.startMic(), 1200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -231,7 +251,7 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
           onClick={toggleMic}
           title={
             isError ? "Microphone blocked — allow mic access in your browser, then reload"
-            : micActive ? 'Mic active — say "Rambo" to command'
+            : micActive ? 'Mic active — say "Operator" to command'
             : "Enable mic"
           }
         >
@@ -266,7 +286,7 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
       {isError ? (
         <span className="vc-hint vc-hint-error">MIC BLOCKED — ALLOW ACCESS &amp; RELOAD</span>
       ) : !isActive ? (
-        <span className="vc-hint">TAP OR SAY 'RAMBO'</span>
+        <span className="vc-hint">TAP OR SAY 'OPERATOR'</span>
       ) : null}
     </div>
   );

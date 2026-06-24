@@ -78,29 +78,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 94 commits:
+Last 14 days — 95 commits:
 
-- `4edbecb docs: design for ElevenLabs voice-credit tracker (20 minutes ago)`
-- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (28 minutes ago)`
-- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (33 minutes ago)`
-- `825e783 feat: add converse target + prefer action over clarifying (72 minutes ago)`
-- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (2 hours ago)`
-- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (2 hours ago)`
-- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (2 hours ago)`
-- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (2 hours ago)`
-- `5097876 feat: add ElevenLabsTTS best-effort client (2 hours ago)`
-- `2afd7e6 docs: implementation plan for ElevenLabs neural voice (2 hours ago)`
-- `e0a94ac docs: design for ElevenLabs neural voice (3 hours ago)`
-- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (3 hours ago)`
-- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (3 hours ago)`
-- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (3 hours ago)`
-- `7b53f24 feat: inject dispatch context into router and voice (3 hours ago)`
-- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (3 hours ago)`
-- `5814b92 feat: add DispatchRepo.format_for_prompt context block (3 hours ago)`
-- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (3 hours ago)`
-- `1976e26 feat: route on the fast model tier (3 hours ago)`
-- `8832f42 feat: add fast_model tier to model_config (3 hours ago)`
-- … and 74 more
+- `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (2 hours ago)`
+- `4edbecb docs: design for ElevenLabs voice-credit tracker (2 hours ago)`
+- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (2 hours ago)`
+- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (2 hours ago)`
+- `825e783 feat: add converse target + prefer action over clarifying (3 hours ago)`
+- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (4 hours ago)`
+- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (4 hours ago)`
+- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (4 hours ago)`
+- `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (4 hours ago)`
+- `5097876 feat: add ElevenLabsTTS best-effort client (4 hours ago)`
+- `2afd7e6 docs: implementation plan for ElevenLabs neural voice (4 hours ago)`
+- `e0a94ac docs: design for ElevenLabs neural voice (4 hours ago)`
+- `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (5 hours ago)`
+- `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (5 hours ago)`
+- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (5 hours ago)`
+- `7b53f24 feat: inject dispatch context into router and voice (5 hours ago)`
+- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (5 hours ago)`
+- `5814b92 feat: add DispatchRepo.format_for_prompt context block (5 hours ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (5 hours ago)`
+- `1976e26 feat: route on the fast model tier (5 hours ago)`
+- … and 75 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
