@@ -78,17 +78,18 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 100 commits:
+Last 14 days — 101 commits:
 
-- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (10 minutes ago)`
-- `b3194fd feat: sound on by default + Settings panel with Sound toggle (18 minutes ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (30 minutes ago)`
+- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (14 minutes ago)`
+- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (24 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (33 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (44 minutes ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (2 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (2 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (4 hours ago)`
-- `4edbecb docs: design for ElevenLabs voice-credit tracker (4 hours ago)`
-- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (4 hours ago)`
-- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (4 hours ago)`
+- `4edbecb docs: design for ElevenLabs voice-credit tracker (5 hours ago)`
+- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (5 hours ago)`
+- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (5 hours ago)`
 - `825e783 feat: add converse target + prefer action over clarifying (5 hours ago)`
 - `f53d45a docs: document ELEVENLABS_* env vars in .env.example (6 hours ago)`
 - `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (6 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 100 commits:
 - `e0a94ac docs: design for ElevenLabs neural voice (7 hours ago)`
 - `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (7 hours ago)`
 - `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (7 hours ago)`
-- `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (7 hours ago)`
-- … and 80 more
+- … and 81 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
