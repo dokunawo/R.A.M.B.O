@@ -78,10 +78,11 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 99 commits:
+Last 14 days — 100 commits:
 
-- `b3194fd feat: sound on by default + Settings panel with Sound toggle (9 minutes ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (20 minutes ago)`
+- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (10 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (18 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (30 minutes ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (2 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (2 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (4 hours ago)`
@@ -95,12 +96,11 @@ Last 14 days — 99 commits:
 - `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (6 hours ago)`
 - `5097876 feat: add ElevenLabsTTS best-effort client (6 hours ago)`
 - `2afd7e6 docs: implementation plan for ElevenLabs neural voice (6 hours ago)`
-- `e0a94ac docs: design for ElevenLabs neural voice (6 hours ago)`
+- `e0a94ac docs: design for ElevenLabs neural voice (7 hours ago)`
 - `ef630e5 fix: dedicated completed-rows query + elapsed annotation in dispatch context (7 hours ago)`
 - `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (7 hours ago)`
 - `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (7 hours ago)`
-- `7b53f24 feat: inject dispatch context into router and voice (7 hours ago)`
-- … and 79 more
+- … and 80 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
