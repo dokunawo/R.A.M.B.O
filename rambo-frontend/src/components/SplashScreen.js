@@ -8,11 +8,11 @@ import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
-import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
+import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
 import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
 import {
-  resumeAudio, audioRunning, startHum, stopHum,
+  resumeAudio, audioRunning,
   loadIntro, playKeyClick,
 } from "./audioEngine";
 import "./SplashScreen.css";
@@ -1000,21 +1000,30 @@ export default function SplashScreen({
   const [voiceText, setVoiceText] = useState("");
   const voiceSetStateRef = useRef(null);
   const speakRef = useRef(null);
+  const stopListeningRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
+    // Hard stop: "stop listening" / "pause" turns the mic fully off and keeps it
+    // off across refreshes so it stops picking up ambient audio.
+    const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+    if (/(stop listening|pause listening|stop the mic|mute the mic|mic off|go to sleep|stop the microphone|pause the mic)/.test(t)) {
+      if (stopListeningRef.current) stopListeningRef.current();
+      return;
+    }
     setTimeout(() => {
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
     }, 800);
   }, []);
   const {
     levelRef: audioLevelRef, state: convState, setState: voiceSetState,
-    micActive, toggleMic, startMic, speakResponse, handleSpeakSegment,
+    micActive, toggleMic, startMic, speakResponse, handleSpeakSegment, pauseListening,
   } = useVoiceReactivity({
     onTranscript: setVoiceText,
     onFinalTranscript: handleFinalTranscript,
   });
   voiceSetStateRef.current = voiceSetState;
   speakRef.current = speakResponse;
+  stopListeningRef.current = pauseListening;
 
   // Route streamed speak_segment messages (which carry ElevenLabs audio) to the
   // voice player, exactly like the sub-pages do via usePageVoice. Without this,
@@ -1049,8 +1058,9 @@ export default function SplashScreen({
   useEffect(() => {
     if (phase === "main" && !micAutoStarted.current) {
       micAutoStarted.current = true;
-      // Small delay to let the page settle before requesting mic
-      setTimeout(() => { startMic(); }, 1200);
+      // Respect a persisted "stop listening" — don't auto-start if the operator
+      // turned the mic off.
+      if (listeningEnabled()) setTimeout(() => { startMic(); }, 1200);
     }
   }, [phase, startMic]);
 
@@ -1137,7 +1147,7 @@ export default function SplashScreen({
     if (!audioRunning()) return;
     if (phaseRef.current !== "main") return;
     audioStartedRef.current = true;
-    startHum();
+    // Ambient console hum removed — it was constant and distracting.
   }, []);
 
   useEffect(() => {
@@ -1153,7 +1163,6 @@ export default function SplashScreen({
   useEffect(() => {
     if (phase !== "main") return;
     startConsoleAudio();
-    return () => stopHum();
   }, [phase, startConsoleAudio]);
 
   const [clockStr, setClockStr] = useState(clockFmt);

@@ -2,7 +2,29 @@ import { useRef, useEffect, useCallback, useState } from "react";
 
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
-const WAKE_WORD   = "rambo";
+const WAKE_WORD   = "operator";
+// Wake word: "operator" — recognized far more reliably than "Rambo". Accept a
+// couple of close variants just in case.
+const WAKE_VARIANTS = ["operator", "operador", "opperator", "operater"];
+function matchesWake(text) {
+  return WAKE_VARIANTS.some(w => text.includes(w));
+}
+
+// Cross-instance guard: if the page remounts and spins up multiple voice
+// listeners, only ONE should speak a given reply. Tracks base_turn_ids that are
+// already being voiced anywhere so duplicates are dropped (prevents the
+// ElevenLabs + browser double-voice).
+const globalSpokenTurns = new Set();
+
+// Persisted listening on/off so an explicit stop STICKS across refreshes and
+// page navigations (otherwise the mic auto-starts again and keeps picking up
+// audio — e.g. while watching a video). Default ON.
+export function listeningEnabled() {
+  try { return localStorage.getItem("rambo-listening") !== "off"; } catch { return true; }
+}
+function setListeningPref(on) {
+  try { localStorage.setItem("rambo-listening", on ? "on" : "off"); } catch { /* ignore */ }
+}
 
 export const CONV_STATES = {
   IDLE:       "idle",
@@ -156,6 +178,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const wakeDetectedRef = useRef(false);
   const commandBufferRef = useRef("");
   const silenceTimerRef = useRef(null);
+  const recogWatchdogRef = useRef(null);
   // Half-duplex echo suppression: stateRef mirrors `state` for the recognition
   // closure; suppressUntilRef is a timestamp the mic stays muted until (covers
   // the speaker echo tail right after TTS ends).
@@ -232,6 +255,13 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
 
   const handleSpeakSegment = useCallback((msg) => {
     if (activeBaseTurnRef.current === null && segmentQueueRef.current.length === 0 && !playingSegmentRef.current) {
+      // Another voice listener (from a remount) already claimed this reply — skip
+      // so it isn't spoken twice.
+      if (globalSpokenTurns.has(msg.base_turn_id)) return;
+      globalSpokenTurns.add(msg.base_turn_id);
+      if (globalSpokenTurns.size > 50) {
+        globalSpokenTurns.delete(globalSpokenTurns.values().next().value);
+      }
       activeBaseTurnRef.current = msg.base_turn_id;
       setState(CONV_STATES.SPEAKING);
       onSpeakStartRef.current?.();
@@ -300,7 +330,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
       const combined = (finalText || interim).toLowerCase().trim();
 
       if (!wakeDetectedRef.current) {
-        if (combined.includes(WAKE_WORD)) {
+        if (matchesWake(combined)) {
           wakeDetectedRef.current = true;
           setState(CONV_STATES.LISTENING);
           const idx = combined.indexOf(WAKE_WORD);
@@ -399,7 +429,25 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
       wakeDetectedRef.current = false;
       rafRef.current = requestAnimationFrame(tick);
 
+      // Unlock the TTS audio context now that we have a user-gesture-backed mic
+      // grant, so ElevenLabs playback never silently fails and falls back to the
+      // browser voice.
+      const tctx = ensureTtsCtx();
+      if (tctx && tctx.state === "suspended") tctx.resume().catch(() => {});
+
       setupRecognition();
+
+      // Watchdog: browser speech recognition degrades over a long continuous
+      // session (mishears, or silently stops), forcing a manual mic re-click.
+      // Recycle the recognizer periodically — but only while idle, so an active
+      // command is never cut off.
+      if (recogWatchdogRef.current) clearInterval(recogWatchdogRef.current);
+      recogWatchdogRef.current = setInterval(() => {
+        if (!activeRef.current) return;
+        if (stateRef.current === CONV_STATES.IDLE && !wakeDetectedRef.current) {
+          setupRecognition();
+        }
+      }, 25000);
     } catch (err) {
       console.error("[Voice] Mic error:", err);
       setState(CONV_STATES.ERROR);
@@ -416,10 +464,12 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     playingSegmentRef.current = false;
     activeBaseTurnRef.current = null;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (recogWatchdogRef.current) { clearInterval(recogWatchdogRef.current); recogWatchdogRef.current = null; }
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (globalRecognitionOwner === ownerIdRef.current) {
-      stopGlobalRecognition();
-    }
+    // Force-stop the recognizer unconditionally. After a remount the global
+    // owner id can drift, so guarding the stop on ownership could leave the mic
+    // running. An explicit stop must always actually stop.
+    stopGlobalRecognition();
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
@@ -435,15 +485,44 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     window.speechSynthesis?.cancel();
   }, []);
 
+  // Explicit, persisted stop/start. stopListening() guarantees the mic is off
+  // and STAYS off (survives refresh/navigation) until startListening() is called.
+  const stopListening = useCallback(() => {
+    setListeningPref(false);
+    stopMic();
+  }, [stopMic]);
+
+  // Soft pause for the voice command: the recognizer stays running (so the wake
+  // word can resume it hands-free), but it drops back to wake-gated idle and
+  // ignores everything until it hears "Operator" again. Cancels any follow-up
+  // open-listening so ambient audio (e.g. a video) is no longer acted on.
+  const pauseListening = useCallback(() => {
+    wakeDetectedRef.current = false;
+    followUpRef.current = false;
+    commandBufferRef.current = "";
+    segmentQueueRef.current = [];
+    activeBaseTurnRef.current = null;
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    setTranscript("");
+    setState(CONV_STATES.IDLE);
+    window.speechSynthesis?.cancel();
+  }, []);
+
+  const startListening = useCallback(() => {
+    setListeningPref(true);
+    startMic();
+  }, [startMic]);
+
   const toggleMic = useCallback(() => {
-    if (activeRef.current) stopMic();
-    else startMic();
-  }, [startMic, stopMic]);
+    if (activeRef.current) stopListening();
+    else startListening();
+  }, [startListening, stopListening]);
 
   useEffect(() => {
     return () => {
       activeRef.current = false;
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (recogWatchdogRef.current) { clearInterval(recogWatchdogRef.current); recogWatchdogRef.current = null; }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (globalRecognitionOwner === ownerIdRef.current) {
         stopGlobalRecognition();
@@ -456,7 +535,8 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
 
   return {
     levelRef, state, setState, micActive, transcript,
-    startMic, stopMic, toggleMic, speakResponse, handleSpeakSegment,
+    startMic, stopMic, toggleMic, startListening, stopListening, pauseListening,
+    speakResponse, handleSpeakSegment,
     setFollowUp: (v) => { followUpRef.current = !!v; },
   };
 }

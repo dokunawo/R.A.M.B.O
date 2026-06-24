@@ -5,7 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate } from "./SharedHUD";
 import "./AgentPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -272,6 +272,7 @@ function AgentPage() {
   const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog } = usePageVoice();
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
+  const voiceUsage = useElevenLabsUsage();
   const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
   const { activity, connected } = useActivityFeed();
 
@@ -442,7 +443,10 @@ function AgentPage() {
       </nav>
 
       <StatBars stats={sysStats} />
-      <CostIndicator data={costData} />
+      <div className="hud-cost-stack">
+        <CostIndicator data={costData} />
+        <VoiceCostIndicator data={voiceUsage} />
+      </div>
       <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
       <ConfirmationDock />
       <HandoffDock />
