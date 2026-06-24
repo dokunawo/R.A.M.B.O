@@ -78,9 +78,10 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 98 commits:
+Last 14 days — 99 commits:
 
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (11 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (9 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (20 minutes ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (2 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (2 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (4 hours ago)`
@@ -88,8 +89,8 @@ Last 14 days — 98 commits:
 - `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (4 hours ago)`
 - `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (4 hours ago)`
 - `825e783 feat: add converse target + prefer action over clarifying (5 hours ago)`
-- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (5 hours ago)`
-- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (5 hours ago)`
+- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (6 hours ago)`
+- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (6 hours ago)`
 - `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (6 hours ago)`
 - `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (6 hours ago)`
 - `5097876 feat: add ElevenLabsTTS best-effort client (6 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 98 commits:
 - `feb1e11 fix: make dispatch-repo helpers resilient to missing attribute (streaming regression) (7 hours ago)`
 - `3c93d04 feat: initialize DispatchRepo on startup and attach to orchestrator (7 hours ago)`
 - `7b53f24 feat: inject dispatch context into router and voice (7 hours ago)`
-- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (7 hours ago)`
-- … and 78 more
+- … and 79 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

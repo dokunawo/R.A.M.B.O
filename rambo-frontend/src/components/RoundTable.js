@@ -68,7 +68,7 @@ function LiveClock() {
 function RoundTable() {
   const navigate = useNavigate();
   const [statusMap, setStatusMap] = useState({});
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice({ onCommandCenter: () => navigate("/console") });
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();

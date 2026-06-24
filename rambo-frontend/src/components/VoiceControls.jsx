@@ -40,7 +40,13 @@ function isClearCommand(text) {
   return /(clear everything|clear responses|clear all|clear the screen|clear the responses|clear cards|dismiss all)/.test(t);
 }
 
-export function usePageVoice() {
+// Voice command to open the Command Center view.
+function isCommandCenter(text) {
+  const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+  return /(command cent(er|re)|open command cent|go to command cent|main view|home screen|main screen|take me home|go home)/.test(t);
+}
+
+export function usePageVoice({ onCommandCenter } = {}) {
   const [voiceText, setVoiceText] = useState("");
   const [commandLog, setCommandLog] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -49,6 +55,8 @@ export function usePageVoice() {
   const segmentHandlerRef = useRef(null);
   const setFollowUpRef = useRef(null);
   const stopListeningRef = useRef(null);
+  const onCommandCenterRef = useRef(onCommandCenter);
+  onCommandCenterRef.current = onCommandCenter;
 
   const executeCommand = useCallback(async (text) => {
     if (!text.trim() || busy) return;
@@ -114,6 +122,13 @@ export function usePageVoice() {
     if (isClearCommand(text)) {
       setCommandLog([]);
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
+    }
+
+    // Open the Command Center hands-free.
+    if (isCommandCenter(text)) {
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      if (onCommandCenterRef.current) onCommandCenterRef.current();
       return;
     }
 
