@@ -80,16 +80,17 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 105 commits:
+Last 14 days — 106 commits:
 
-- `99a5b7b feat: recurring morning brief (on-screen card + email) (7 minutes ago)`
-- `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (14 minutes ago)`
-- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (26 minutes ago)`
-- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (39 minutes ago)`
-- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (53 minutes ago)`
-- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (63 minutes ago)`
-- `b3194fd feat: sound on by default + Settings panel with Sound toggle (72 minutes ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (83 minutes ago)`
+- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (2 minutes ago)`
+- `99a5b7b feat: recurring morning brief (on-screen card + email) (9 minutes ago)`
+- `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (16 minutes ago)`
+- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (27 minutes ago)`
+- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (41 minutes ago)`
+- `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (55 minutes ago)`
+- `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (65 minutes ago)`
+- `b3194fd feat: sound on by default + Settings panel with Sound toggle (74 minutes ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (85 minutes ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (3 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (3 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (5 hours ago)`
@@ -101,8 +102,7 @@ Last 14 days — 105 commits:
 - `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (7 hours ago)`
 - `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (7 hours ago)`
 - `585da0c feat: attach ElevenLabs segment audio to speak_segment (best-effort) (7 hours ago)`
-- `5097876 feat: add ElevenLabsTTS best-effort client (7 hours ago)`
-- … and 85 more
+- … and 86 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
