@@ -78,14 +78,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 78 commits:
+Last 14 days — 79 commits:
 
-- `5814b92 feat: add DispatchRepo.format_for_prompt context block (3 minutes ago)`
-- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (6 minutes ago)`
-- `1976e26 feat: route on the fast model tier (8 minutes ago)`
-- `8832f42 feat: add fast_model tier to model_config (12 minutes ago)`
-- `a0716de docs: implementation plan for dispatch memory + model split (15 minutes ago)`
-- `da27915 docs: design for persistent dispatch memory + fast/deep model split (21 minutes ago)`
+- `2c17365 feat: log dispatches to DispatchRepo from orchestrator (best-effort) (3 minutes ago)`
+- `5814b92 feat: add DispatchRepo.format_for_prompt context block (6 minutes ago)`
+- `fca76fa feat: add DispatchRepo persistence (schema, register, update, queries) (8 minutes ago)`
+- `1976e26 feat: route on the fast model tier (11 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (15 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (18 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (24 minutes ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (13 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (13 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 78 commits:
 - `0cec625 Roadmap: note true AEC/barge-in voice follow-up (14 hours ago)`
 - `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (14 hours ago)`
 - `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (14 hours ago)`
-- `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (14 hours ago)`
-- … and 58 more
+- … and 59 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

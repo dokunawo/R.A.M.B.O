@@ -197,13 +197,23 @@ class Orchestrator:
         except Exception:
             pass
 
+    async def _dispatch_context(self) -> str:
+        if not self.dispatch_repo:
+            return ""
+        try:
+            return await self.dispatch_repo.format_for_prompt()
+        except Exception:
+            return ""
+
     # ── Tier 1: smart-routed entry point ─────────────────────────
 
     async def handle(self, goal: str, ctx: dict = None):
         ctx = ctx or {}
 
         roster_lines, valid_targets = await self._build_roster()
-        decision = await self.router.route(goal, roster_lines, valid_targets)
+        dispatch_ctx = await self._dispatch_context()
+        routed_goal = f"{dispatch_ctx}\n\n{goal}" if dispatch_ctx else goal
+        decision = await self.router.route(routed_goal, roster_lines, valid_targets)
 
         # Router unavailable or punted → keyword fallback (failure isolation).
         if decision is None:
@@ -461,6 +471,9 @@ class Orchestrator:
             f"Plan:\n" + "\n".join(f"  - {s}" for s in plan) + "\n\n"
             f"Agent results:\n" + results_block
         )
+        dispatch_ctx = await self._dispatch_context()
+        if dispatch_ctx:
+            execution_report = f"{dispatch_ctx}\n\n{execution_report}"
 
         self.conversation.add_user_message(execution_report)
         messages = self.conversation.get_messages_for_api()
