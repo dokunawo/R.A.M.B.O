@@ -275,6 +275,10 @@ function buildReveal({ brandText, clockText, headline, agentNames, paramKeys, ce
   };
 }
 
+// R.A.M.B.O version mark — single source of truth for the "MK X" / "VERSION X"
+// labels. Bump this one letter as roadmap milestones land.
+const RAMBO_VERSION = "V";
+
 // System-parameter rows (keys are typed; values fade in alongside).
 const PARAM_KEYS = [
   "DESIGNATION", "VERSION", "CLEARANCE", "BACKEND", "PROTOCOL",
@@ -283,7 +287,7 @@ const PARAM_KEYS = [
 function paramValues(overseerStatus) {
   return {
     DESIGNATION: "R.A.M.B.O",
-    VERSION:     "VERSION III",
+    VERSION:     `VERSION ${RAMBO_VERSION}`,
     CLEARANCE:   "AUTHORIZED",
     BACKEND:     "localhost:8000",
     PROTOCOL:    "HTTP / WebSocket",
@@ -984,7 +988,7 @@ function StatBar({ label, value, max = 100, displayValue }) {
 export default function SplashScreen({
   projectLabel = "PROJECT: RAMBO",
   agentName    = "R.A.M.B.O",
-  title        = "MK III",
+  title        = `MK ${RAMBO_VERSION}`,
   byline       = "BY DANIEL",
   headline     = "System Online",
   skipIntro    = false,
