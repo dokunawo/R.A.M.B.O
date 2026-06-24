@@ -6,7 +6,6 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
-import DispatchBeams from "./DispatchBeam";
 import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES } from "./useVoiceReactivity";
@@ -1005,13 +1004,41 @@ export default function SplashScreen({
   }, []);
   const {
     levelRef: audioLevelRef, state: convState, setState: voiceSetState,
-    micActive, toggleMic, startMic, speakResponse,
+    micActive, toggleMic, startMic, speakResponse, handleSpeakSegment,
   } = useVoiceReactivity({
     onTranscript: setVoiceText,
     onFinalTranscript: handleFinalTranscript,
   });
   voiceSetStateRef.current = voiceSetState;
   speakRef.current = speakResponse;
+
+  // Route streamed speak_segment messages (which carry ElevenLabs audio) to the
+  // voice player, exactly like the sub-pages do via usePageVoice. Without this,
+  // the console only ever spoke through the browser's robotic fallback voice.
+  const segHandlerRef = useRef(handleSpeakSegment);
+  segHandlerRef.current = handleSpeakSegment;
+  const segmentArrivedRef = useRef(false);
+  useEffect(() => {
+    let ws, closed = false, retry;
+    const connect = () => {
+      try { ws = new WebSocket("ws://localhost:8000/ws/activity"); } catch { return; }
+      ws.onclose = () => { if (!closed) retry = setTimeout(connect, 2500); };
+      ws.onerror = () => { try { ws.close(); } catch {} };
+      ws.onmessage = (e) => {
+        const msg = String(e.data);
+        if (msg.charAt(0) !== "{") return;
+        try {
+          const j = JSON.parse(msg);
+          if (j.t === "speak_segment" && segHandlerRef.current) {
+            segmentArrivedRef.current = true;
+            segHandlerRef.current(j);
+          }
+        } catch { /* ignore */ }
+      };
+    };
+    connect();
+    return () => { closed = true; clearTimeout(retry); try { ws?.close(); } catch {} };
+  }, []);
 
   // Auto-start mic in IDLE mode when Phase 2 loads
   const micAutoStarted = useRef(false);
@@ -1025,12 +1052,20 @@ export default function SplashScreen({
 
   const handleVoiceExecuted = useCallback((responseText) => {
     setVoiceText("");
-    if (responseText && speakRef.current) {
-      // Read the response, then ask if there's anything else
-      speakRef.current(responseText, true); // true = conversational follow-up
-    } else {
+    segmentArrivedRef.current = false;
+    if (!responseText) {
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
     }
+    // The reply is normally spoken by the streamed speak_segment audio
+    // (ElevenLabs voice). If no segment arrives shortly — e.g. a clarify
+    // response the backend doesn't stream — fall back to the browser voice so
+    // the reply is never silent. No "anything else?" follow-up suffix.
+    setTimeout(() => {
+      if (!segmentArrivedRef.current && speakRef.current) {
+        speakRef.current(responseText, false);
+      }
+    }, 2500);
   }, []);
 
   // Result branch (response panel + connector) + clickable agents
@@ -1052,7 +1087,7 @@ export default function SplashScreen({
 
   // Live backend link: status + system stats + WebSocket activity feed.
   const { statusData, stats, activity, connected, responses, dismissResponse,
-          dispatches, processing, dismissBeam } = useRamboLive();
+          processing } = useRamboLive();
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
   const { pending: factoryPending, refresh: refreshFactory } = useFactoryPending();
@@ -1175,7 +1210,6 @@ export default function SplashScreen({
               <CosmicBackground />
               <CosmicOrb mouseRef={mouseRef} audioLevelRef={audioLevelRef} />
               <AgentConstellation statusMap={agentStatusMap} />
-              <DispatchBeams dispatches={dispatches} onBeamComplete={dismissBeam} />
               <ProcessingHelix active={processing} />
               <EffectComposer enabled={perf.bloomEnabled}>
                 <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.95}
