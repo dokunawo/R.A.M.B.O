@@ -76,18 +76,36 @@ class DispatchRepo:
             )
             return [dict(r) for r in rows]
 
+    async def get_recent_completed(self, limit: int = 2) -> list[dict]:
+        """Most recently completed/failed dispatches, newest first."""
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            rows = await db.execute_fetchall(
+                "SELECT * FROM dispatches WHERE status IN ('completed','failed') "
+                "ORDER BY completed_at DESC LIMIT ?",
+                (limit,),
+            )
+            return [dict(r) for r in rows]
+
     async def format_for_prompt(self) -> str:
         active = await self.get_active()
-        recent = await self.get_recent(3)
-        completed = [r for r in recent if r["status"] in _DONE]
+        completed = await self.get_recent_completed(2)
 
         parts: list[str] = []
         if active:
-            lines = [f"  - [working] {r['goal']}" for r in active]
+            now = datetime.now(timezone.utc)
+            lines = []
+            for r in active:
+                try:
+                    created = datetime.fromisoformat(r["created_at"])
+                    elapsed = int((now - created).total_seconds())
+                    lines.append(f"  - [working] {r['goal']} ({elapsed}s ago)")
+                except Exception:
+                    lines.append(f"  - [working] {r['goal']}")
             parts.append("CURRENTLY WORKING ON:\n" + "\n".join(lines))
         if completed:
             lines = []
-            for r in completed[:2]:
+            for r in completed:
                 tail = f": {r['summary']}" if r["summary"] else ""
                 lines.append(f"  - {r['goal']}{tail}")
             parts.append("RECENTLY COMPLETED:\n" + "\n".join(lines))

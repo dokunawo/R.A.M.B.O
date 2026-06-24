@@ -91,3 +91,52 @@ async def test_format_for_prompt_completed(repo):
     out = await repo.format_for_prompt()
     assert "RECENTLY COMPLETED:" in out
     assert "Compared 3 vendors" in out
+
+
+# ── new tests for fix-wave ────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_format_completed_not_hidden_by_active_rows(repo):
+    """Fix #1: 3 working rows must not crowd out a completed row."""
+    c_id = await repo.register("completed goal")
+    await repo.update_status(c_id, "completed", "done summary")
+    for i in range(3):
+        await repo.register(f"working goal {i}")
+    out = await repo.format_for_prompt()
+    assert "RECENTLY COMPLETED:" in out
+    assert "completed goal" in out
+
+
+@pytest.mark.asyncio
+async def test_format_active_row_has_elapsed_annotation(repo):
+    """Fix #4: active rows must include elapsed time annotation."""
+    await repo.register("annotated task")
+    out = await repo.format_for_prompt()
+    assert "annotated task" in out
+    assert "s ago)" in out
+
+
+@pytest.mark.asyncio
+async def test_get_recent_completed_returns_only_done_rows(repo):
+    """get_recent_completed returns only completed/failed, newest first, respects limit."""
+    id1 = await repo.register("goal A")
+    await repo.update_status(id1, "completed", "A done")
+    id2 = await repo.register("goal B")
+    await repo.update_status(id2, "failed", "B failed")
+    await repo.register("goal C")  # still working — must be excluded
+
+    results = await repo.get_recent_completed(limit=5)
+    statuses = {r["status"] for r in results}
+    assert statuses <= {"completed", "failed"}
+    assert len(results) == 2
+    # newest completed/failed first (B registered after A)
+    assert results[0]["goal"] == "goal B"
+
+
+@pytest.mark.asyncio
+async def test_get_recent_completed_respects_limit(repo):
+    for i in range(5):
+        rid = await repo.register(f"goal {i}")
+        await repo.update_status(rid, "completed", "")
+    results = await repo.get_recent_completed(limit=2)
+    assert len(results) == 2
