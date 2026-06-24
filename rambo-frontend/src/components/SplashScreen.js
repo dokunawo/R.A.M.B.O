@@ -1005,6 +1005,7 @@ export default function SplashScreen({
   const speakRef = useRef(null);
   const stopListeningRef = useRef(null);
   const clearAllRef = useRef(null);
+  const commandCenterRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
     const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
@@ -1017,6 +1018,12 @@ export default function SplashScreen({
     // Clear all response cards by voice.
     if (/(clear everything|clear responses|clear all|clear the screen|clear the responses|clear cards|dismiss all)/.test(t)) {
       if (clearAllRef.current) clearAllRef.current();
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
+    }
+    // Open / return to the Command Center.
+    if (/(command cent(er|re)|open command cent|go to command cent|main view|home screen|main screen|take me home|go home)/.test(t)) {
+      if (commandCenterRef.current) commandCenterRef.current();
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }
@@ -1120,6 +1127,7 @@ export default function SplashScreen({
     setResult(null);
   }, [clearResponses]);
   clearAllRef.current = clearAll;
+  commandCenterRef.current = () => nav("/console");
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();

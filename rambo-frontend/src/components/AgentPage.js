@@ -269,7 +269,7 @@ function AgentPage() {
   const { agentKey } = useParams();
   const navigate = useNavigate();
   const meta = AGENT_META[agentKey];
-  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice();
+  const { micActive, toggleMic, state: convState, levelRef: audioLevelRef, commandLog, clearCommandLog } = usePageVoice({ onCommandCenter: () => navigate("/console") });
   const sysStats = useSystemStats();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();
