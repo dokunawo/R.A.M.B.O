@@ -78,8 +78,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 72 commits:
+Last 14 days — 73 commits:
 
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (6 minutes ago)`
 - `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (12 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (12 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
@@ -90,7 +91,7 @@ Last 14 days — 72 commits:
 - `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (13 hours ago)`
 - `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (13 hours ago)`
 - `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (13 hours ago)`
-- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (13 hours ago)`
+- `0cec625 Roadmap: note true AEC/barge-in voice follow-up (14 hours ago)`
 - `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (14 hours ago)`
 - `fd93ab8 Default startup to prod frontend (:3000); add -Dev switch for hot-reload (:3001) (14 hours ago)`
 - `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (14 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 72 commits:
 - `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (14 hours ago)`
 - `0da4e4b Fix two bugs blocking live model calls; centralize model id (14 hours ago)`
 - `db6070c Frontend docks for confirmation gate (Tier 4) and handoffs (Tier 5) (15 hours ago)`
-- `6179eed Auto-load rambo-backend/.env on startup (15 hours ago)`
-- … and 52 more
+- … and 53 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
