@@ -78,6 +78,9 @@ class Orchestrator:
         # Dispatch log — set later via set_dispatch_repo (best-effort, may be None).
         self.dispatch_repo = None
 
+        # TTS client — set later via set_tts (best-effort, may be None).
+        self.tts = None
+
     # One-line ownership for each core agent. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
     CORE_OWNERSHIP = {
@@ -101,6 +104,10 @@ class Orchestrator:
     def set_dispatch_repo(self, dispatch_repo):
         """Give the orchestrator a durable dispatch log (best-effort)."""
         self.dispatch_repo = dispatch_repo
+
+    def set_tts(self, tts):
+        """Give the orchestrator a best-effort TTS client (or None)."""
+        self.tts = tts
 
     async def _dispatch_spawned(self, goal: str):
         """If the goal names a Factory-spawned agent, run it and return a
@@ -425,16 +432,35 @@ class Orchestrator:
             return candidate, remainder
         return None, buffer
 
+    async def _segment_audio(self, text: str) -> "str | None":
+        """Synthesize a spoken segment to base64 MP3, best-effort. None on
+        missing client, empty result, or any error."""
+        tts = getattr(self, "tts", None)
+        if not tts:
+            return None
+        try:
+            data = await tts.synthesize(text)
+            if not data:
+                return None
+            import base64
+            return base64.b64encode(data).decode("ascii")
+        except Exception:
+            return None
+
     async def _emit_segment(self, text: str, base_turn_id: str, seq: int, is_final: bool, t0: float):
         segment_id = f"{base_turn_id}::{seq}"
-        await self.ws.broadcast_json({
+        payload = {
             "t": "speak_segment",
             "turn_id": segment_id,
             "base_turn_id": base_turn_id,
             "seq": seq,
             "text": text,
             "is_final": is_final,
-        })
+        }
+        audio = await self._segment_audio(text)
+        if audio:
+            payload["audio"] = audio
+        await self.ws.broadcast_json(payload)
         elapsed = time.monotonic() - t0
         print(f"[stream] speak_segment base={base_turn_id} seq={seq} "
               f"chars={len(text)} t_since_start={elapsed:.2f}s final={is_final}")
