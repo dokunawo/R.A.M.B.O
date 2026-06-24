@@ -61,10 +61,14 @@ agent's status.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
 - **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo. Bloom postprocessing for cinematic glow.
 - **📊 Persistent HUD** — CPU/RAM/DSK system metrics, LIVE command input, and real-time activity feed visible on every page.
-- **🗣️ Voice command system** — wake word "Rambo" activates listening, speech-to-text fills the command input, TTS reads responses aloud with a natural voice, conversational follow-up flow. Streaming LLM responses with per-sentence segment emission for low-latency speech.
+- **🗣️ Voice command system** — wake word **"Operator"** activates listening (browser STT misheard "Rambo"), speech-to-text fills the command input, streaming LLM responses with per-sentence segment emission for low-latency speech. **Reliable mic control** — hard-off button (persisted across refreshes) + soft "stop listening" voice pause that resumes hands-free on the wake word — plus a recognizer watchdog that auto-recovers from STT degradation. Voice commands: "clear everything", "command center", "stop listening", "remember …", "email me …".
+- **🔊 ElevenLabs neural voice** — responses are synthesized server-side by ElevenLabs (`tts.py`) and streamed over the activity WebSocket; the orb pulses to R.A.M.B.O's own voice via a Web-Audio AnalyserNode. Degrades cleanly to the browser voice when no key is set. Live **voice-credit tracker** (`/usage/tts`) shows remaining/used against your ElevenLabs balance.
 - **🧬 Self-knowledge system** — auto-generated doc from live code registries, refreshed on every commit via pre-commit hook, drift checker catches stale references, slim summary injected into the agent's system prompt.
 - **🎭 Personality engine** — cold professional voice powered by Claude, with tonal checkpoints and voice cues to prevent filler language.
 - **💰 Cost dashboard** — live tracking of LLM API token usage and cost per call, with always-visible indicator, click-to-expand panel (per-model breakdown, daily trend, cache savings), and `GET /usage` endpoint. Best-effort recording that never breaks conversation flow.
+- **🔌 Connected agent backends** — Seeker does **live web search** (Anthropic's native `web_search`, no extra key); Keeper has **durable SQLite memory** (spoken "remember X is Y" / "what is my X" persist and recall across restarts); Link runs **Google OAuth** (calendar/drive); Echo sends **real email** via SMTP. Per-agent health at `GET /agents/health` (LIVE / CONNECTED / OFFLINE) and `GET /integrations/status`.
+- **🗓️ Recurring morning brief** — a daily scheduler composes a brief (date + today's Google calendar + doctrine priorities) and both **displays it on screen** as an Architect card and **emails it** via Echo. `POST /brief/run` to trigger on demand; `MORNING_BRIEF_TIME` / `MORNING_BRIEF_TZ` to schedule.
+- **⚙️ Settings + sound** — sound on by default (auto-enables on first interaction), with a ⚙ settings popover (Sound On/Off toggle) on every page. Two-tier model split — Haiku for fast routing, Sonnet for voice/agents.
 - **🏭 Factory sub-agent spawner** — a meta-agent that mints other agents on demand: it researches a role (web search → structured Skills Report), drafts a spec + system prompt, stages a manifest for human approval, then registers it as a hot-reloadable `dispatch_to_<slug>` agent — no restart, no bespoke class per agent. Every spawned agent is pure config (`ConfigDrivenAgent` runs one generic tool-use loop). Includes a daily spawn cap, reserved-slug guard, prompt-injection sanitization, 3-round revision loop, and a `FactoryDock` approval surface with page-load hydration via `GET /factory/pending`.
 - **🧭 Smart orchestration layer** — an LLM router picks the right agent on purpose (decomposes multi-step requests, asks one clarifying question when ambiguous); least-privilege per-agent tool allowlists with bounded loops; failure isolated at every boundary; **human-in-the-loop gates** — tool-level confirmation for risky actions (`ConfirmationDock`) and propose-don't-chain agent handoffs (`HandoffDock`).
 - **⚡ Prompt caching** — shared sub-agent loop, conversation history, router, and research all cache their stable prefixes (extended 1h TTL for sparse traffic); verified live with cache-reads far exceeding full-price input.
@@ -136,6 +140,17 @@ agent's status.
 > **R.A.M.B.O** itself sits above the roster as the **Overseer**.
 
 **Status states:** `online` · `working` · `idle` · `offline` — each color-coded in the UI.
+
+**Live agent backends** (as of 06/24/2026 — check `GET /agents/health`):
+
+| Agent | Backend | Status |
+|-------|---------|--------|
+| **Seeker** | Anthropic native `web_search` + Open-Meteo weather | 🟢 LIVE |
+| **Keeper** | SQLite (`data/keeper.db`) — persistent memory, write/read/query/confirm | 🟢 CONNECTED |
+| **Link** | Google OAuth (calendar / drive) | 🟢 CONNECTED |
+| **Echo** | SMTP email (`echo_messaging.py`) + `notify` skill | 🟢 CONNECTED |
+
+Other agents (Architect, Engineer, Analyst, Steward, Sentinel, Pilot) coordinate planning, review, and queueing; capabilities are delivered through the **skills** layer and the **Factory** spawner.
 
 ---
 
@@ -319,6 +334,15 @@ npm start          # serves on http://localhost:3000
 | `POST` | `/sentinel/decision` | `{ "id": "...", "decision": "APPROVE" \| "DENY" }` | Approve or deny a held task |
 | `GET` | `/learning/log` | — | System-wide learning entries |
 | `GET` | `/usage` | — | Cost dashboard (MTD/today/per-model/daily/cache savings) |
+| `GET` | `/usage/tts` | — | ElevenLabs voice-credit usage (local + real balance) |
+| `POST` | `/keeper` | `{ "key": "...", "value": "...", "tags": "" }` | Keeper: write/upsert a memory entry |
+| `GET` | `/keeper` | `?search=&limit=` | Keeper: query entries |
+| `GET` | `/keeper/{key}` | — | Keeper: read one entry |
+| `GET` | `/keeper/confirm` | — | Keeper: count + recent entries |
+| `GET` | `/agents/health` | — | Per-agent backend status (LIVE / CONNECTED / OFFLINE) |
+| `GET` | `/integrations/status` | — | Google / Echo / ElevenLabs / Anthropic status |
+| `POST` | `/brief/run` | — | Generate the morning brief now (on-screen + email) |
+| `GET` | `/google/status` | — | Google OAuth auth state |
 | `POST` | `/factory/spawn` | `{ "name_hint": "...", "role_description": "...", "special_requirements": "" }` | Stage a new sub-agent build |
 | `GET` | `/factory/pending` | — | All tasks awaiting approval (page-load hydration) |
 | `GET` | `/factory/task/{id}` | — | Single spawn-task status + proposed manifest |
@@ -354,8 +378,15 @@ curl -X POST http://localhost:8000/rambo/execute \
 | Where | Setting | Default |
 |------------------------------|----------------------------------|------------------------|
 | `rambo-backend/.env` | `ANTHROPIC_API_KEY` (required for live LLM) — gitignored, auto-loaded on startup | _(none)_ |
-| `rambo-backend/.env` | `RAMBO_MODEL` — LLM model id | `claude-sonnet-4-6` |
+| `rambo-backend/.env` | `RAMBO_MODEL` — deep LLM model (voice/agents) | `claude-sonnet-4-6` |
+| `rambo-backend/.env` | `RAMBO_FAST_MODEL` — fast LLM model (routing) | `claude-haiku-4-5` |
 | `rambo-backend/.env` | `RAMBO_CACHE_TTL` — prompt cache TTL (`1h`/`5m`) | `1h` |
+| `rambo-backend/.env` | `ELEVENLABS_API_KEY` — neural voice (optional; falls back to browser voice) | _(none)_ |
+| `rambo-backend/.env` | `ELEVENLABS_VOICE_ID` / `ELEVENLABS_MODEL` | _(preset)_ / `eleven_turbo_v2_5` |
+| `rambo-backend/.env` | `ELEVENLABS_MONTHLY_LIMIT` — voice-credit limit for the HUD | `10000` |
+| `rambo-backend/.env` | `SMTP_HOST/PORT/USER/PASS/FROM`, `ECHO_DEFAULT_TO` — Echo email (optional) | _(none)_ |
+| `rambo-backend/.env` | `MORNING_BRIEF_TIME` / `MORNING_BRIEF_TZ` — daily brief schedule | `07:00` / `America/Detroit` |
+| `rambo-backend/credentials.json` + `token.json` | Google OAuth (calendar/drive) | _(via `/google/auth`)_ |
 | `rambo-backend/main.py` | CORS allowed origins | `localhost:3000`, `localhost:3001` |
 | `docker-compose.yml` | Dev frontend host port | `3001 → 3000` |
 | `docker-compose.yml` | Prod frontend host port | `3000 → 80` |
@@ -375,7 +406,7 @@ curl -X POST http://localhost:8000/rambo/execute \
 - **Agent Constellation:** 10 orbiting nodes with billboarded glow sprites, canvas-texture labels, tilted orbit ring, status-driven pulse.
 - **Dispatch beams:** Dynamic cylinder beams from orb center to orbiting agent nodes during task processing.
 - **Processing helix:** 3 tilted golden rings spinning around the orb during active work.
-- **Voice:** Wake word "Rambo", Web Speech API STT/TTS, conversational follow-up flow.
+- **Voice:** Wake word **"Operator"**, Web Speech API STT, **ElevenLabs** neural TTS (browser-voice fallback), the orb pulses to R.A.M.B.O's voice, conversational follow-up flow.
 - **Performance mode:** Auto-adapts to battery level, tab visibility, `prefers-reduced-motion`.
 - **Status colors:** `online #00ff88` · `working #e8b15a` · `idle #8fa0b5` · `offline #5a6575`.
 
@@ -383,18 +414,25 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 ## Roadmap
 
-See [`ROADMAP_R.A.M.B.O_06-23-2026_06-30.md`](ROADMAP_R.A.M.B.O_06-23-2026_06-30.md) for the full plan. Highlights:
+See [`ROADMAP_R.A.M.B.O_06-24-2026_14-26.md`](ROADMAP_R.A.M.B.O_06-24-2026_14-26.md) for the current plan. Highlights:
 
-- **Complete:** All 6 tiers of the Living Cosmic Interface — Orb, Cosmos, Voice, Constellation, Dispatch & Docking, Wire to Reality. Shared HUD across all pages. Learning Log side-panel redesign. Flicker mitigations. Personality engine (Claude). Voice latency optimization (streaming LLM + per-sentence segments). Self-knowledge system (5 phases).
-- **Short term:** Live voice testing with API key, VAD tuning, operator greeting, shutdown sequence, task history panel.
-- **Mid term:** Color presets, modular HUD panels, mission dashboard, mobile responsive.
-- **Long term:** Secure login, CLI tool, plugin system.
+- **Complete (06/24):** ElevenLabs neural voice, "Operator" wake word + reliable mic stop/pause + watchdog, persistent dispatch memory + fast/deep model split, ElevenLabs credit tracker, clear-all-responses, sound-on-launch + settings panel, command-center voice trigger. **Connected agent backends** — Seeker web search (LIVE), Keeper SQLite memory (CONNECTED), Link/Google (CONNECTED), Echo email (CONNECTED). Recurring morning brief (on-screen + email).
+- **Short term:** Echo push/SMS channels, Keeper recall-in-context, retire remaining stub agents.
+- **Mid term:** Self-coding agent (sandboxed branch→PR), Alembic migrations, morning-brief enrichment.
+- **Long term:** Cloud-hosted personal digital twin (north-star vision).
 
 ---
 
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-24 — Real voice, connected agent backends, persistence
+- **Voice:** ElevenLabs neural TTS streamed over WS (orb pulses to it; browser-voice fallback); `/console` speaks via ElevenLabs. Wake word → **"Operator"** with fuzzy matching + recognizer watchdog. Reliable mic: hard-off button (persisted) + soft "stop listening" voice pause that resumes on the wake word. Fixed the ElevenLabs-then-browser double voice.
+- **Agent backends:** Seeker live web search (Anthropic native), Keeper SQLite persistence (`KeeperRepo`) with spoken remember/recall, Link/Google auth surfacing, Echo SMTP email + `notify` skill. New `/keeper*`, `/usage/tts`, `/agents/health`, `/integrations/status`, `/brief/run`. Routing forces memory→keeper and messaging→echo. Removed dead `memory/sqlite_store.py` stub.
+- **Morning brief:** daily scheduler → on-screen Architect card + email.
+- **UI/HUD:** version MK V, ElevenLabs credit tracker, cost chips moved top-right + on agent pages, clear-all-responses (button + voice), sound-on-launch + ⚙ settings panel, command-center voice trigger, removed orb dispatch beam + ambient hum.
+- **Infra:** persistent dispatch memory (`DispatchRepo`) + fast/deep model split (`RAMBO_FAST_MODEL`).
 
 ### 2026-06-23 — Orchestration tiers 4–5, prompt caching, go-live fixes, seamless startup
 
