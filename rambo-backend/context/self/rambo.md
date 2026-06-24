@@ -78,12 +78,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 75 commits:
+Last 14 days — 76 commits:
 
-- `8832f42 feat: add fast_model tier to model_config (4 minutes ago)`
-- `a0716de docs: implementation plan for dispatch memory + model split (7 minutes ago)`
-- `da27915 docs: design for persistent dispatch memory + fast/deep model split (13 minutes ago)`
-- `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (12 hours ago)`
+- `1976e26 feat: route on the fast model tier (3 minutes ago)`
+- `8832f42 feat: add fast_model tier to model_config (6 minutes ago)`
+- `a0716de docs: implementation plan for dispatch memory + model split (9 minutes ago)`
+- `da27915 docs: design for persistent dispatch memory + fast/deep model split (16 minutes ago)`
+- `2b03149 Startup: clean kiosk look (hide bookmarks bar); default fullscreen keeps F11/X exit, -Kiosk for fully locked (13 hours ago)`
 - `d502adb Voice: stop follow-up loop on 'no thank you', conversational tone, drop unsupported chrome flag (13 hours ago)`
 - `effbe39 Startup: skip Chrome first-run, auto-grant mic (wake word) + geolocation in the RAMBO profile (13 hours ago)`
 - `ba84f6b Startup: launch RAMBO in a dedicated Chrome profile so fullscreen works even when Chrome is already open (13 hours ago)`
@@ -91,7 +92,7 @@ Last 14 days — 75 commits:
 - `9f2e0a9 Startup: launch Chrome in a dedicated new window, fullscreen (F11-style) (13 hours ago)`
 - `08b67d0 Long-press the volume button = full reset to unmuted max volume (13 hours ago)`
 - `9103eee Boot always starts unmuted at max volume via ?boot=1 flag (manual refresh preserved) (13 hours ago)`
-- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (13 hours ago)`
+- `6d9190f Add SoundGate: one-click 'enable sound' pill when browser autoplay is blocked (14 hours ago)`
 - `816be93 Startup: launch Chrome with autoplay allowed so the intro sound plays on boot (14 hours ago)`
 - `0cec625 Roadmap: note true AEC/barge-in voice follow-up (14 hours ago)`
 - `63c6ce2 Voice: half-duplex echo suppression so TTS output isn't transcribed as a command (14 hours ago)`
@@ -99,8 +100,7 @@ Last 14 days — 75 commits:
 - `2816c24 Update roadmap and README: orchestration tiers 4-5, caching, go-live fixes, startup, mic redesign (14 hours ago)`
 - `90e223e Add nginx SPA fallback (fix deep-link/refresh 404s) + red blocked-mic ring (14 hours ago)`
 - `845155b Redesign mic button (glass + gold glow) and surface a visible mic-blocked state (14 hours ago)`
-- `934c999 Add rambo-startup.ps1: seamless boot (wait for Docker, compose up, wait for frontend, open browser) (14 hours ago)`
-- … and 55 more
+- … and 56 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
