@@ -24,7 +24,10 @@ SetTitleMatchMode 2            ; match a window whose title CONTAINS "R.A.M.B.O"
 SetTimer(BootGesture, -1000)   ; negative = run once, ~1s after the script starts
 BootGesture() {
     win := "R.A.M.B.O ahk_exe chrome.exe"
-    if !WinWait(win, , 40)     ; wait up to 40s for the kiosk window to appear
+    ; Wait up to 5 min: the helper is now launched BEFORE the browser (front-loaded
+    ; in rambo-startup.ps1), so on a cold boot the window may take a while to appear
+    ; while Docker + the frontend come up. Hotkeys stay responsive during this wait.
+    if !WinWait(win, , 300)
         return
     Sleep 4000                 ; give the app time to load + arm armAutoStart()
     if !WinExist(win)

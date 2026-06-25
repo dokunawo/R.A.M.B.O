@@ -34,7 +34,31 @@ function Log($msg) {
 
 Log "=== R.A.M.B.O startup ==="
 
-# 1) Wait for the Docker daemon to be ready (Docker Desktop can take a bit
+# 1) Route the hardware media keys to the R.A.M.B.O player — FRONT-LOADED so the
+# keys are captured from login, NOT after the multi-minute Docker/frontend waits
+# below (that gap let the native keys / keyboard software mute audio). The Spotify
+# Web Playback SDK's cross-origin iframe owns the browser media session, so Chrome
+# won't deliver the play/pause key to our page — this OS-level helper intercepts
+# the keys and POSTs to the backend. Until the backend is up, the POSTs no-op
+# gracefully (the key does nothing rather than falling through). Needs AutoHotkey v2.
+$ahkScript = "$projectRoot\rambo-mediakeys.ahk"
+$ahkExe = @(
+    "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe",
+    "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe",
+    "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($ahkExe -and (Test-Path $ahkScript)) {
+    # Replace any prior instance so we don't stack duplicate key hooks.
+    Get-CimInstance Win32_Process -Filter "Name LIKE 'AutoHotkey%'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like "*rambo-mediakeys.ahk*" } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Process $ahkExe -ArgumentList "`"$ahkScript`""
+    Log "Media-key helper launched ($ahkExe)."
+} else {
+    Log "NOTE: AutoHotkey v2 not found — hardware media keys won't control RAMBO. Install from https://www.autohotkey.com/ to enable rambo-mediakeys.ahk."
+}
+
+# 2) Wait for the Docker daemon to be ready (Docker Desktop can take a bit
 #    after login). Poll up to ~3 minutes.
 Log "Waiting for Docker daemon..."
 $dockerReady = $false
@@ -49,7 +73,7 @@ if (-not $dockerReady) {
 }
 Log "Docker daemon ready."
 
-# 2) Bring the stack up. Everyday use = prod only. The dev frontend (:3001) is
+# 3) Bring the stack up. Everyday use = prod only. The dev frontend (:3001) is
 # behind the "dev" compose profile, so it starts ONLY when -Dev is passed.
 Set-Location $projectRoot
 $profileArgs = if ($Dev) { @("--profile", "dev") } else { @() }
@@ -66,7 +90,7 @@ if ($Clean) {
 }
 if ($LASTEXITCODE -ne 0) { Log "WARNING: docker compose returned non-zero." }
 
-# 3) Wait until the frontend actually answers (not just the container up).
+# 4) Wait until the frontend actually answers (not just the container up).
 Log "Waiting for $url ..."
 $frontendReady = $false
 for ($i = 0; $i -lt 36; $i++) {
@@ -79,7 +103,7 @@ if (-not $frontendReady) {
     Log "WARNING: $url did not respond in time; opening anyway."
 }
 
-# 4) Seed the dedicated profile so it: skips Chrome's first-run UI, pre-grants
+# 5) Seed the dedicated profile so it: skips Chrome's first-run UI, pre-grants
 # mic + geolocation to the RAMBO origins, and hides the bookmarks bar for a
 # clean kiosk look. Written fresh each boot so it's deterministic.
 $ramboProfile = "$projectRoot\.chrome-profile"
@@ -116,7 +140,7 @@ try {
     Log "WARNING: could not seed Chrome profile prefs: $_"
 }
 
-# 5) Open the browser.
+# 6) Open the browser.
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
@@ -167,27 +191,6 @@ if ((Test-Path $chrome) -and $DevTools) {
     Start-Process $chrome -ArgumentList ($chromeFlags + $openUrl)
 } else {
     Start-Process $openUrl   # default browser
-}
-
-# 6) Route the hardware media keys to the R.A.M.B.O player. The Spotify Web
-# Playback SDK's cross-origin iframe owns the browser media session, so Chrome
-# won't deliver the play/pause key to our page — this OS-level helper intercepts
-# the keys and calls the backend directly. Needs AutoHotkey v2 installed.
-$ahkScript = "$projectRoot\rambo-mediakeys.ahk"
-$ahkExe = @(
-    "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe",
-    "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe",
-    "C:\Program Files\AutoHotkey\AutoHotkey.exe"
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
-if ($ahkExe -and (Test-Path $ahkScript)) {
-    # Replace any prior instance so we don't stack duplicate key hooks.
-    Get-CimInstance Win32_Process -Filter "Name LIKE 'AutoHotkey%'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -like "*rambo-mediakeys.ahk*" } |
-        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-    Start-Process $ahkExe -ArgumentList "`"$ahkScript`""
-    Log "Media-key helper launched ($ahkExe)."
-} else {
-    Log "NOTE: AutoHotkey v2 not found — hardware media keys won't control RAMBO. Install from https://www.autohotkey.com/ to enable rambo-mediakeys.ahk."
 }
 
 Log "=== startup complete ==="
