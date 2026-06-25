@@ -6,6 +6,7 @@ import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
 import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
+import SpotifyWidget from "./SpotifyWidget";
 import "./AgentPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -405,6 +406,7 @@ function AgentPage() {
         <VoiceCostIndicator data={voiceUsage} />
         <EmbedCostIndicator data={embedUsage} />
       </div>
+      <SpotifyWidget compact />
       <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
       <ConfirmationDock />
       <HandoffDock />

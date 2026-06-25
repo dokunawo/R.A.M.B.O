@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { isMuted, setMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
+import { frameForGoal } from "./screenVision";
 import "./VoiceControls.css";
 
 const API = "http://localhost:8000";
@@ -65,10 +66,11 @@ export function usePageVoice({ onCommandCenter } = {}) {
     setCommandLog(prev => [entry, ...prev].slice(0, 50));
 
     try {
+      const image = frameForGoal(text);  // screen frame when sharing + screen-directed
       const res = await fetch(`${API}/rambo/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: text }),
+        body: JSON.stringify(image ? { goal: text, image } : { goal: text }),
       });
       const data = await res.json().catch(() => ({}));
       const responseText = data.response || "(no response)";

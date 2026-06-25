@@ -79,6 +79,9 @@ class Orchestrator:
         self.factory_repo = None
         self.tool_registry = None
 
+        # Self-coding (dev) lane — set later by main.py via set_dev_agent.
+        self.dev_repo = None
+
         # Dispatch log — set later via set_dispatch_repo (best-effort, may be None).
         self.dispatch_repo = None
 
@@ -131,6 +134,10 @@ class Orchestrator:
         """Give the orchestrator access to spawned agents + their tools."""
         self.factory_repo = factory_repo
         self.tool_registry = tool_registry
+
+    def set_dev_agent(self, dev_repo):
+        """Give the orchestrator access to the self-coding (dev) lane repo."""
+        self.dev_repo = dev_repo
 
     def set_dispatch_repo(self, dispatch_repo):
         """Give the orchestrator a durable dispatch log (best-effort)."""
@@ -574,6 +581,14 @@ class Orchestrator:
         )
         targets.add("spotify")
 
+        lines.append(
+            "- dev (self-coding): when the operator asks RAMBO to change its OWN "
+            "code — fix a bug, add a feature/endpoint, refactor, edit its own "
+            "files. Drafts the change on an isolated branch for review; never "
+            "edits the running code directly."
+        )
+        targets.add("dev")
+
         for skill in SKILLS:
             lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
             targets.add(skill["name"])
@@ -603,6 +618,9 @@ class Orchestrator:
 
             if target == "spotify":
                 return await self._run_spotify(task)
+
+            if target == "dev":
+                return await self._run_dev_session(task)
 
             skill = next((s for s in SKILLS if s["name"] == target), None)
             if skill:
@@ -643,6 +661,51 @@ class Orchestrator:
         await self.broadcast(f"[{label}] Finished: {goal}")
         await self._set_status(agent_name, "idle")
         return result
+
+    async def _run_dev_session(self, task: str) -> str:
+        """Self-coding lane: draft a change to RAMBO's OWN code on an isolated
+        branch, analyze its impact, and register it for operator review. Never
+        merges — the operator approves in the Code Review dock."""
+        if not self.dev_repo or not self.llm:
+            return ("The self-coding lane isn't available right now "
+                    "(needs the dev agent and an API key configured).")
+        from dev_agent import session as dev_session
+        import uuid
+
+        change_id = uuid.uuid4().hex[:12]
+        await self.dev_repo.create(change_id, task)
+        await self._set_status("engineer", "working")
+        await self.broadcast(f"[Engineer] Drafting self-change: {task}")
+
+        async def _emit(**kw):
+            await self.ws.broadcast_json({"t": "dev_progress", "id": change_id, **kw})
+
+        def _emit_sync(**kw):
+            asyncio.create_task(_emit(**kw))
+
+        try:
+            impact = await dev_session.draft_change(
+                llm=self.llm, repo=self.dev_repo, change_id=change_id, goal=task,
+                personality_text=self.personality_text, on_event=_emit_sync,
+            )
+        finally:
+            await self.broadcast(f"[Engineer] Finished drafting: {task}")
+            await self._set_status("engineer", "idle")
+
+        rec = impact.get("recommendation")
+        affects = ", ".join(impact.get("affects") or []) or "a few files"
+        if rec == "merge":
+            verdict = "My read is it's safe to merge."
+        elif rec == "escalate":
+            verdict = "It looks right, but I'd want Claude's eyes on it before merging."
+        else:  # hold
+            verdict = "I'd hold off merging — it's not ready or it's risky."
+        # Returned as a result block; _speak() voices it in RAMBO's tone.
+        return (
+            f"Drafted the change on an isolated branch (id {change_id}) — nothing is "
+            f"merged. It touches {affects}. {impact.get('summary','')} {verdict} "
+            f"It's waiting in the review dock for you to look at the diff and decide."
+        )
 
     async def _run_core_agent(self, agent_name: str, task_desc: str) -> str:
         from models.task import Task

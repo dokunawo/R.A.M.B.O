@@ -114,6 +114,10 @@ architecture, or recent changes ("what changed", "what did we just change", "you
 code", "how are you built", "what's in <file>") ALWAYS routes to the "codebase" \
 skill — never "converse" and never answered from memory. R.A.M.B.O reads its own \
 repo to answer these.
+11. MUSIC: any request to play, pause, stop, skip, resume, or queue music or \
+songs, play a playlist, control Spotify, or ask what's currently playing ALWAYS \
+routes to "spotify". "play Daft Punk", "next song", "pause", "what's playing", \
+"play my workout playlist" → spotify.
 
 ROSTER:
 {roster}

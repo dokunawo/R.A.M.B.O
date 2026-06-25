@@ -125,6 +125,12 @@ $chromeFlags = @(
     "--no-first-run",                              # skip the "Sign in to Chrome" welcome
     "--no-default-browser-check",                  # skip "make Chrome default" prompt
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
+    # Screen vision: auto-pick the whole screen so clicking "SCREEN" shares
+    # instantly with NO "Choose what to share" dialog. The value is matched against
+    # the capture source's name — "Entire screen" is the full primary display. On a
+    # multi-monitor box you may need "Screen 1" instead. This auto-grant applies ONLY
+    # to this dedicated R.A.M.B.O profile (your everyday Chrome is unaffected).
+    "--auto-select-desktop-capture-source=Entire screen",
     $fullscreenFlag
     # NOTE: mic is granted via the seeded profile Preferences above (no need for
     # --use-fake-ui-for-media-stream, which triggers Chrome's "unsupported flag" bar).
