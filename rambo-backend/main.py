@@ -23,6 +23,7 @@ from keeper_repo import KeeperRepo
 from morning_brief import brief_scheduler, run_brief
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
+from embed_dashboard import get_embed_dashboard
 from factory.repo import FactoryRepo, State
 from factory.tool_registry import build_default_registry
 from factory.pipeline import SpawnPipeline
@@ -204,6 +205,11 @@ async def usage_dashboard():
 @app.get("/usage/tts")
 async def tts_usage_dashboard():
     return await get_tts_dashboard(_tts_usage_repo, os.environ.get("ELEVENLABS_API_KEY"))
+
+
+@app.get("/usage/embed")
+async def embed_usage_dashboard():
+    return await get_embed_dashboard(_usage_repo)
 
 
 # ── Keeper memory store ──────────────────────────────────────────────

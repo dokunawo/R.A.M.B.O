@@ -68,7 +68,10 @@ class UsageRepo:
                 "  COALESCE(SUM(cache_read_input_tokens), 0)     AS total_cache_read, "
                 "  COALESCE(SUM(cost_usd), 0.0)                  AS total_cost, "
                 "  COUNT(*)                                      AS call_count "
-                "FROM usage WHERE created_at >= ? AND created_at <= ?",
+                # Exclude Voyage embeddings — they have their own EMBED chip and
+                # live in the free tier; counting them here would show phantom spend.
+                "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%'",
                 (start, end),
             )
             totals = dict(row[0])
@@ -78,6 +81,7 @@ class UsageRepo:
                 "  COALESCE(SUM(cost_usd), 0.0) AS cost, "
                 "  COUNT(*) AS calls "
                 "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%' "
                 "GROUP BY model ORDER BY cost DESC",
                 (start, end),
             )
@@ -90,8 +94,29 @@ class UsageRepo:
                 "  COALESCE(SUM(output_tokens), 0) AS output_tokens, "
                 "  COUNT(*) AS calls "
                 "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%' "
                 "GROUP BY DATE(created_at) ORDER BY day DESC",
                 (start, end),
             )
             totals["by_day"] = [dict(r) for r in daily]
         return totals
+
+    async def voyage_totals(self, start: str | None = None) -> dict:
+        """Aggregate embedding usage (model LIKE 'voyage%'). `start` (ISO) limits
+        to a window; omit for all-time totals. Used by the EMBED credit HUD."""
+        clause = "WHERE model LIKE 'voyage%'"
+        params: tuple = ()
+        if start:
+            clause += " AND created_at >= ?"
+            params = (start,)
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            rows = await db.execute_fetchall(
+                "SELECT "
+                "  COALESCE(SUM(input_tokens), 0) AS tokens, "
+                "  COALESCE(SUM(cost_usd), 0.0)   AS cost, "
+                "  COUNT(*)                       AS calls "
+                f"FROM usage {clause}",
+                params,
+            )
+            return dict(rows[0]) if rows else {"tokens": 0, "cost": 0.0, "calls": 0}
