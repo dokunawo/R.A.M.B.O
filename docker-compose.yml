@@ -19,6 +19,10 @@ services:
       - RAMBO_REPO_ROOT=/repo
       # Keep worktrees off the bind mount so they don't clutter the host tree.
       - RAMBO_WORKTREE_DIR=/tmp/rambo-worktrees
+      # Standalone builds land here (container path); the operator's desktop sees
+      # the host path below — used to open built projects in VS Code / Explorer.
+      - RAMBO_BUILDS_DIR=/repo/builds
+      - RAMBO_HOST_REPO_ROOT=C:\Users\dokun\PycharmProjects\R.A.M.B.O
     # Dev convenience: auto-restart uvicorn on .py edits (source is volume-mounted
     # above). Overrides the Dockerfile CMD, which stays the clean prod default.
     # Needs watchfiles → requirements pins uvicorn[standard].

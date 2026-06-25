@@ -22,6 +22,7 @@ API := "http://localhost:8000"
 ; clicks from the operator. Title is set via rambo-frontend/public/index.html.
 SetTitleMatchMode 2            ; match a window whose title CONTAINS "R.A.M.B.O"
 SetTimer(BootGesture, -1000)   ; negative = run once, ~1s after the script starts
+SetTimer(PollOpenQueue, 2000)  ; every 2s: open any folders RAMBO asked to open
 BootGesture() {
     win := "R.A.M.B.O ahk_exe chrome.exe"
     ; Wait up to 5 min: the helper is now launched BEFORE the browser (front-loaded
@@ -76,6 +77,39 @@ post(path) {
     } catch {
         ; Backend not up yet / offline — let the keypress do nothing rather than error.
     }
+}
+
+; ── Desktop-open bridge ──────────────────────────────────────────────────────
+; RAMBO runs in Docker and can't open a window on the desktop. When the operator
+; clicks "Open" on a built project (or a self-change), the backend queues the
+; folder's Windows path; this poller drains the queue and opens each in VS Code,
+; falling back to File Explorer if `code` isn't on PATH. The backend only ever
+; queues paths inside the RAMBO repo, so nothing else can be opened.
+PollOpenQueue() {
+    try {
+        req := ComObject("WinHttp.WinHttpRequest.5.1")
+        req.Open("GET", API . "/desktop/open-queue", false)
+        req.SetTimeouts(1500, 1500, 1500, 2500)
+        req.Send()
+        body := req.ResponseText
+    } catch {
+        return                  ; backend down — try again next tick
+    }
+    if !RegExMatch(body, '"open"\s*:\s*\[(.*?)\]', &m)
+        return
+    arr := m[1]
+    pos := 1
+    while RegExMatch(arr, '"((?:[^"\\]|\\.)*)"', &s, pos) {
+        pos := s.Pos + s.Len
+        path := StrReplace(StrReplace(s[1], "\\", "\"), "\/", "/")
+        OpenPath(path)
+    }
+}
+
+OpenPath(p) {
+    ; `code "p" || explorer "p"` — VS Code if available, else Explorer. Run via
+    ; cmd so `code` (a .cmd shim) resolves through PATH and the `||` fallback works.
+    try Run(A_ComSpec . ' /c code "' . p . '" || explorer "' . p . '"', , "Hide")
 }
 
 ; The "::" remaps SUPPRESS the key's default action, so it no longer reaches the

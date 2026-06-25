@@ -130,7 +130,8 @@ def _tool_defs() -> list[dict]:
 
 class CodingAgent:
     def __init__(self, llm_client, worktree_path: Path, personality_text: str = "",
-                 model: str | None = None, on_event=None, playbooks: str | None = None):
+                 model: str | None = None, on_event=None, playbooks: str | None = None,
+                 test_cwd: str | None = None):
         self._llm = llm_client
         self._worktree = Path(worktree_path)
         self._model = model or model_config.default_model()
@@ -141,7 +142,9 @@ class CodingAgent:
         self._system = (personality_text or "") + _CONTRACT + pb
         self._on_event = on_event or (lambda *a, **k: None)
         self._test_cmd = shlex.split(os.environ.get("RAMBO_TEST_CMD", _DEFAULT_TEST_CMD))
-        self._test_cwd = os.environ.get("RAMBO_TEST_CWD", _DEFAULT_TEST_CWD)
+        # test_cwd: where pytest runs (relative to the agent root). Standalone
+        # builds pass "" to run from the build root; default falls back to env.
+        self._test_cwd = test_cwd if test_cwd is not None else os.environ.get("RAMBO_TEST_CWD", _DEFAULT_TEST_CWD)
         # Exact set of worktree-relative paths the agent wrote/edited. The diff
         # shown to the operator is built from ONLY these — never `git add -A` —
         # so nothing the agent didn't touch can leak into the review.

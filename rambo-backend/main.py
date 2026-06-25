@@ -33,6 +33,8 @@ from factory.approval import handle_approve, handle_reject
 from factory.registry_watcher import RegistryWatcher
 from dev_agent.repo import DevRepo
 from dev_agent import session as dev_session
+from dev_agent.builds_repo import BuildsRepo
+from dev_agent import builds as builds_mod
 from spotify_repo import SpotifyRepo
 from spotify_client import SpotifyClient, SCOPES
 import spotify_client as spotify_mod
@@ -60,6 +62,8 @@ _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
 _watcher: RegistryWatcher | None = None
 _dev_repo = DevRepo()
+_builds_repo = BuildsRepo()
+_open_queue: list[str] = []   # host paths the desktop helper should open + clear
 _IN_FLIGHT: set[asyncio.Task] = set()
 _spotify_repo = SpotifyRepo()
 _spotify = SpotifyClient(_spotify_repo)
@@ -144,6 +148,12 @@ async def _init_factory():
 async def _init_dev_agent():
     await _dev_repo.init_db()
     rambo.set_dev_agent(_dev_repo)
+
+
+@app.on_event("startup")
+async def _init_builds():
+    await _builds_repo.init_db()
+    rambo.set_builds(_builds_repo)
 
 manager = rambo.ws
 
@@ -646,6 +656,89 @@ async def dev_reject(change_id: str):
 @app.post("/dev/escalate/{change_id}")
 async def dev_escalate(change_id: str):
     return await dev_session.escalate_change(_dev_repo, change_id)
+
+
+# ── Standalone builds (Engineer builds an app into builds/<slug>/) ───
+
+
+class BuildRequest(BaseModel):
+    name: str
+    goal: str
+
+
+@app.post("/builds/create")
+async def builds_create(req: BuildRequest):
+    if rambo.llm is None:
+        return {"error": "LLM client not configured — cannot build"}
+    slug = builds_mod.slugify(req.name)
+    if await _builds_repo.slug_taken(slug):
+        import uuid
+        slug = f"{slug}-{uuid.uuid4().hex[:4]}"
+    import uuid
+    await _builds_repo.create(uuid.uuid4().hex[:12], slug, req.name, req.goal)
+
+    async def _drive():
+        def _emit(**kw):
+            asyncio.create_task(manager.broadcast_json({"t": "build_progress", "slug": slug, **kw}))
+        await builds_mod.build_app(
+            llm=rambo.llm, repo=_builds_repo, slug=slug, name=req.name, goal=req.goal,
+            personality_text=rambo.personality_text, on_event=_emit,
+        )
+
+    task = asyncio.create_task(_drive())
+    _IN_FLIGHT.add(task)
+    task.add_done_callback(_IN_FLIGHT.discard)
+    return {"slug": slug, "status": "building"}
+
+
+@app.get("/builds")
+async def builds_list():
+    return await _builds_repo.list_all()
+
+
+@app.get("/builds/{slug}")
+async def builds_get(slug: str):
+    row = await _builds_repo.get_by_slug(slug)
+    if row is None:
+        return {"error": "not found"}
+    return row
+
+
+# ── Desktop-open bridge (host AHK helper polls and opens in VS Code/Explorer) ──
+
+
+class OpenRequest(BaseModel):
+    path: str
+
+
+@app.post("/desktop/open")
+async def desktop_open(req: OpenRequest):
+    """Queue a path for the host helper to open. Only paths inside the operator's
+    repo are accepted, so the bridge can never open arbitrary locations."""
+    if not builds_mod.is_safe_host_path(req.path):
+        return {"error": "path is outside the RAMBO repo — refused"}
+    _open_queue.append(req.path)
+    return {"queued": req.path}
+
+
+@app.get("/desktop/open-queue")
+async def desktop_open_queue():
+    """Return + clear pending open requests (the host helper polls this)."""
+    pending = list(_open_queue)
+    _open_queue.clear()
+    return {"open": pending}
+
+
+@app.post("/desktop/open-change/{change_id}")
+async def desktop_open_change(change_id: str):
+    """Open the RAMBO repo (where a merged self-change lives) on the desktop."""
+    row = await _dev_repo.get(change_id)
+    if row is None:
+        return {"error": "not found"}
+    from dev_agent import git_workspace as gw
+    host = builds_mod.to_host_path(gw.resolve_repo_root())
+    _open_queue.append(host)
+    return {"queued": host}
 
 
 from factory import confirmations as _confirmations

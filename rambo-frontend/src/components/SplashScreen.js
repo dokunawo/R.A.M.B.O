@@ -10,7 +10,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, SoundGate, SettingsPanel } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
@@ -1300,6 +1300,8 @@ export default function SplashScreen({
           <ConfirmationDock />
           <HandoffDock />
           <CodeReviewDock />
+          <BuildsDock />
+          <ActiveTaskBar />
           <SoundGate />
           <SettingsPanel />
           <SpotifyWidget />

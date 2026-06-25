@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { audioRunning, isMuted, setMuted, resumeAudio } from "./audioEngine";
+import { audioRunning, isMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
+import { setMusicVolume } from "./spotifyEngine";
 import { startShare, stopShare, isSharing, onShareChange, frameForGoal, armAutoStart } from "./screenVision";
 import "./SharedHUD.css";
 
@@ -60,6 +61,82 @@ export function useActivityFeed() {
   }, []);
 
   return { activity, connected };
+}
+
+// Tracks the current Engineer task (build or self-edit) from the WS progress
+// events and produces a smoothly-advancing progress value + ETA countdown. The
+// bar always creeps forward with time AND jumps at each stage, but only reaches
+// 100% on the real completion event ("ready") — i.e. when it's actually created.
+export function useTaskProgress() {
+  const [view, setView] = useState(null);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    let ws, closed = false, retry;
+    const connect = () => {
+      try { ws = new WebSocket(WS_URL); } catch { return; }
+      ws.onclose = () => { if (!closed) retry = setTimeout(connect, 2500); };
+      ws.onerror = () => { try { ws.close(); } catch {} };
+      ws.onmessage = (e) => {
+        const msg = String(e.data);
+        if (msg.charAt(0) !== "{") return;
+        let j; try { j = JSON.parse(msg); } catch { return; }
+        if (j.t !== "build_progress" && j.t !== "dev_progress") return;
+        const id = j.slug || j.id || "task";
+        const isBuild = j.t === "build_progress";
+        let s = ref.current;
+        if (!s || s.id !== id || s.finished) {
+          s = ref.current = { id, label: isBuild ? "Building" : "Drafting",
+            etaS: j.eta_s || 60, startedAt: Date.now(), target: 5, pct: 0, finished: false };
+        }
+        if (j.eta_s) s.etaS = j.eta_s;
+        switch (j.stage) {
+          case "coding": s.target = Math.max(s.target, 15); break;
+          case "tool":   s.target = Math.min(85, Math.max(s.target, 15) + 4); break;
+          case "impact": s.target = Math.max(s.target, 88); break;
+          case "commit": s.target = Math.max(s.target, 92); break;
+          case "ready":  s.target = 100; s.finished = true; s.finishedAt = Date.now(); break;
+          default: break;
+        }
+      };
+    };
+    connect();
+    const anim = setInterval(() => {
+      const s = ref.current;
+      if (!s) return;
+      const elapsed = (Date.now() - s.startedAt) / 1000;
+      const timeEst = Math.min(94, (elapsed / Math.max(1, s.etaS)) * 100);
+      const target = s.finished ? 100 : Math.max(s.target, timeEst);
+      s.pct += (target - s.pct) * 0.16;
+      if (s.finished && s.pct > 99.3) s.pct = 100;
+      if (s.finished && s.finishedAt && Date.now() - s.finishedAt > 4500) {
+        ref.current = null; setView(null); return;
+      }
+      setView({ label: s.label, pct: s.pct, etaS: s.etaS, elapsed, finished: s.finished });
+    }, 120);
+    return () => { closed = true; clearTimeout(retry); clearInterval(anim); if (ws) try { ws.close(); } catch {} };
+  }, []);
+
+  return view;
+}
+
+export function ActiveTaskBar() {
+  const task = useTaskProgress();
+  if (!task) return null;
+  const pct = Math.min(100, Math.round(task.pct));
+  const remain = Math.max(0, Math.round(task.etaS - task.elapsed));
+  const status = task.finished ? "FINISHED ✓" : remain > 0 ? `~${remain}s left` : "finalizing…";
+  return (
+    <div className="hud-task-bar">
+      <div className="hud-task-head">
+        <span className="hud-task-label">ENGINEER · {task.finished ? "DONE" : task.label.toUpperCase()}</span>
+        <span className="hud-task-eta">{pct}% · {status}</span>
+      </div>
+      <div className="hud-task-track">
+        <div className={`hud-task-fill ${task.finished ? "hud-task-fill-done" : ""}`} style={{ width: pct + "%" }} />
+      </div>
+    </div>
+  );
 }
 
 export function StatBars({ stats }) {
@@ -516,6 +593,17 @@ async function _post(path, refresh) {
   refresh();
 }
 
+// Ask the host helper (rambo-mediakeys.ahk) to open a folder on the desktop.
+async function openOnDesktop(hostPath) {
+  try {
+    await fetch(`${API}/desktop/open`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: hostPath }),
+    });
+  } catch {}
+}
+
 export function ConfirmationDock() {
   const { items, refresh } = usePolledQueue("/confirmations");
   const [open, setOpen] = useState(false);
@@ -666,6 +754,9 @@ function DevReviewCard({ change, onResolved }) {
           REJECT
         </button>
       </div>
+      <button className="hud-factory-cancel" onClick={() => _post(`/desktop/open-change/${change.id}`, () => {})}>
+        OPEN IN EDITOR
+      </button>
     </div>
   );
 }
@@ -686,6 +777,57 @@ export function CodeReviewDock() {
           {items.length === 0
             ? <div className="hud-factory-empty">{"// no changes awaiting review"}</div>
             : items.map(c => <DevReviewCard key={c.id} change={c} onResolved={refresh} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Builds dock: standalone apps RAMBO built (open them on the desktop) ──
+export function BuildsDock() {
+  const { items } = usePolledQueue("/builds");
+  const [open, setOpen] = useState(false);
+  const ready = items.filter(b => b.status === "ready");
+
+  const statusLabel = (b) =>
+    b.status === "building" ? "BUILDING…" : b.status === "failed" ? "FAILED" : "READY";
+
+  return (
+    <div className="hud-builds-wrap">
+      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+        <span className="hud-builds-tag">BUILDS</span>
+        <span className={`hud-factory-count ${ready.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ BUILT PROJECTS</div>
+          {items.length === 0
+            ? <div className="hud-factory-empty">{"// nothing built yet"}</div>
+            : items.map(b => (
+                <div key={b.id || b.slug} className="hud-factory-card">
+                  <div className="hud-factory-card-head">
+                    <span className="hud-factory-name">{b.name || b.slug}</span>
+                    <span className={`hud-dev-rec hud-dev-rec-${b.status === "ready" ? "merge" : b.status === "failed" ? "hold" : "escalate"}`}>
+                      {statusLabel(b)}
+                    </span>
+                  </div>
+                  {b.summary && <div className="hud-factory-specialty">{b.summary}</div>}
+                  {b.host_path && <div className="hud-builds-path">{b.host_path}</div>}
+                  {b.files && b.files.length > 0 && (
+                    <div className="hud-factory-iter">{b.files.length} file{b.files.length === 1 ? "" : "s"}</div>
+                  )}
+                  {b.status === "ready" && b.host_path && (
+                    <div className="hud-factory-actions">
+                      <button className="hud-factory-approve" onClick={() => openOnDesktop(b.host_path)}>
+                        OPEN
+                      </button>
+                    </div>
+                  )}
+                  {b.status === "failed" && b.error && (
+                    <div className="hud-factory-iter">error: {b.error}</div>
+                  )}
+                </div>
+              ))}
         </div>
       )}
     </div>
@@ -725,6 +867,7 @@ export function SoundGate() {
 export function SettingsPanel() {
   const [open, setOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(!isMuted());
+  const [vol, setVol] = useState(isMuted() ? 0 : getVolume());
   const ref = useRef(null);
 
   useEffect(() => {
@@ -736,9 +879,22 @@ export function SettingsPanel() {
 
   const toggleSound = () => {
     const next = !soundOn;
+    // ON → full volume (100%); OFF → 0% (silent). The slider follows, and both
+    // RAMBO audio and the Spotify music move together. setVolume manages the mute
+    // flag (0 → muted, >0 → unmuted), keeping the toggle and slider consistent.
+    const v = setVolume(next ? 100 : 0);
+    setMusicVolume(v);
+    setVol(v);
     setSoundOn(next);
-    setMuted(!next);          // persisted in audioEngine
     if (next) resumeAudio();
+  };
+
+  const onVol = (e) => {
+    resumeAudio();
+    const v = setVolume(parseInt(e.target.value, 10));  // RAMBO audio (voice/chimes)
+    setMusicVolume(v);                                  // Spotify music player too
+    setVol(v);
+    setSoundOn(v > 0);
   };
 
   return (
@@ -753,6 +909,20 @@ export function SettingsPanel() {
               type="button" onClick={toggleSound}>
               {soundOn ? "ON" : "OFF"}
             </button>
+          </div>
+          <div className="hud-settings-row hud-vol-row">
+            <span>Volume</span>
+            <span className="hud-vol-val">{vol}%</span>
+          </div>
+          <input
+            className="hud-vol-slider"
+            type="range" min="0" max="100" step="5"
+            value={vol}
+            onChange={onVol}
+            aria-label="Volume"
+          />
+          <div className="hud-vol-ticks">
+            <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
           </div>
         </div>
       )}

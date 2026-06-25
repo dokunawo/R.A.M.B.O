@@ -34,6 +34,10 @@ ENV/
 # ───────────────────────────── Docker ──────────────────────────────────────
 *.pid
 
+# Standalone apps RAMBO builds for the operator (opened on the desktop, not
+# committed to RAMBO). The container writes these to /repo/builds.
+builds/
+
 # ───────────────────────────── IDE / Editor ────────────────────────────────
 .idea/
 .vscode/

@@ -40,9 +40,10 @@ async def draft_change(*, llm, repo: DevRepo, change_id: str, goal: str,
                        personality_text: str = "", on_event=None) -> dict:
     """Run the full draft pipeline. Returns the impact dict (or raises-safe error dict)."""
     on_event = on_event or (lambda *a, **k: None)
+    eta_s = max(30, min(180, 25 + len(goal) // 6))
     ws = None
     try:
-        on_event(stage="workspace", msg="Creating isolated worktree")
+        on_event(stage="workspace", msg="Creating isolated worktree", eta_s=eta_s)
         ws = await gw.create_workspace(change_id)
 
         on_event(stage="coding", msg="Drafting the change")
