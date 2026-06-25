@@ -83,12 +83,12 @@ open-ended research.
 <!-- AUTO-START: recent_activity -->
 Last 14 days — 111 commits:
 
-- `e54b912 Add Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (17 minutes ago)`
-- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (74 minutes ago)`
+- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (3 minutes ago)`
+- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (77 minutes ago)`
 - `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (2 hours ago)`
 - `34a640e Consolidate agent fleet into 3 routable modes + services (2 hours ago)`
 - `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (11 hours ago)`
-- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (11 hours ago)`
+- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (12 hours ago)`
 - `99a5b7b feat: recurring morning brief (on-screen card + email) (12 hours ago)`
 - `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (12 hours ago)`
 - `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (12 hours ago)`
@@ -98,7 +98,7 @@ Last 14 days — 111 commits:
 - `b3194fd feat: sound on by default + Settings panel with Sound toggle (13 hours ago)`
 - `cff3b2b feat: clear-all-responses action (button + voice) on all pages (13 hours ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (14 hours ago)`
-- `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (14 hours ago)`
+- `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (15 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (16 hours ago)`
 - `4edbecb docs: design for ElevenLabs voice-credit tracker (17 hours ago)`
 - `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (17 hours ago)`
