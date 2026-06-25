@@ -81,15 +81,16 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 112 commits:
+Last 14 days — 113 commits:
 
+- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (4 minutes ago)`
 - `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (3 hours ago)`
 - `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (3 hours ago)`
 - `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (4 hours ago)`
 - `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (5 hours ago)`
 - `34a640e Consolidate agent fleet into 3 routable modes + services (5 hours ago)`
-- `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (14 hours ago)`
-- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (14 hours ago)`
+- `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (15 hours ago)`
+- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (15 hours ago)`
 - `99a5b7b feat: recurring morning brief (on-screen card + email) (15 hours ago)`
 - `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (15 hours ago)`
 - `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (15 hours ago)`
@@ -102,8 +103,7 @@ Last 14 days — 112 commits:
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (18 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (19 hours ago)`
 - `4edbecb docs: design for ElevenLabs voice-credit tracker (20 hours ago)`
-- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (20 hours ago)`
-- … and 92 more
+- … and 93 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -56,7 +56,7 @@ agent's status.
 
 ## Key Features
 
-- **🧠 Multi-agent orchestration** — 10 specialized agents coordinated by an Overseer.
+- **🧠 Multi-agent orchestration** — ten specialist shells **consolidated into 3 routable modes** (Planner / Executor / Researcher) + Keeper/Sentinel/Pilot services, coordinated by an Overseer. See [The Agent Roster](#the-agent-roster).
 - **🛡️ Sentinel security gate** — risky actions (engineer / steward / link) are reviewed and can be blocked or held for manual approval.
 - **🔌 Live status feed** — REST polling (`/agents/status`) + WebSocket broadcasts (`/ws/activity`) keep the UI in sync in real time.
 - **🌌 Cosmic wireframe orb** — custom GLSL shaders (simplex noise displacement, fresnel rim glow, wireframe icosahedron) render the Overseer as a living wireframe nucleus with a billboarded glow halo. Bloom postprocessing for cinematic glow.
@@ -124,6 +124,14 @@ agent's status.
 
 ## The Agent Roster
 
+The roster was **consolidated**: the original ten specialist agents collapsed into
+**three routable modes** plus **three standalone services**. The ten shells still
+exist internally (the dispatch pipeline runs them), but the routing surface — what
+the LLM router actually targets — is now six entries, not ten. This kept the
+cinematic ten-node identity while making routing decisions sharper and cheaper.
+
+### Before — the original ten (MK I–IV)
+
 | Agent | Role | Responsibility |
 |-----------|----------------------|----------------------------------------------------|
 | **Architect** | Strategic Planning | Decomposes goals into executable task hierarchies |
@@ -137,9 +145,26 @@ agent's status.
 | **Echo** | Communication | Synthesizes and delivers final responses |
 | **Pilot** | Task Coordination | Manages the execution queue and agent deployment |
 
+### After — three modes + three services
+
+| Routable target | Type | Owns | Folds in (original shells) |
+|-----------------|------|------|----------------------------|
+| **Planner** | Mode | Planning, decomposition, specs, and summarizing results | Architect + Echo |
+| **Executor** | Mode | Building/implementing code, integrations, budgeting & resource actions | Engineer + Steward + Link |
+| **Researcher** | Mode | Searching, finding, looking things up, analyzing/evaluating data | Seeker + Analyst |
+| **Keeper** | Service | Storing, recalling, and managing files/memory | Keeper |
+| **Sentinel** | Service *(internal)* | Reviews risky actions; not a routable target | Sentinel |
+| **Pilot** | Service *(internal)* | Builds the task queue; not a routable target | Pilot |
+
+> The mapping is defined in `orchestrator/orchestrator.py` (`CORE_OWNERSHIP`,
+> `_MODE_AGENTS`, `DISPLAY_GROUPS`). The **SmartRouter** (`orchestrator/routing.py`)
+> routes over the three modes + Keeper; Sentinel and Pilot run inside the pipeline
+> rather than being dispatched to directly.
+
 > **R.A.M.B.O** itself sits above the roster as the **Overseer**.
 
 **Status states:** `online` · `working` · `idle` · `offline` — each color-coded in the UI.
+Each consolidated entry aggregates the live status of its underlying shell agents.
 
 **Live agent backends** (as of 06/24/2026 — check `GET /agents/health`):
 
@@ -204,7 +229,7 @@ R.A.M.B.O/
 │   ├── main.py                 # FastAPI app + routes
 │   ├── orchestrator/
 │   │   └── orchestrator.py     # plan → queue → route → run → summarize
-│   ├── agents/                 # 10 specialized agents
+│   ├── agents/                 # 10 specialist shells (→ 3 routable modes + 3 services)
 │   │   ├── architect.py  engineer.py  seeker.py  analyst.py
 │   │   ├── sentinel.py   steward.py   link.py    keeper.py
 │   │   └── echo.py       pilot.py
