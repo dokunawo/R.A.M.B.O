@@ -70,6 +70,23 @@ export function stopShare() {
   notify();
 }
 
+// Auto-start sharing on the FIRST user gesture. getDisplayMedia is blocked
+// without a user activation, so we can't start at page load — but we can arm a
+// one-shot listener so the operator's first click/keypress silently begins the
+// share (no picker, thanks to the startup flag --auto-select-desktop-capture-source).
+let autoArmed = false;
+export function armAutoStart() {
+  if (autoArmed || isSharing()) return;
+  autoArmed = true;
+  const go = async () => {
+    window.removeEventListener("pointerdown", go, true);
+    window.removeEventListener("keydown", go, true);
+    if (!isSharing()) { try { await startShare(); } catch { /* picker cancelled / unsupported */ } }
+  };
+  window.addEventListener("pointerdown", go, true);
+  window.addEventListener("keydown", go, true);
+}
+
 // Grab one frame from the live stream as a base64 JPEG (no data: prefix).
 // Returns null if not sharing or the video has no dimensions yet.
 export function captureFrame() {

@@ -259,6 +259,12 @@ class SpotifyClient:
         dev = await self.resolve_device(device_id)
         if not dev:
             return {"error": "no_device"}
+        # When the caller picked a SPECIFIC track (a uris queue, or an offset into
+        # a context), shuffle must be OFF first — otherwise Spotify ignores the
+        # requested start position and begins on a random track, which looks like
+        # "I clicked Fall Back but it played something else / jumped around".
+        if uris or offset:
+            await self.shuffle(False, device_id=dev)
         body: dict = {}
         if context_uri:
             body["context_uri"] = context_uri
@@ -277,6 +283,16 @@ class SpotifyClient:
     async def pause(self, device_id: str | None = None) -> dict:
         dev = await self.resolve_device(device_id)
         return await self._request("PUT", "/me/player/pause", params={"device_id": dev} if dev else None)
+
+    async def toggle(self, device_id: str | None = None) -> dict:
+        """Pause if currently playing, otherwise resume — for the OS media key,
+        which sends a single play/pause action and needs us to decide which."""
+        now = await self.now_playing()
+        is_playing = bool(isinstance(now, dict) and now.get("is_playing"))
+        if is_playing:
+            return await self.pause(device_id)
+        # Resume with no body just continues the current device's playback.
+        return await self.play(device_id=device_id)
 
     async def next(self, device_id: str | None = None) -> dict:
         # Web API next respects the device's shuffle_state automatically.

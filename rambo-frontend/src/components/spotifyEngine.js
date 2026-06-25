@@ -118,14 +118,16 @@ export async function init() {
     state.art = t && t.album && t.album.images && t.album.images[0] ? t.album.images[0].url : null;
     emit();
     // Feed the OS media overlay so the album/track shows on hardware media keys.
-    if ("mediaSession" in navigator && t) {
+    if ("mediaSession" in navigator) {
       try {
-        navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: t.name,
-          artist: (t.artists || []).map((a) => a.name).join(", "),
-          album: t.album ? t.album.name : "",
-          artwork: ((t.album && t.album.images) || []).map((im) => ({ src: im.url })),
-        });
+        if (t) {
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: t.name,
+            artist: (t.artists || []).map((a) => a.name).join(", "),
+            album: t.album ? t.album.name : "",
+            artwork: ((t.album && t.album.images) || []).map((im) => ({ src: im.url })),
+          });
+        }
         navigator.mediaSession.playbackState = s.paused ? "paused" : "playing";
       } catch { /* ignore */ }
     }
@@ -142,11 +144,11 @@ export async function init() {
 function setupMediaSession() {
   if (!("mediaSession" in navigator)) return;
   try {
-    navigator.mediaSession.setActionHandler("play", () => togglePlay());
-    navigator.mediaSession.setActionHandler("pause", () => togglePlay());
+    navigator.mediaSession.setActionHandler("play", () => resume());
+    navigator.mediaSession.setActionHandler("pause", () => pause());
     navigator.mediaSession.setActionHandler("previoustrack", () => prevTrack());
     navigator.mediaSession.setActionHandler("nexttrack", () => nextTrack());
-    navigator.mediaSession.setActionHandler("stop", () => togglePlay());
+    navigator.mediaSession.setActionHandler("stop", () => pause());
   } catch { /* some keys unsupported on this browser */ }
 }
 
@@ -192,7 +194,30 @@ export async function disconnect() {
 // The SDK methods drive the R.A.M.B.O device's own playback directly, so they
 // advance reliably (incl. Liked Songs / search queues) and honor shuffle. We
 // keep playback ON this device (see resolve_device) so these always apply.
-export async function togglePlay() { if (player) await player.togglePlay(); }
+// Explicit resume/pause — more reliable than the SDK's togglePlay(), whose
+// internal state desyncs when playback was started via the backend Web API (the
+// cause of "next/prev work but play/pause does nothing"). Each also asserts the
+// OS playbackState so Chrome keeps claiming the hardware play/pause media key,
+// and falls back to the backend Web API if the SDK call doesn't take.
+function setPlaybackState(s) {
+  if ("mediaSession" in navigator) { try { navigator.mediaSession.playbackState = s; } catch { /* ignore */ } }
+}
+async function _control(action) {  // action: "play" | "pause"
+  if (player) {
+    try { action === "play" ? await player.resume() : await player.pause(); return; }
+    catch { /* fall through to backend */ }
+  }
+  try {
+    await fetch(`${API}/spotify/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ device_id: deviceId }),
+    });
+  } catch { /* ignore */ }
+}
+export async function resume() { setPlaybackState("playing"); return _control("play"); }
+export async function pause() { setPlaybackState("paused"); return _control("pause"); }
+export async function togglePlay() { return state.paused ? resume() : pause(); }
 export async function nextTrack() { if (player) await player.nextTrack(); }
 export async function prevTrack() { if (player) await player.previousTrack(); }
 export async function seek(ms) { if (player) await player.seek(ms); }

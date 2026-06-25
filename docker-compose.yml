@@ -40,15 +40,28 @@ services:
     restart: unless-stopped
 
   rambo-frontend-dev:
+    # DORMANT by default. Everyday use is prod (:3000) only — this dev/hot-reload
+    # server is gated behind the "dev" compose profile so `docker compose up -d`
+    # (and rambo-startup.ps1) never start it. Bring it up ONLY when editing:
+    #   docker compose --profile dev up -d rambo-frontend-dev
+    # or run rambo-startup.ps1 -Dev.
+    profiles: ["dev"]
     build:
       context: ./rambo-frontend
       dockerfile: Dockerfile.dev
     container_name: rambo-frontend-dev
     ports:
-      - "3001:3000"      # Dev frontend (hot reload) → now on 3001
+      - "3001:3000"      # Dev frontend (hot reload) → on 3001
     volumes:
       - ./rambo-frontend:/app
       - /app/node_modules
     environment:
+      # CRA 5 / webpack 5 watches via watchpack, NOT chokidar — on Docker/Windows
+      # the source bind mount needs WATCHPACK_POLLING or saves never recompile
+      # (the build goes stale and edits silently never reach the :3001 bundle).
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      # The HMR client is served on host :3001 (container :3000); tell it so it
+      # stops failing to reach ws://localhost:3000/ws and hot reload actually works.
+      - WDS_SOCKET_PORT=3001
     restart: unless-stopped

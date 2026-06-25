@@ -2,7 +2,7 @@
 
 ## 1. Mission
 
-R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agent AI orchestration system. React 19 frontend with a WebGL cosmic orb interface, FastAPI backend with 10 specialized agents, voice control via Web Speech API, and Google service integrations. The operator (Daniel) uses it as a personal ops hub for two businesses: armed security and photography. The system is functional end-to-end — the current phase is expanding integrations, polishing the UI, and wiring up the Anthropic API for personality-driven responses.
+R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agent AI orchestration system. React 19 frontend with a WebGL cosmic orb interface, FastAPI backend whose 10 original agents are now consolidated into **3 routable modes (Planner/Executor/Researcher) + Keeper/Sentinel/Pilot services** (the UI may still show the legacy roster names), voice control via Web Speech API, Spotify in-app playback, screen vision, and Google service integrations. The operator (Daniel) uses it as a personal ops hub for two businesses: armed security and photography. The system is functional end-to-end — the current phase is expanding integrations, polishing the UI, and wiring up the Anthropic API for personality-driven responses.
 
 ## 2. Current State
 
@@ -14,7 +14,44 @@ R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agen
 - **Phase 2 main console** — full orb + agent roster + system parameters + command input + WebSocket activity feed + stat bars.
 - **Round Table** — 10 agents orbiting orb as clickable nodes, AgentConstellation in 3D.
 - **Tier 5/6** — dispatch beams, processing helix, WebSocket-driven animations, performance mode (battery/visibility/prefers-reduced-motion).
-- **Git state**: clean working tree, all on `main`, latest commit `f72fd1f`.
+- **Git state**: on `main`, latest commit `d60d48d` (self-coding lane merge). Working tree has **uncommitted** Spotify/startup fixes from the 2026-06-25 session (see §2a).
+
+## 2a. Session 2026-06-25 — Spotify control + startup fixes (UNCOMMITTED)
+
+All verified working on dev (:3001) and prod (:3000) rebuilt. Files touched:
+`rambo-backend/spotify_client.py`, `rambo-backend/main.py`,
+`rambo-frontend/src/components/spotifyEngine.js`, `docker-compose.yml`,
+`rambo-startup.ps1`, plus new `rambo-mediakeys.ahk`, `docs/spotify-extended-quota.md`.
+
+- **Click-the-wrong-song bug → FIXED.** `SpotifyClient.play()` now forces shuffle
+  OFF whenever a specific track is selected (`uris` or `offset` present) — with
+  shuffle on, Spotify ignored the start position and began on a random track.
+- **Play/pause BUTTON → FIXED.** `spotifyEngine.js` replaced the flaky SDK
+  `togglePlay()` with explicit `resume()`/`pause()` off tracked state, with a
+  backend Web-API fallback.
+- **Hardware media keys → solved at OS level, NOT in-browser.** The Web Playback
+  SDK plays audio in a cross-origin iframe that owns the OS media session, so
+  Chrome won't deliver the play/pause key to our page (confirmed: top-frame
+  `mediaSession.playbackState` stayed `none`; a silent-audio anchor did not win
+  the session). Solution: new `/spotify/toggle` endpoint + `rambo-mediakeys.ahk`
+  (AutoHotkey v2) maps play/pause/next/prev → backend. Auto-launched by the
+  startup script. **Requires AutoHotkey v2 installed** (now is).
+- **Playlist track listings → Spotify limitation, not a bug.** `/playlists/{id}/tracks`
+  403s for ALL playlists (incl. own) because the app is in Dev Mode. Needs
+  Extended Quota Mode — steps in `docs/spotify-extended-quota.md`. Playback via ▶
+  (context_uri) still works; Liked Songs lists fine (`/me/tracks` isn't restricted).
+- **Dev server wasn't recompiling → FIXED.** CRA 5 / webpack 5 watches via
+  watchpack, not chokidar; on Docker/Windows it needs `WATCHPACK_POLLING=true`
+  (added to compose) or edits silently never reach the :3001 bundle. Also set
+  `WDS_SOCKET_PORT=3001` so HMR stops failing against :3000. **This is why early
+  fixes "didn't work" — the running dev build was stale.**
+- **Startup blank "screen" tab → FIXED.** Root cause: `--auto-select-desktop-capture-source=Entire screen`
+  has a space and was unquoted, so PowerShell split it and Chrome opened the bare
+  `screen` token as a URL. Now quoted. Also: kill leftover RAMBO-profile Chrome
+  before relaunch + suppress session restore.
+- **Note:** backend compose command uses `--reload`, so .py edits DO auto-reload
+  (the old "no auto-reload" note was wrong). Prod frontend (:3000) must be rebuilt
+  (`docker compose up -d --build rambo-frontend`) to pick up frontend changes.
 
 ### Half-built
 - **Personality engine** — `personality.py`, `conversation.py`, `AGENT.md` all exist and are wired into the orchestrator's `_speak()` method. Falls back gracefully to raw results when no API key is set. **Not yet live** because Daniel hasn't set `ANTHROPIC_API_KEY`.

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { isMuted, setMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
-import { frameForGoal } from "./screenVision";
+import { frameForGoal, startShare, stopShare, isSharing, armAutoStart } from "./screenVision";
 import "./VoiceControls.css";
 
 const API = "http://localhost:8000";
@@ -39,6 +39,15 @@ function isStopListening(text) {
 function isClearCommand(text) {
   const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
   return /(clear everything|clear responses|clear all|clear the screen|clear the responses|clear cards|dismiss all)/.test(t);
+}
+
+// Voice command to toggle screen share. Returns "on" | "off" | null.
+function screenShareIntent(text) {
+  const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+  if (!/(screen\s*shar(?:e|ing)|shar(?:e|ing)\s+(?:my|the)\s+screen|screen\s+vision|look\s+at\s+my\s+screen)/.test(t)) return null;
+  if (/\b(off|stop|disable|end|kill|close|hide|don'?t)\b/.test(t)) return "off";
+  if (/\b(on|start|enable|begin|open|turn\s+on|share)\b/.test(t)) return "on";
+  return null;
 }
 
 // Voice command to open the Command Center view.
@@ -123,6 +132,30 @@ export function usePageVoice({ onCommandCenter } = {}) {
     // Clear all accumulated response cards on this page.
     if (isClearCommand(text)) {
       setCommandLog([]);
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
+    }
+
+    // Toggle screen share hands-free. "off" always works; "on" needs a user
+    // gesture (Chrome rule for getDisplayMedia) — if blocked, we arm auto-start
+    // so the operator's next tap/keypress enables it, and say so.
+    const ssIntent = screenShareIntent(text);
+    if (ssIntent) {
+      (async () => {
+        let resp;
+        if (ssIntent === "off") {
+          stopShare();
+          resp = isSharing() ? "Couldn't stop screen share." : "Screen share off.";
+        } else if (isSharing()) {
+          resp = "Screen share is already on.";
+        } else {
+          try { await startShare(); resp = "Screen share on."; }
+          catch { armAutoStart(); resp = "I can't start screen share on my own — tap anywhere and I'll turn it on."; }
+        }
+        const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: resp, status: "complete" };
+        setCommandLog(prev => [entry, ...prev].slice(0, 50));
+        if (speakRef.current) speakRef.current(resp, true);
+      })();
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }

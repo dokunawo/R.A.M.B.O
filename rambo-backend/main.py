@@ -359,6 +359,13 @@ async def spotify_pause(ctrl: SpotifyControl):
     return await _spotify.pause(device_id=ctrl.device_id)
 
 
+@app.post("/spotify/toggle")
+async def spotify_toggle(ctrl: SpotifyControl | None = None):
+    """Single play/pause toggle for the OS media-key helper (rambo-mediakeys.ahk),
+    which can't track play state itself. Body is optional so a bare POST works."""
+    return await _spotify.toggle(device_id=ctrl.device_id if ctrl else None)
+
+
 @app.post("/spotify/next")
 async def spotify_next(ctrl: SpotifyControl):
     return await _spotify.next(device_id=ctrl.device_id)

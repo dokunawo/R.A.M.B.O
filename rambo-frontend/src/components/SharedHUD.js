@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { audioRunning, isMuted, setMuted, resumeAudio } from "./audioEngine";
-import { startShare, stopShare, isSharing, onShareChange, frameForGoal } from "./screenVision";
+import { startShare, stopShare, isSharing, onShareChange, frameForGoal, armAutoStart } from "./screenVision";
 import "./SharedHUD.css";
 
 const API = "http://localhost:8000";
@@ -793,6 +793,10 @@ export function CommandInput({ connected }) {
   // Keep the toggle in sync with the screen-share state (incl. the browser's
   // own "Stop sharing" button, which fires the stream's ended event).
   useEffect(() => onShareChange(setSharing), []);
+
+  // Auto-begin screen share on the operator's first interaction (browsers block
+  // getDisplayMedia at page load). With the startup auto-select flag this is silent.
+  useEffect(() => armAutoStart(), []);
 
   const toggleScreen = async () => {
     if (isSharing()) { stopShare(); return; }

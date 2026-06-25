@@ -49,18 +49,20 @@ if (-not $dockerReady) {
 }
 Log "Docker daemon ready."
 
-# 2) Bring the stack up.
+# 2) Bring the stack up. Everyday use = prod only. The dev frontend (:3001) is
+# behind the "dev" compose profile, so it starts ONLY when -Dev is passed.
 Set-Location $projectRoot
+$profileArgs = if ($Dev) { @("--profile", "dev") } else { @() }
 if ($Clean) {
     Log "Full no-cache rebuild (this takes a few minutes)..."
-    docker compose build --no-cache
-    docker compose up -d
+    docker compose @profileArgs build --no-cache
+    docker compose @profileArgs up -d
 } elseif ($Rebuild) {
     Log "Rebuilding changed layers..."
-    docker compose up -d --build
+    docker compose @profileArgs up -d --build
 } else {
     Log "Fast start (reusing images)..."
-    docker compose up -d
+    docker compose @profileArgs up -d
 }
 if ($LASTEXITCODE -ne 0) { Log "WARNING: docker compose returned non-zero." }
 
@@ -87,7 +89,10 @@ try {
     $prefs = @'
 {
   "bookmark_bar": { "show_on_all_tabs": false },
+  "session": { "restore_on_startup": 4, "startup_urls": [] },
   "profile": {
+    "exit_type": "Normal",
+    "exited_cleanly": true,
     "content_settings": {
       "exceptions": {
         "geolocation": {
@@ -114,6 +119,20 @@ try {
 # 5) Open the browser.
 Log "Opening browser at $url"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+# Close any leftover RAMBO-profile Chrome from a previous launch FIRST. If one is
+# already alive, a second launch can't apply the fullscreen flags and you get a
+# stray/blank extra window. We match ONLY processes using the dedicated RAMBO
+# profile (--user-data-dir=...\.chrome-profile) — your everyday Chrome is untouched.
+try {
+    $stale = Get-CimInstance Win32_Process -Filter "Name = 'chrome.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -and $_.CommandLine -like "*--user-data-dir=$ramboProfile*" }
+    if ($stale) {
+        $stale | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+        Log "Closed $($stale.Count) leftover RAMBO Chrome process(es) before relaunch."
+        Start-Sleep -Seconds 2   # let the profile lock release before reopening
+    }
+} catch { Log "WARNING: could not check for leftover RAMBO Chrome: $_" }
 # RAMBO gets its OWN dedicated Chrome profile (--user-data-dir): a separate,
 # isolated instance, so the flags below are honored even if your normal Chrome
 # is already open. Your everyday Chrome is left untouched.
@@ -124,13 +143,17 @@ $chromeFlags = @(
     "--user-data-dir=$ramboProfile",               # dedicated, isolated profile
     "--no-first-run",                              # skip the "Sign in to Chrome" welcome
     "--no-default-browser-check",                  # skip "make Chrome default" prompt
+    "--hide-crash-restore-bubble",                 # never prompt to restore tabs after an unclean (shutdown) exit
+    "--restore-last-session=false",                # boot to a single fresh tab, not the previous session's stray tabs
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
-    # Screen vision: auto-pick the whole screen so clicking "SCREEN" shares
-    # instantly with NO "Choose what to share" dialog. The value is matched against
-    # the capture source's name — "Entire screen" is the full primary display. On a
-    # multi-monitor box you may need "Screen 1" instead. This auto-grant applies ONLY
-    # to this dedicated R.A.M.B.O profile (your everyday Chrome is unaffected).
-    "--auto-select-desktop-capture-source=Entire screen",
+    # Screen vision: auto-pick the display so sharing starts with NO "Choose what
+    # to share" dialog. The value is matched against the capture SOURCE NAME. On a
+    # MULTI-MONITOR box the sources are "Screen 1" / "Screen 2" (NOT "Entire screen",
+    # which only matches single-monitor) — RAMBO runs on the primary, so "Screen 1".
+    # If RAMBO ever moves to the other monitor, change this to "Screen 2".
+    # The value has a SPACE; it MUST stay quoted or Start-Process splits it and
+    # Chrome opens the leftover token as a bogus URL (the stray blank tab).
+    '--auto-select-desktop-capture-source="Screen 1"',
     $fullscreenFlag
     # NOTE: mic is granted via the seeded profile Preferences above (no need for
     # --use-fake-ui-for-media-stream, which triggers Chrome's "unsupported flag" bar).
@@ -144,6 +167,27 @@ if ((Test-Path $chrome) -and $DevTools) {
     Start-Process $chrome -ArgumentList ($chromeFlags + $openUrl)
 } else {
     Start-Process $openUrl   # default browser
+}
+
+# 6) Route the hardware media keys to the R.A.M.B.O player. The Spotify Web
+# Playback SDK's cross-origin iframe owns the browser media session, so Chrome
+# won't deliver the play/pause key to our page — this OS-level helper intercepts
+# the keys and calls the backend directly. Needs AutoHotkey v2 installed.
+$ahkScript = "$projectRoot\rambo-mediakeys.ahk"
+$ahkExe = @(
+    "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe",
+    "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe",
+    "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($ahkExe -and (Test-Path $ahkScript)) {
+    # Replace any prior instance so we don't stack duplicate key hooks.
+    Get-CimInstance Win32_Process -Filter "Name LIKE 'AutoHotkey%'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like "*rambo-mediakeys.ahk*" } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Process $ahkExe -ArgumentList "`"$ahkScript`""
+    Log "Media-key helper launched ($ahkExe)."
+} else {
+    Log "NOTE: AutoHotkey v2 not found — hardware media keys won't control RAMBO. Install from https://www.autohotkey.com/ to enable rambo-mediakeys.ahk."
 }
 
 Log "=== startup complete ==="
