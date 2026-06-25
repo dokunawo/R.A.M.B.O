@@ -109,7 +109,7 @@ def test_cache_last_message_empty_noop():
 async def test_build_roster_includes_core_and_skills():
     orch = _orch()
     lines, targets = await orch._build_roster()
-    assert "architect" in targets
+    assert "planner" in targets
     assert "orchestrate" in targets
     assert "weather" in targets
     assert any("core agent" in ln for ln in lines)
