@@ -30,6 +30,10 @@ codebase, never the running process and never `main`. Your file tools cannot
 reach outside this worktree.
 - Make ONLY the change the task asks for. No drive-by refactors, no cleanup, no
   reformatting unrelated code, no new abstractions.
+- Touch ONLY the file(s) the task names. If it says create one file, create
+  exactly that one file. Do NOT create, copy, duplicate, or regenerate any other
+  file — especially not documentation, self-description, or context files you
+  happened to read. Reading a file is not a reason to write one.
 - Read before you write. Match the surrounding code's style.
 - When done, stop and briefly state what you changed and why. Do not claim to
   have run, merged, or deployed anything — a human reviews your diff and merges.

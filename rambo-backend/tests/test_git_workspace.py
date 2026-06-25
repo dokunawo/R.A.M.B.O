@@ -89,12 +89,32 @@ async def test_merge_refuses_dirty_working_tree(repo):
     (ws.worktree_path / "README.md").write_text("hello\nchange\n", encoding="utf-8")
     await gw.commit_paths(ws, "change", ["README.md"])
 
-    # Dirty the live working tree.
+    # Dirty the SAME file the merge will touch → real conflict, merge refused.
     (repo / "README.md").write_text("hello\nlocal edit\n", encoding="utf-8")
 
     with pytest.raises(gw.GitWorkspaceError, match="uncommitted changes"):
         await gw.merge(ws)
 
+    await gw.discard(ws)
+
+
+@pytest.mark.asyncio
+async def test_merge_allows_unrelated_dirty_file(repo):
+    # Merge touches README; an unrelated tracked file is dirty → merge still allowed.
+    (repo / "other.txt").write_text("v1\n", encoding="utf-8")
+    _run(repo, "add", "-A")
+    _run(repo, "commit", "-m", "add other")
+
+    ws = await gw.create_workspace("unrel", repo_root=repo)
+    (ws.worktree_path / "README.md").write_text("hello\nfrom branch\n", encoding="utf-8")
+    await gw.commit_paths(ws, "branch edits readme", ["README.md"])
+
+    # Dirty an UNRELATED file the merge won't touch.
+    (repo / "other.txt").write_text("locally edited\n", encoding="utf-8")
+
+    await gw.merge(ws)  # should NOT raise
+    assert (repo / "README.md").read_text(encoding="utf-8") == "hello\nfrom branch\n"
+    assert (repo / "other.txt").read_text(encoding="utf-8") == "locally edited\n"  # WIP preserved
     await gw.discard(ws)
 
 

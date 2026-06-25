@@ -95,9 +95,26 @@ async def current_branch(repo_root: Path) -> str:
 
 
 async def is_dirty(repo_root: Path) -> bool:
-    """True if the repo's main working tree has uncommitted changes."""
+    """True if the repo's main working tree has uncommitted changes (any kind)."""
     out = await _git_ok(repo_root, "status", "--porcelain")
     return bool(out.strip())
+
+
+async def locally_modified(repo_root: Path) -> set[str]:
+    """Tracked files with uncommitted modifications (untracked files excluded).
+
+    These are the only files a merge could unsafely clobber — untracked files are
+    protected by git itself, so they don't block a merge that doesn't touch them.
+    """
+    out = await _git_ok(repo_root, "status", "--porcelain", "--untracked-files=no")
+    files: set[str] = set()
+    for line in out.splitlines():
+        path = line[3:].strip()
+        if " -> " in path:  # rename: "old -> new"
+            path = path.split(" -> ", 1)[1].strip()
+        if path:
+            files.add(path)
+    return files
 
 
 async def create_workspace(change_id: str,
@@ -165,9 +182,14 @@ async def merge(ws: GitWorkspace) -> str:
     """
     if ws.branch in _PROTECTED:
         raise GitWorkspaceError(f"refusing to merge protected branch {ws.branch!r}")
-    if await is_dirty(ws.repo_root):
+    # Precise guard: block only if the merge would touch a locally-modified file
+    # (untracked files and unrelated WIP don't block a clean merge — git itself
+    # protects against the collision cases).
+    conflicts = (await locally_modified(ws.repo_root)) & set(await changed_files(ws))
+    if conflicts:
         raise GitWorkspaceError(
-            "main working tree has uncommitted changes — commit or stash before merging"
+            "merge would touch files with uncommitted changes: "
+            f"{sorted(conflicts)} — commit or stash them first"
         )
     on = await current_branch(ws.repo_root)
     if on != ws.base_branch:

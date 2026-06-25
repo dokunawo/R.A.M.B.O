@@ -15,6 +15,7 @@ let initStarted = false;
 let state = {
   configured: false,   // SPOTIFY_CLIENT_ID/SECRET present on the backend
   connected: false,    // OAuth completed
+  needsReconnect: false, // token missing a now-required scope → reconnect to fix
   ready: false,        // the R.A.M.B.O device is registered & active
   paused: true,
   shuffle: false,
@@ -42,6 +43,7 @@ async function fetchStatus() {
       const j = await r.json();
       state.configured = !!j.configured;
       state.connected = !!j.connected;
+      state.needsReconnect = !!j.needs_reconnect;
       emit();
       return j;
     }
@@ -196,12 +198,12 @@ export async function prevTrack() { if (player) await player.previousTrack(); }
 export async function seek(ms) { if (player) await player.seek(ms); }
 
 // Start a playlist/track on the R.A.M.B.O device (used by search/playlist clicks).
-export async function playUri({ context_uri, uris } = {}) {
+export async function playUri({ context_uri, uris, offset } = {}) {
   try {
     await fetch(`${API}/spotify/play`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ device_id: deviceId, context_uri, uris }),
+      body: JSON.stringify({ device_id: deviceId, context_uri, uris, offset }),
     });
   } catch { /* ignore */ }
 }
