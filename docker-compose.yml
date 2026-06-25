@@ -9,6 +9,10 @@ services:
     volumes:
       - ./rambo-backend:/app
       - ./:/repo:ro          # full tree + .git, read-only — for self-awareness
+    # Dev convenience: auto-restart uvicorn on .py edits (source is volume-mounted
+    # above). Overrides the Dockerfile CMD, which stays the clean prod default.
+    # Needs watchfiles → requirements pins uvicorn[standard].
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]

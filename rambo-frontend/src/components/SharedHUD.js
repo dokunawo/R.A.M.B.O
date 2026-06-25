@@ -282,6 +282,85 @@ export function VoiceCostIndicator({ data }) {
   );
 }
 
+/* ---- Voyage embedding-credit tracker ---- */
+
+function formatTokens(n) {
+  if (n == null) return "—";
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
+  }
+  return formatK(n);
+}
+
+export function useVoyageUsage() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const r = await fetch(`${API}/usage/embed`);
+        if (r.ok && !cancelled) setData(await r.json());
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 60000);
+    const onVis = () => { if (!document.hidden) poll(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+  return data;
+}
+
+export function EmbedCostIndicator({ data }) {
+  const [expanded, setExpanded] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const close = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setExpanded(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [expanded]);
+
+  if (!data || !data.tokens) return null;
+  const t = data.tokens;
+  const credit = data.credit || {};
+
+  return (
+    <div className="hud-cost-wrap" ref={panelRef}>
+      <div className="hud-cost-face" onClick={() => setExpanded(e => !e)}>
+        <span className="hud-cost-tag">EMBED</span>
+        <span className="hud-cost-amount">{formatTokens(t.remaining)}</span>
+        <span className="hud-cost-delta">{formatTokens(t.used)}/{formatTokens(t.limit)}</span>
+        <span className="hud-voice-src">{data.active ? "ON" : "OFF"}</span>
+      </div>
+
+      {expanded && (
+        <div className="hud-cost-panel">
+          <div className="hud-cost-panel-header">◆ EMBED CREDITS</div>
+          <div className="hud-cost-section">
+            <div className="hud-cost-row"><span>Free remaining</span><span>{t.remaining.toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>Free used</span><span>{t.used.toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>Free limit</span><span>{t.limit.toLocaleString()}</span></div>
+          </div>
+          <div className="hud-cost-section">
+            <div className="hud-cost-row"><span>Paid balance</span><span>${(credit.remaining_usd ?? 0).toFixed(2)}</span></div>
+            <div className="hud-cost-row"><span>Paid spent</span><span>${(credit.spent_usd ?? 0).toFixed(4)}</span></div>
+          </div>
+          <div className="hud-cost-section">
+            <div className="hud-cost-row"><span>MTD tokens</span><span>{(data.month_to_date?.tokens ?? 0).toLocaleString()}</span></div>
+            <div className="hud-cost-row"><span>MTD calls</span><span>{data.month_to_date?.calls ?? 0}</span></div>
+            <div className="hud-cost-row"><span>Model</span><span>{data.model}</span></div>
+            <div className="hud-cost-row"><span>Status</span><span>{data.active ? "Active" : "Key not set"}</span></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function useFactoryPending() {
   const [pending, setPending] = useState([]);
 

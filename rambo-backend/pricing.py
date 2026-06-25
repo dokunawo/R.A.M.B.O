@@ -30,6 +30,27 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
         "cache_write":  3.75,
         "cache_read":   0.30,
     },
+    # Voyage AI embeddings — flat per-million-token rate (no output/cache tiers).
+    # First 200M tokens/account are free; these rates apply beyond that.
+    # Source: https://docs.voyageai.com/docs/pricing
+    "voyage-4-lite": {
+        "input":        0.02,
+        "output":       0.00,
+        "cache_write":  0.00,
+        "cache_read":   0.00,
+    },
+    "voyage-4": {
+        "input":        0.06,
+        "output":       0.00,
+        "cache_write":  0.00,
+        "cache_read":   0.00,
+    },
+    "voyage-4-large": {
+        "input":        0.12,
+        "output":       0.00,
+        "cache_write":  0.00,
+        "cache_read":   0.00,
+    },
 }
 
 _PER_MILLION = 1_000_000

@@ -95,3 +95,23 @@ class UsageRepo:
             )
             totals["by_day"] = [dict(r) for r in daily]
         return totals
+
+    async def voyage_totals(self, start: str | None = None) -> dict:
+        """Aggregate embedding usage (model LIKE 'voyage%'). `start` (ISO) limits
+        to a window; omit for all-time totals. Used by the EMBED credit HUD."""
+        clause = "WHERE model LIKE 'voyage%'"
+        params: tuple = ()
+        if start:
+            clause += " AND created_at >= ?"
+            params = (start,)
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            rows = await db.execute_fetchall(
+                "SELECT "
+                "  COALESCE(SUM(input_tokens), 0) AS tokens, "
+                "  COALESCE(SUM(cost_usd), 0.0)   AS cost, "
+                "  COUNT(*)                       AS calls "
+                f"FROM usage {clause}",
+                params,
+            )
+            return dict(rows[0]) if rows else {"tokens": 0, "cost": 0.0, "calls": 0}

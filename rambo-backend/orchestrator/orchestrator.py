@@ -32,6 +32,7 @@ from websocket.manager import ConnectionManager
 from conversation import ConversationManager
 from personality import load_personality, build_system_prompt, append_voice_cue
 from orchestrator.routing import SmartRouter
+from orchestrator.roster_index import RosterIndex
 import sentinel_queue
 import cache_config
 import model_config
@@ -69,6 +70,9 @@ class Orchestrator:
 
         # Tier 1 — smart routing brain (fast model: routing is a quick decision).
         self.router = SmartRouter(self.llm, model=model_config.fast_model())
+        # Embedding-based roster pre-filter — shortlists the roster before routing
+        # (no-op when VOYAGE_API_KEY is unset). See orchestrator/roster_index.py.
+        self.roster_index = RosterIndex()
 
         # Factory wiring — set later by main.py once the DB + registry exist.
         self.factory_repo = None
@@ -125,6 +129,32 @@ class Orchestrator:
     def set_dispatch_repo(self, dispatch_repo):
         """Give the orchestrator a durable dispatch log (best-effort)."""
         self.dispatch_repo = dispatch_repo
+        # Wire the digester so long completed-history blocks get compressed with
+        # the fast model before injection (no-op if the LLM is unavailable).
+        try:
+            dispatch_repo.set_digester(self._digest_dispatch_history)
+        except Exception:
+            pass
+
+    async def _digest_dispatch_history(self, raw_block: str) -> str:
+        """Compress a raw completed-dispatch block into a 1-2 line activity digest
+        using the fast model. Best-effort — callers fall back to raw on failure."""
+        if not self.llm:
+            return ""
+        prompt = (
+            "Compress this list of recently completed tasks into ONE short line "
+            "(<=25 words) capturing the gist of recent activity. No preamble.\n\n"
+            f"{raw_block}"
+        )
+        resp = await self.llm.messages.create(
+            model=model_config.fast_model(),
+            max_tokens=80,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        await record_usage(model_config.fast_model(), resp.usage, source="digest")
+        return "".join(
+            b.text for b in resp.content if getattr(b, "type", None) == "text"
+        ).strip()
 
     def set_tts(self, tts):
         """Give the orchestrator a best-effort TTS client (or None)."""
@@ -168,7 +198,17 @@ class Orchestrator:
         m = re.search(r"\b(?:what(?:'s| is| are)?|recall|remember|tell me|do you (?:know|have))\b\s*(?:my|the|our|about)?\s*(.+)", low)
         if m:
             term = re.sub(r"[?.!]+$", "", m.group(1)).strip()
-            hits = await repo.query(term, limit=5)
+            # Semantic recall first (associative — handles paraphrase/synonyms).
+            # Falls through to substring matching when embeddings are off or weak.
+            hits = []
+            try:
+                semantic = getattr(repo, "semantic_query", None)
+                if semantic:
+                    hits = await semantic(term, limit=5)
+            except Exception:
+                hits = []
+            if not hits:
+                hits = await repo.query(term, limit=5)
             if not hits:
                 # Fall back to matching individual significant words (handles
                 # phrasing/plural drift, e.g. "dog's name" vs stored "dog_s_name").
@@ -329,9 +369,13 @@ class Orchestrator:
         ctx = ctx or {}
 
         roster_lines, valid_targets = await self._build_roster()
+        # Semantic pre-filter: route over the top-K relevant lines, but keep the
+        # FULL valid_targets set so the router may still name a non-shortlisted
+        # target without sanitize() rewriting it. No-op without embeddings.
+        shortlisted = await self.roster_index.shortlist(goal, roster_lines)
         dispatch_ctx = await self._dispatch_context()
         routed_goal = f"{dispatch_ctx}\n\n{goal}" if dispatch_ctx else goal
-        decision = await self.router.route(routed_goal, roster_lines, valid_targets)
+        decision = await self.router.route(routed_goal, shortlisted, valid_targets)
 
         # Router unavailable or punted → keyword fallback (failure isolation).
         if decision is None:
