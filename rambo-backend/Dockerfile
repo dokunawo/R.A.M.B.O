@@ -10,6 +10,7 @@ WORKDIR /app
 # Install system dependencies (very lightweight)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- INSTALL DEPENDENCIES ----------
