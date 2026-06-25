@@ -61,6 +61,40 @@ def get_detail(agent_key):
     return result
 
 
+def get_detail_merged(keys):
+    """Aggregate detail across several shell agents into one view (used by the
+    consolidated dashboard lineup). Single-key lists defer to get_detail."""
+    if not keys:
+        return get_detail("unknown")
+    if len(keys) == 1:
+        return get_detail(keys[0])
+
+    tasks_completed = tasks_pending = failed_total = 0
+    activity = []
+    for k in keys:
+        _ensure(k)
+        s = _stats[k]
+        tasks_completed += s["tasks_completed"]
+        tasks_pending += s["tasks_pending"]
+        activity.extend(_activity.get(k, []))
+        failed_total += sum(1 for a in _activity[k] if a["status"] == "failed")
+
+    activity.sort(key=lambda a: a["time"], reverse=True)
+    success_rate = (
+        f"{round((tasks_completed - failed_total) / tasks_completed * 100)}%"
+        if tasks_completed else "100%"
+    )
+    result = {
+        "tasks_completed": tasks_completed,
+        "tasks_pending": tasks_pending,
+        "success_rate": success_rate,
+        "recent_activity": activity[:10],
+    }
+    if "steward" in keys:
+        result["budget"] = BUDGET_DATA
+    return result
+
+
 def add_learning(text, source="System", category="General"):
     _learnings.insert(0, {
         "text": text,

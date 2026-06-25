@@ -81,20 +81,41 @@ class Orchestrator:
         self.tts = None
         self.tts_usage_repo = None
 
-    # One-line ownership for each core agent. Drives the routing roster and
+    # One-line ownership for each routable mode. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
+    # The 7 former LLM-shell agents collapse into 3 modes; only their distinct
+    # services (keeper memory, sentinel gate, pilot queue) keep separate identity.
     CORE_OWNERSHIP = {
-        "architect": "planning, decomposition, and specs (precedes implementation)",
-        "engineer":  "building / implementing code and features",
-        "seeker":    "searching, finding, and looking things up",
-        "analyst":   "analyzing data, metrics, and evaluating results",
-        "steward":   "budgeting, cost, and resource planning",
-        "link":      "external integrations (Notion, Slack, APIs)",
-        "keeper":    "storing, recalling, and managing files/memory",
-        "echo":      "summarizing and condensing",
+        "planner":    "planning, decomposition, specs, and summarizing results",
+        "executor":   "building/implementing code, integrations, budgeting & resource actions",
+        "researcher": "searching, finding, looking things up, and analyzing/evaluating data",
+        "keeper":     "storing, recalling, and managing files/memory",
     }
+
+    # Router-facing mode → underlying shell agent. The shells still live in
+    # self.agents so the orchestrate pipeline (choose_brain) keeps working; only
+    # the routing surface is collapsed. _speak() handles summary voicing, so the
+    # "planner" mode covers both architect (plan) and echo (summarize).
+    _MODE_AGENTS = {
+        "planner":    "architect",
+        "executor":   "engineer",   # absorbs steward + link
+        "researcher": "seeker",     # absorbs analyst
+    }
+    # keeper is routable but runs via _run_keeper, not a mode shell.
     # sentinel + pilot are internal-only (review / queue-building) and are not
     # offered as routable targets.
+
+    # The lineup the dashboard shows: consolidated modes + the distinct services,
+    # NOT the 10 internal shells. Each entry aggregates the live status of its
+    # underlying shell agents. (display_key, display_name, [shell members])
+    DISPLAY_GROUPS = [
+        ("planner",    "Planner",    ["architect", "echo"]),
+        ("executor",   "Executor",   ["engineer", "steward", "link"]),
+        ("researcher", "Researcher", ["seeker", "analyst"]),
+        ("keeper",     "Keeper",     ["keeper"]),
+        ("sentinel",   "Sentinel",   ["sentinel"]),
+        ("pilot",      "Pilot",      ["pilot"]),
+    ]
 
     def set_factory(self, factory_repo, tool_registry):
         """Give the orchestrator access to spawned agents + their tools."""
@@ -230,13 +251,24 @@ class Orchestrator:
             pass
 
     def get_status(self):
+        agents = []
+        for key, name, members in self.DISPLAY_GROUPS:
+            working = any(self.agent_status.get(m) == "working" for m in members)
+            agents.append({
+                "key": key,
+                "name": name,
+                "status": "working" if working else "idle",
+            })
         return {
             "overseer": {"name": "R.A.M.B.O", "role": "Overseer", "status": "online"},
-            "agents": [
-                {"name": name.capitalize(), "status": self.agent_status[name]}
-                for name in self.agents
-            ],
+            "agents": agents,
         }
+
+    def detail_for(self, key: str):
+        """Drill-down detail for a dashboard lineup entry — merges the activity
+        of its underlying shell agents so the consolidated view stays coherent."""
+        members = next((m for k, _n, m in self.DISPLAY_GROUPS if k == key), [key])
+        return agent_tracker.get_detail_merged(members)
 
     async def _set_status(self, name: str, status: str):
         self.agent_status[name] = status
@@ -373,8 +405,10 @@ class Orchestrator:
                 if row and row.get("status") == "active":
                     return await self._run_spawned(row, task)
 
-            if target in self.agents:
-                return await self._run_core_agent(target, task)
+            # Router-facing modes resolve to their underlying shell agent.
+            resolved = self._MODE_AGENTS.get(target, target)
+            if resolved in self.agents:
+                return await self._run_core_agent(resolved, task)
 
             # Unknown target slipped through → fall back to full pipeline.
             plan, results = await self._orchestrate(task)
