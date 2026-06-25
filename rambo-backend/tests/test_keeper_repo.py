@@ -16,9 +16,10 @@ async def test_table_and_columns(repo):
     async with aiosqlite.connect(repo._db_path) as db:
         rows = await db.execute_fetchall("PRAGMA table_info(memories)")
         cols = {r[1] for r in rows}
-    # embedding/topic added for semantic recall + topic auto-split.
+    # embedding/topic added for semantic recall + topic auto-split;
+    # confidence added for verified-vs-hint scoring.
     assert cols == {"id", "key", "value", "tags", "embedding", "topic",
-                    "created_at", "updated_at"}
+                    "confidence", "created_at", "updated_at"}
 
 
 @pytest.mark.asyncio

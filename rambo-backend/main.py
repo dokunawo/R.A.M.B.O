@@ -21,6 +21,7 @@ from tts_usage_repo import TTSUsageRepo
 from tts_dashboard import get_tts_dashboard
 from keeper_repo import KeeperRepo
 from morning_brief import brief_scheduler, run_brief
+from reflection import reflection_scheduler, run_reflection
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from embed_dashboard import get_embed_dashboard
@@ -29,6 +30,10 @@ from factory.tool_registry import build_default_registry
 from factory.pipeline import SpawnPipeline
 from factory.approval import handle_approve, handle_reject
 from factory.registry_watcher import RegistryWatcher
+from spotify_repo import SpotifyRepo
+from spotify_client import SpotifyClient, SCOPES
+import spotify_client as spotify_mod
+from fastapi.responses import RedirectResponse, HTMLResponse
 
 try:
     import psutil
@@ -52,6 +57,9 @@ _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
 _watcher: RegistryWatcher | None = None
 _IN_FLIGHT: set[asyncio.Task] = set()
+_spotify_repo = SpotifyRepo()
+_spotify = SpotifyClient(_spotify_repo)
+_spotify_states: set[str] = set()
 
 
 @app.on_event("startup")
@@ -64,6 +72,12 @@ async def _init_usage_db():
 async def _init_dispatch_db():
     await _dispatch_repo.init_db()
     rambo.set_dispatch_repo(_dispatch_repo)
+
+
+@app.on_event("startup")
+async def _init_spotify_db():
+    await _spotify_repo.init_db()
+    rambo.set_spotify(_spotify)
 
 
 @app.on_event("startup")
@@ -81,12 +95,19 @@ async def _init_keeper():
 
 
 _brief_task = None
+_reflection_task = None
 
 
 @app.on_event("startup")
 async def _start_morning_brief():
     global _brief_task
     _brief_task = asyncio.create_task(brief_scheduler(rambo))
+
+
+@app.on_event("startup")
+async def _start_reflection():
+    global _reflection_task
+    _reflection_task = asyncio.create_task(reflection_scheduler(rambo))
 
 
 @app.on_event("startup")
@@ -122,6 +143,7 @@ class Command(BaseModel):
     goal: str
     lat: float | None = None
     lon: float | None = None
+    image: str | None = None  # base64 JPEG of the screen (on-demand vision)
 
 
 class SentinelDecision(BaseModel):
@@ -164,7 +186,7 @@ async def system_stats():
 
 @app.post("/rambo/execute")
 async def execute_command(cmd: Command):
-    ctx = {"lat": cmd.lat, "lon": cmd.lon}
+    ctx = {"lat": cmd.lat, "lon": cmd.lon, "image": cmd.image}
     return await rambo.handle(cmd.goal, ctx)
 
 
@@ -210,6 +232,151 @@ async def tts_usage_dashboard():
 @app.get("/usage/embed")
 async def embed_usage_dashboard():
     return await get_embed_dashboard(_usage_repo)
+
+
+# ── Spotify (in-app player via Web Playback SDK) ─────────────────────
+class SpotifyControl(BaseModel):
+    device_id: str | None = None
+    context_uri: str | None = None
+    uris: list[str] | None = None
+    play: bool = True
+
+
+class SpotifyDevice(BaseModel):
+    device_id: str
+
+
+@app.post("/spotify/device")
+async def spotify_device(d: SpotifyDevice):
+    """The browser registers its Web Playback SDK device id so voice commands can
+    target the R.A.M.B.O player even before anything is playing."""
+    rambo.set_spotify_device(d.device_id)
+    return {"ok": True}
+
+
+@app.get("/spotify/status")
+async def spotify_status():
+    return {
+        "configured": spotify_mod.is_configured(),
+        "connected": await _spotify.is_connected(),
+    }
+
+
+@app.get("/spotify/login")
+async def spotify_login():
+    if not spotify_mod.is_configured():
+        return {"error": "Spotify not configured — set SPOTIFY_CLIENT_ID/SECRET in .env"}
+    import secrets
+    state = secrets.token_urlsafe(16)
+    _spotify_states.add(state)
+    return RedirectResponse(_spotify.authorize_url(state))
+
+
+@app.get("/spotify/callback")
+async def spotify_callback(code: str | None = None, state: str | None = None, error: str | None = None):
+    def _page(msg: str, ok: bool) -> HTMLResponse:
+        color = "#48e0c0" if ok else "#e05a5a"
+        return HTMLResponse(
+            f"<html><body style='background:#0c0f14;color:{color};font-family:monospace;"
+            f"display:flex;align-items:center;justify-content:center;height:100vh;'>"
+            f"<div style='text-align:center'><h2>{msg}</h2>"
+            f"<p style='color:#9fd8cf'>You can close this tab.</p></div>"
+            f"<script>setTimeout(()=>window.close(),1500)</script></body></html>"
+        )
+    if error:
+        return _page(f"Spotify auth failed: {error}", False)
+    if not state or state not in _spotify_states:
+        return _page("Spotify auth failed: invalid state", False)
+    _spotify_states.discard(state)
+    if not code or not await _spotify.exchange_code(code):
+        return _page("Spotify auth failed: could not get tokens", False)
+    return _page("✓ Spotify connected to R.A.M.B.O", True)
+
+
+@app.get("/spotify/token")
+async def spotify_token():
+    tok = await _spotify.access_token()
+    if not tok:
+        return {"error": "not_connected"}
+    return {"access_token": tok}
+
+
+@app.post("/spotify/disconnect")
+async def spotify_disconnect():
+    await _spotify_repo.clear()
+    return {"ok": True}
+
+
+@app.get("/spotify/now-playing")
+async def spotify_now_playing():
+    return await _spotify.now_playing()
+
+
+@app.get("/spotify/playlists")
+async def spotify_playlists():
+    return await _spotify.playlists()
+
+
+@app.get("/spotify/playlist-tracks")
+async def spotify_playlist_tracks(playlist_id: str):
+    return await _spotify.playlist_tracks(playlist_id)
+
+
+@app.get("/spotify/liked")
+async def spotify_liked():
+    return await _spotify.liked()
+
+
+@app.post("/spotify/play-liked")
+async def spotify_play_liked(ctrl: SpotifyControl):
+    return await _spotify.play_liked(device_id=ctrl.device_id)
+
+
+@app.get("/spotify/search")
+async def spotify_search(q: str):
+    return await _spotify.search(q)
+
+
+@app.post("/spotify/play")
+async def spotify_play(ctrl: SpotifyControl):
+    return await _spotify.play(device_id=ctrl.device_id, context_uri=ctrl.context_uri, uris=ctrl.uris)
+
+
+@app.post("/spotify/pause")
+async def spotify_pause(ctrl: SpotifyControl):
+    return await _spotify.pause(device_id=ctrl.device_id)
+
+
+@app.post("/spotify/next")
+async def spotify_next(ctrl: SpotifyControl):
+    return await _spotify.next(device_id=ctrl.device_id)
+
+
+@app.post("/spotify/previous")
+async def spotify_previous(ctrl: SpotifyControl):
+    return await _spotify.previous(device_id=ctrl.device_id)
+
+
+@app.post("/spotify/transfer")
+async def spotify_transfer(ctrl: SpotifyControl):
+    if not ctrl.device_id:
+        return {"error": "device_id required"}
+    return await _spotify.transfer(ctrl.device_id, play=ctrl.play)
+
+
+@app.get("/spotify/devices")
+async def spotify_devices():
+    return await _spotify.devices()
+
+
+class SpotifyShuffle(BaseModel):
+    state: bool
+    device_id: str | None = None
+
+
+@app.post("/spotify/shuffle")
+async def spotify_shuffle(s: SpotifyShuffle):
+    return await _spotify.shuffle(s.state, device_id=s.device_id)
 
 
 # ── Keeper memory store ──────────────────────────────────────────────
@@ -259,6 +426,13 @@ async def brief_run():
     """Generate the morning brief now — displays it on screen and emails it."""
     brief = await run_brief(rambo)
     return {"delivered": True, "brief": brief}
+
+
+@app.post("/reflection/run")
+async def reflection_run():
+    """Run nightly reflection now — consolidates today's activity into Keeper."""
+    insights = await run_reflection(rambo)
+    return {"stored": len(insights), "insights": insights}
 
 
 @app.get("/agents/health")

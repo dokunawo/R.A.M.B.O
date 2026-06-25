@@ -33,11 +33,21 @@ async def calendar_skill(goal: str, ctx: dict) -> str:
         return await _create_event(service, goal)
 
     # List events (default)
-    return await _list_events(service, goal)
+    return await _list_events(service, goal, ctx)
 
 
-async def _list_events(service, goal: str) -> str:
+async def _list_events(service, goal: str, ctx: dict | None = None) -> str:
     lower = goal.lower()
+
+    # Prefer a centrally-resolved temporal range (from the orchestrator) so
+    # "this week", "tomorrow", etc. resolve identically everywhere. Fall back to
+    # the local keyword parsing below when none was attached.
+    resolved = (ctx or {}).get("temporal") or []
+    if resolved:
+        r = resolved[0]
+        time_min = r.start.isoformat() + "Z"
+        time_max = r.end.isoformat() + "Z"
+        return await _query_and_format(service, time_min, time_max, r.phrase)
 
     # Determine time range
     now = datetime.utcnow()
@@ -61,7 +71,10 @@ async def _list_events(service, goal: str) -> str:
 
     time_min = start.isoformat() + "Z"
     time_max = end.isoformat() + "Z"
+    return await _query_and_format(service, time_min, time_max, label)
 
+
+async def _query_and_format(service, time_min: str, time_max: str, label: str) -> str:
     try:
         result = service.events().list(
             calendarId="primary",

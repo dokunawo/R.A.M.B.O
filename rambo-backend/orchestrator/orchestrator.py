@@ -37,6 +37,7 @@ import sentinel_queue
 import cache_config
 import model_config
 from skills import SKILLS
+from temporal import resolve_temporal, format_temporal_context
 
 
 class Orchestrator:
@@ -84,6 +85,11 @@ class Orchestrator:
         # TTS client — set later via set_tts (best-effort, may be None).
         self.tts = None
         self.tts_usage_repo = None
+
+        # Spotify — set later via set_spotify (best-effort, may be None). The
+        # playback device lives in the browser; its id is registered at runtime.
+        self.spotify = None
+        self._spotify_device = None
 
     # One-line ownership for each routable mode. Drives the routing roster and
     # keeps dispatch knowledge centralized in the conductor (not in agents).
@@ -164,6 +170,115 @@ class Orchestrator:
         """Give the orchestrator a best-effort ElevenLabs character-usage log."""
         self.tts_usage_repo = repo
 
+    def set_spotify(self, client):
+        """Give the orchestrator the Spotify client for voice control."""
+        self.spotify = client
+
+    def set_spotify_device(self, device_id: str):
+        """Register the browser's Web Playback SDK device so voice commands can
+        target the R.A.M.B.O player even when nothing is active yet."""
+        self._spotify_device = device_id
+
+    @staticmethod
+    def _spotify_failed(res) -> bool:
+        return isinstance(res, dict) and bool(res.get("error"))
+
+    _NO_DEVICE = ("I can't reach the player — make sure a R.A.M.B.O tab is open "
+                  "and Spotify is connected.")
+
+    async def _run_spotify(self, text: str) -> str:
+        """Voice/command control of Spotify: play a track, playlist, or Liked
+        Songs, switch tracks, pause/resume, shuffle, or report what's playing.
+        Resolves a live device first so playback actually lands somewhere."""
+        client = getattr(self, "spotify", None)
+        if not client:
+            return "[Spotify] Music control isn't wired."
+        if not await client.is_connected():
+            return "Spotify isn't connected yet — hit Connect Spotify on the dashboard first."
+
+        t = (text or "").strip()
+        low = t.lower()
+        # Target the currently-active R.A.M.B.O device (handles stale/duplicate ids).
+        dev = await client.resolve_device(self._spotify_device)
+
+        if re.search(r"\b(what'?s playing|what is playing|current (?:song|track)|what song|now playing)\b", low):
+            np = await client.now_playing()
+            item = np.get("item") if isinstance(np, dict) else None
+            if not item:
+                return "Nothing's playing right now."
+            artists = ", ".join(a.get("name", "") for a in item.get("artists", []))
+            return f"Now playing {item.get('name')} by {artists}."
+
+        # shuffle on / off
+        m = re.search(r"\bshuffle\b", low)
+        if m and not re.search(r"\bplay\b", low):
+            on = not re.search(r"\b(off|stop|no|disable)\b", low)
+            res = await client.shuffle(on, dev)
+            if self._spotify_failed(res):
+                return self._NO_DEVICE
+            return "Shuffle on." if on else "Shuffle off."
+
+        if re.search(r"\b(pause|stop)\b", low):
+            await client.pause(dev)
+            return "Paused."
+        if re.search(r"\b(next|skip)\b", low):
+            await client.next(dev)
+            return "Skipped ahead."
+        if re.search(r"\b(previous|go back|last song|prev)\b", low):
+            await client.previous(dev)
+            return "Back a track."
+
+        # play [my|the] <name> playlist  /  play playlist <name>
+        m = re.search(r"play(?:\s+(?:my|the))?\s+(.+?)\s+playlist\b", low) or \
+            re.search(r"play(?:\s+(?:my|the))?\s+playlist\s+(.+)", low)
+        if m:
+            name = t[m.start(1):m.end(1)].strip()
+            data = await client.playlists()
+            items = data.get("items", []) if isinstance(data, dict) else []
+            match = next((p for p in items if name.lower() in (p.get("name") or "").lower()), None)
+            if match:
+                res = await client.play(device_id=dev, context_uri=match["uri"])
+                return self._NO_DEVICE if self._spotify_failed(res) else f"Playing your {match['name']} playlist."
+            return f'Couldn\'t find a playlist called "{name}".'
+
+        # play my liked songs
+        if re.search(r"\b(liked(?: songs?)?|my (?:liked|saved) (?:songs?|music|tracks?)|my songs?)\b", low) \
+                and re.search(r"\b(play|put on|shuffle|start)\b", low):
+            res = await client.play_liked(device_id=dev)
+            if self._spotify_failed(res):
+                if res.get("error") == "no_liked_songs":
+                    return "Your Liked Songs list looks empty."
+                return self._NO_DEVICE
+            return "Playing your Liked Songs."
+
+        # play <something>
+        m = re.search(r"\b(?:play|put on|queue up)\b\s+(.+)", low)
+        if m:
+            q = t[m.start(1):].strip().rstrip(".")
+            if not q or q in ("music", "something", "a song", "some music"):
+                res = await client.play_liked(device_id=dev)
+                if self._spotify_failed(res):
+                    return self._NO_DEVICE if res.get("error") != "no_liked_songs" else "Your Liked Songs list looks empty."
+                return "Playing your Liked Songs."
+            # "song by artist" → drop the connective so search matches better.
+            sq = re.sub(r"\s+by\s+", " ", q)
+            res = await client.search(sq, "track")
+            tracks = (res.get("tracks") or {}).get("items", []) if isinstance(res, dict) else []
+            if not tracks:
+                return f'Couldn\'t find "{q}" on Spotify.'
+            top = tracks[0]
+            played = await client.play(device_id=dev, uris=[top["uri"]])
+            if self._spotify_failed(played):
+                return self._NO_DEVICE
+            artists = ", ".join(a.get("name", "") for a in top.get("artists", []))
+            return f"Playing {top.get('name')} by {artists}."
+
+        if re.search(r"\b(resume|unpause|play)\b", low):
+            res = await client.play(device_id=dev)
+            return self._NO_DEVICE if self._spotify_failed(res) else "Resuming."
+
+        return "I can play songs or playlists, skip, pause, shuffle, or tell you what's on — just say the word."
+
     def set_keeper_repo(self, repo):
         """Give the Keeper agent a durable memory store."""
         self.keeper_repo = repo
@@ -198,13 +313,14 @@ class Orchestrator:
         m = re.search(r"\b(?:what(?:'s| is| are)?|recall|remember|tell me|do you (?:know|have))\b\s*(?:my|the|our|about)?\s*(.+)", low)
         if m:
             term = re.sub(r"[?.!]+$", "", m.group(1)).strip()
-            # Semantic recall first (associative — handles paraphrase/synonyms).
-            # Falls through to substring matching when embeddings are off or weak.
+            # Hybrid recall: blends keyword + semantic + recency + confidence, and
+            # works with Voyage off. Falls back to substring/word matching only if
+            # the blended pass surfaces nothing.
             hits = []
             try:
-                semantic = getattr(repo, "semantic_query", None)
-                if semantic:
-                    hits = await semantic(term, limit=5)
+                recall = getattr(repo, "recall", None)
+                if recall:
+                    hits = await recall(term, limit=5)
             except Exception:
                 hits = []
             if not hits:
@@ -224,7 +340,17 @@ class Orchestrator:
                             seen[h["key"]] = h
                 hits = list(seen.values())[:5]
             if hits:
-                return "[Keeper] " + "; ".join(f"{h['key']}: {h['value']}" for h in hits)
+                # Assert verified facts; hedge on low-confidence hints so the
+                # voice layer never states an uncertain memory as established fact.
+                verified = [h for h in hits if h.get("confidence", "verified") != "hint"]
+                hinted = [h for h in hits if h.get("confidence", "verified") == "hint"]
+                parts = []
+                if verified:
+                    parts.append("; ".join(f"{h['key']}: {h['value']}" for h in verified))
+                if hinted:
+                    parts.append("possibly " + "; ".join(
+                        f"{h['key']}: {h['value']}" for h in hinted))
+                return "[Keeper] " + " — ".join(parts)
             return f'[Keeper] Nothing stored about "{term}".'
 
         # Default: report what's stored.
@@ -368,13 +494,30 @@ class Orchestrator:
     async def handle(self, goal: str, ctx: dict = None):
         ctx = ctx or {}
 
+        # On-demand screen vision: an attached frame short-circuits straight to a
+        # direct multimodal Q&A (no agent routing).
+        image = ctx.get("image")
+        if image:
+            return await self._vision_answer(goal, image)
+
         roster_lines, valid_targets = await self._build_roster()
         # Semantic pre-filter: route over the top-K relevant lines, but keep the
         # FULL valid_targets set so the router may still name a non-shortlisted
         # target without sanitize() rewriting it. No-op without embeddings.
         shortlisted = await self.roster_index.shortlist(goal, roster_lines)
         dispatch_ctx = await self._dispatch_context()
-        routed_goal = f"{dispatch_ctx}\n\n{goal}" if dispatch_ctx else goal
+
+        # Resolve relative date phrases ("yesterday", "this week") to explicit
+        # ranges. Stash them on ctx so skills (e.g. calendar) can reuse the same
+        # resolution, and surface them to the router so it dispatches against
+        # real dates instead of guessing.
+        temporal = resolve_temporal(goal)
+        if temporal:
+            ctx["temporal"] = temporal
+        temporal_ctx = format_temporal_context(temporal)
+
+        prefix = "\n\n".join(p for p in (temporal_ctx, dispatch_ctx) if p)
+        routed_goal = f"{prefix}\n\n{goal}" if prefix else goal
         decision = await self.router.route(routed_goal, shortlisted, valid_targets)
 
         # Router unavailable or punted → keyword fallback (failure isolation).
@@ -425,6 +568,12 @@ class Orchestrator:
         )
         targets.add("orchestrate")
 
+        lines.append(
+            "- spotify (music): play/pause/skip songs, play a named playlist, "
+            "search and play tracks, and report what's currently playing"
+        )
+        targets.add("spotify")
+
         for skill in SKILLS:
             lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
             targets.add(skill["name"])
@@ -451,6 +600,9 @@ class Orchestrator:
             if target == "orchestrate":
                 plan, results = await self._orchestrate(task)
                 return "\n".join(str(r) for r in results) if results else "(no output)"
+
+            if target == "spotify":
+                return await self._run_spotify(task)
 
             skill = next((s for s in SKILLS if s["name"] == target), None)
             if skill:
@@ -603,6 +755,10 @@ class Orchestrator:
             return candidate, remainder
         return None, buffer
 
+    # Spoken-form fix: the dotted acronym makes TTS spell out "R-A-M-B-O".
+    # Say it as the word "Rambo" instead (voice only — on-screen text is untouched).
+    _SPOKEN_RAMBO = re.compile(r"R\.A\.M\.B\.O\.?", re.IGNORECASE)
+
     async def _segment_audio(self, text: str) -> "str | None":
         """Synthesize a spoken segment to base64 MP3, best-effort. None on
         missing client, empty result, or any error."""
@@ -610,10 +766,11 @@ class Orchestrator:
         if not tts:
             return None
         try:
-            data = await tts.synthesize(text)
+            spoken = self._SPOKEN_RAMBO.sub("Rambo", text)
+            data = await tts.synthesize(spoken)
             if not data:
                 return None
-            await self._record_tts_usage(text, getattr(tts, "model", ""))
+            await self._record_tts_usage(spoken, getattr(tts, "model", ""))
             import base64
             return base64.b64encode(data).decode("ascii")
         except Exception:
@@ -690,6 +847,15 @@ class Orchestrator:
         messages = self.conversation.get_messages_for_api()
         append_voice_cue(messages)
         self._cache_last_message(messages)
+        return await self._stream_voice(messages, fallback_text=results_block)
+
+    async def _stream_voice(
+        self, messages: list[dict], fallback_text: str = "", *, source: str = "conversation",
+    ) -> str:
+        """Stream a voiced reply for already-prepared `messages`: split into
+        sentences, emit speak_segments (+TTS) over WS, record usage, persist the
+        assistant turn, and return the full text. Shared by _speak and
+        _vision_answer so the voice/TTS pipeline lives in one place."""
         system = build_system_prompt(self.personality_text)
 
         t0 = time.monotonic()
@@ -699,6 +865,7 @@ class Orchestrator:
         held_seq = None
         sentences = []
         token_buf = ""
+        text = (fallback_text or "").strip()
 
         try:
             async with self.llm.messages.stream(
@@ -723,7 +890,7 @@ class Orchestrator:
                             seq += 1
 
             final_msg = await stream.get_final_message()
-            await record_usage(final_msg.model, final_msg.usage)
+            await record_usage(final_msg.model, final_msg.usage, source=source)
 
             if token_buf.strip():
                 sentences.append(token_buf.strip())
@@ -740,10 +907,48 @@ class Orchestrator:
                 await self._emit_segment(held_text, base_turn_id, held_seq, True, t0)
 
         except Exception:
-            text = results_block.strip()
+            text = (fallback_text or "").strip()
             await self._emit_segment(text, base_turn_id, 0, True, t0)
 
         self.conversation.add_assistant_message(text)
         await self._response("rambo", text)
         await self.broadcast("[R.A.M.B.O] Response delivered.")
         return text
+
+    async def _vision_answer(self, goal: str, image_b64: str) -> dict:
+        """On-demand screen vision: answer/describe what's in the captured frame.
+        Bypasses agent routing — it's a direct multimodal Q&A in R.A.M.B.O's voice.
+        The image is sent for THIS call only; conversation history keeps a text-only
+        turn so screenshots don't bloat (and re-bill) every later turn."""
+        if not self.llm:
+            msg = "Vision's offline — no model is wired."
+            await self._response("rambo", msg)
+            await self.broadcast("[R.A.M.B.O] Response delivered.")
+            return {"response": msg, "agent": "rambo"}
+
+        question = (goal or "").strip() or "What's on my screen right now? Describe what you see."
+        await self.broadcast("[R.A.M.B.O] Looking at your screen…")
+
+        # Persist a text-only user turn; swap in the image for the API call only.
+        self.conversation.add_user_message(question)
+        messages = self.conversation.get_messages_for_api()
+        messages[-1] = {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": question},
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": image_b64,
+                    },
+                },
+            ],
+        }
+        append_voice_cue(messages)
+        self._cache_last_message(messages)
+        text = await self._stream_voice(
+            messages, fallback_text="I couldn't make out the screen.", source="vision",
+        )
+        return {"response": text, "agent": "rambo"}

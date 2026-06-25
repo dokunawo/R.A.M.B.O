@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS memories (
     tags       TEXT    NOT NULL DEFAULT '',
     embedding  BLOB,
     topic      TEXT,
+    confidence TEXT    NOT NULL DEFAULT 'hint',
     created_at TEXT    NOT NULL,
     updated_at TEXT    NOT NULL
 );
@@ -80,6 +81,81 @@ def _recall_floor() -> float:
         return 0.55
 
 
+import math
+import re as _re
+
+_STOP = {
+    "the", "a", "an", "my", "our", "your", "is", "are", "was", "were", "be",
+    "to", "of", "in", "on", "for", "and", "or", "what", "whats", "about",
+    "do", "you", "i", "me", "it", "that", "this", "with", "have", "has",
+}
+
+
+def _tokenize(text: str) -> list[str]:
+    """Lowercase word tokens, stopwords dropped, length>2. Trailing 's' stripped
+    so 'dogs' and 'dog' collide (cheap stemming)."""
+    out = []
+    for w in _re.findall(r"[a-z0-9]+", (text or "").lower()):
+        if len(w) <= 2 or w in _STOP:
+            continue
+        if w.endswith("s") and len(w) > 3:
+            w = w[:-1]
+        out.append(w)
+    return out
+
+
+def _recency_score(updated_at: str, now: datetime) -> float:
+    """1.0 for just-now, decaying smoothly with a ~30-day half-life, floored at 0."""
+    try:
+        ts = datetime.fromisoformat(updated_at)
+    except (ValueError, TypeError):
+        return 0.0
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    age_days = max(0.0, (now - ts).total_seconds() / 86400.0)
+    return 0.5 ** (age_days / 30.0)
+
+
+def _bm25_scores(query_terms: list[str], rows) -> list[float]:
+    """BM25 over the candidate set, normalized to [0,1]. Each row's document is its
+    key+value+tags. Returns 0.0 for every row when the query has no usable terms."""
+    n = len(rows)
+    if not query_terms or n == 0:
+        return [0.0] * n
+    docs = [_tokenize(f"{r['key']} {r['value']} {r['tags']}") for r in rows]
+    lengths = [len(d) for d in docs]
+    avgdl = (sum(lengths) / n) or 1.0
+    qset = set(query_terms)
+
+    # Document frequency per query term.
+    df = {t: 0 for t in qset}
+    for d in docs:
+        seen = set(d)
+        for t in qset:
+            if t in seen:
+                df[t] += 1
+
+    k1, b = 1.5, 0.75
+    raw: list[float] = []
+    for i, d in enumerate(docs):
+        if not d:
+            raw.append(0.0)
+            continue
+        tf = {}
+        for tok in d:
+            if tok in qset:
+                tf[tok] = tf.get(tok, 0) + 1
+        score = 0.0
+        for t, f in tf.items():
+            idf = math.log(1 + (n - df[t] + 0.5) / (df[t] + 0.5))
+            denom = f + k1 * (1 - b + b * lengths[i] / avgdl)
+            score += idf * (f * (k1 + 1)) / denom
+        raw.append(score)
+
+    hi = max(raw) or 1.0
+    return [s / hi for s in raw]
+
+
 def _topic_name_from(key: str, value: str) -> str:
     base = (key or value or "general").strip().lower()
     return " ".join(base.split()[:3]) or "general"
@@ -113,6 +189,13 @@ class KeeperRepo:
             await db.execute("ALTER TABLE memories ADD COLUMN embedding BLOB")
         if "topic" not in cols:
             await db.execute("ALTER TABLE memories ADD COLUMN topic TEXT")
+        if "confidence" not in cols:
+            await db.execute(
+                "ALTER TABLE memories ADD COLUMN confidence TEXT NOT NULL DEFAULT 'hint'"
+            )
+            # Pre-existing memories predate the confidence concept; treat them as
+            # verified so recall phrasing doesn't suddenly hedge on trusted facts.
+            await db.execute("UPDATE memories SET confidence='verified'")
 
     # ── topic assignment ─────────────────────────────────────────────
     async def _assign_topic(self, db, vec: list[float] | None) -> str | None:
@@ -151,9 +234,15 @@ class KeeperRepo:
         return name
 
     # (a) write -----------------------------------------------------------
-    async def write(self, key: str, value: str, tags: str = "") -> int:
+    async def write(self, key: str, value: str, tags: str = "",
+                    confidence: str = "verified") -> int:
         """Store (or update) an entry by key. Embeds the value and assigns a topic
-        when embeddings are available; otherwise stores NULL (legacy behavior)."""
+        when embeddings are available; otherwise stores NULL (legacy behavior).
+
+        ``confidence`` is 'verified' (an explicit, trusted fact — the default for
+        direct user saves) or 'hint' (inferred/uncertain — recall hedges on it)."""
+        if confidence not in ("verified", "hint"):
+            confidence = "hint"
         now = _now()
         vec = await embeddings.embed_one(value, input_type="document")
         blob = _pack(vec)
@@ -164,13 +253,14 @@ class KeeperRepo:
                 # No semantic match — auto-split into a genuinely new topic.
                 topic = await self._new_topic(db, key, value, blob, now)
             await db.execute(
-                "INSERT INTO memories (key, value, tags, embedding, topic, created_at, updated_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?) "
+                "INSERT INTO memories (key, value, tags, embedding, topic, confidence, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET "
                 "  value=excluded.value, tags=excluded.tags, "
                 "  embedding=excluded.embedding, topic=excluded.topic, "
+                "  confidence=excluded.confidence, "
                 "  updated_at=excluded.updated_at",
-                (key, value, tags, blob, topic, now, now),
+                (key, value, tags, blob, topic, confidence, now, now),
             )
             if vec is not None:
                 # GC topics no longer referenced (e.g. this memory moved clusters
@@ -190,7 +280,7 @@ class KeeperRepo:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             rows = await db.execute_fetchall(
-                "SELECT id, key, value, tags, topic, created_at, updated_at "
+                "SELECT id, key, value, tags, topic, confidence, created_at, updated_at "
                 "FROM memories WHERE key=?", (key,)
             )
             return dict(rows[0]) if rows else None
@@ -200,7 +290,7 @@ class KeeperRepo:
         Empty search returns the latest rows. The original, always-available recall."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            select = ("SELECT id, key, value, tags, topic, created_at, updated_at "
+            select = ("SELECT id, key, value, tags, topic, confidence, created_at, updated_at "
                       "FROM memories")
             if search:
                 like = f"%{search.lower()}%"
@@ -226,7 +316,7 @@ class KeeperRepo:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             rows = await db.execute_fetchall(
-                "SELECT id, key, value, tags, topic, embedding, updated_at FROM memories "
+                "SELECT id, key, value, tags, topic, confidence, embedding, updated_at FROM memories "
                 "WHERE embedding IS NOT NULL ORDER BY updated_at DESC LIMIT ?",
                 (_recall_scan_limit(),),
             )
@@ -244,6 +334,53 @@ class KeeperRepo:
         scored.sort(key=lambda s: (s[0], s[1]["updated_at"]), reverse=True)
         return [d for _s, d in scored[:limit]]
 
+    # (b2) hybrid recall --------------------------------------------------
+    async def recall(self, text: str, limit: int = 5) -> list[dict]:
+        """Hybrid recall: blend keyword (BM25-lite), semantic cosine, recency, and
+        confidence into a single ranking. Degrades to keyword+recency when Voyage
+        is unavailable, so quality no longer collapses to raw substring matching.
+
+        A candidate must have *some* lexical or semantic signal to appear — pure
+        recency never surfaces an unrelated memory."""
+        terms = _tokenize(text)
+        qvec = await embeddings.embed_one(text, input_type="query") if text else None
+
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            rows = await db.execute_fetchall(
+                "SELECT id, key, value, tags, topic, confidence, embedding, "
+                "       created_at, updated_at "
+                "FROM memories ORDER BY updated_at DESC LIMIT ?",
+                (_recall_scan_limit(),),
+            )
+        if not rows:
+            return []
+
+        kw_scores = _bm25_scores(terms, rows)
+        floor = _recall_floor()
+        now = datetime.now(timezone.utc)
+        scored: list[tuple[float, dict]] = []
+        for i, r in enumerate(rows):
+            kw = kw_scores[i]
+            sem = 0.0
+            if qvec is not None:
+                vec = _unpack(r["embedding"])
+                if vec is not None:
+                    c = embeddings.cosine(qvec, vec)
+                    sem = c if c >= floor else 0.0
+            # Require lexical or semantic evidence; recency/confidence only re-rank.
+            if kw <= 0.0 and sem <= 0.0:
+                continue
+            rec = _recency_score(r["updated_at"], now)
+            conf = 1.0 if (r["confidence"] or "verified") != "hint" else 0.6
+            blended = (0.5 * sem) + (0.35 * kw) + (0.1 * rec) + (0.05 * conf)
+            d = {k: r[k] for k in r.keys() if k != "embedding"}
+            d["score"] = round(blended, 4)
+            scored.append((blended, d))
+
+        scored.sort(key=lambda s: (s[0], s[1]["updated_at"]), reverse=True)
+        return [d for _s, d in scored[:limit]]
+
     # (c) confirm ---------------------------------------------------------
     async def confirm(self, recent: int = 5) -> dict:
         """Confirm what's stored: total count + the most recent entries."""
@@ -252,7 +389,7 @@ class KeeperRepo:
             count_rows = await db.execute_fetchall("SELECT COUNT(*) AS n FROM memories")
             count = int(count_rows[0]["n"]) if count_rows else 0
             rows = await db.execute_fetchall(
-                "SELECT id, key, value, tags, topic, created_at, updated_at "
+                "SELECT id, key, value, tags, topic, confidence, created_at, updated_at "
                 "FROM memories ORDER BY updated_at DESC LIMIT ?", (recent,)
             )
             return {"count": count, "recent": [dict(r) for r in rows]}
