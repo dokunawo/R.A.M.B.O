@@ -151,6 +151,14 @@ export default function SpotifyWidget({ compact = false }) {
   const sub = state.artist || "";
   const playing = !state.paused && !!state.track;
 
+  // Auto-surfaced when the saved token is missing a now-required scope.
+  const reconnectBanner = state.needsReconnect ? (
+    <div className="sp-reconnect-banner" onClick={spotify.reconnect}
+      title="Your Spotify connection needs new permissions — click to reconnect">
+      ⟳ Reconnect Spotify to enable Liked Songs
+    </div>
+  ) : null;
+
   const Art = ({ small }) => (
     <div className={`sp-art ${small ? "sp-art-sm" : ""}`}>
       {art ? <img src={art} alt="" /> : <span>♫</span>}
@@ -186,6 +194,7 @@ export default function SpotifyWidget({ compact = false }) {
 
   return (
     <div className="spdg">
+      {reconnectBanner}
       <div className="sp-main">
         <Art />
         <div className="sp-body">
@@ -226,7 +235,10 @@ export default function SpotifyWidget({ compact = false }) {
             <div className="sp-list">
               <div className="sp-list-label">RESULTS</div>
               {results.map((t) => (
-                <div key={t.id} className="sp-item" onClick={() => spotify.playUri({ uris: [t.uri] })}>
+                <div key={t.id} className="sp-item" onClick={() =>
+                  spotify.playUri(t.album && t.album.uri
+                    ? { context_uri: t.album.uri, offset: { uri: t.uri } }
+                    : { uris: [t.uri] })}>
                   <span className="sp-item-name">{t.name}</span>
                   <span className="sp-item-sub">{(t.artists || []).map((a) => a.name).join(", ")}</span>
                 </div>
@@ -254,7 +266,8 @@ export default function SpotifyWidget({ compact = false }) {
                       : likedTracks === "empty"
                         ? <div className="sp-empty">{"// no liked songs yet"}</div>
                         : likedTracks.map((t, i) => (
-                          <div key={t.uri + i} className="sp-item sp-track" onClick={() => spotify.playUri({ uris: [t.uri] })}>
+                          <div key={t.uri + i} className="sp-item sp-track"
+                            onClick={() => spotify.playUri({ uris: likedTracks.slice(i, i + 100).map((x) => x.uri) })}>
                             <span className="sp-item-name">{t.name}</span>
                             <span className="sp-item-sub">{(t.artists || []).map((a) => a.name).join(", ")}</span>
                           </div>
@@ -280,7 +293,8 @@ export default function SpotifyWidget({ compact = false }) {
                           : tracks[p.id] === "empty"
                             ? <div className="sp-empty">{"// empty playlist"}</div>
                             : tracks[p.id].map((t, i) => (
-                              <div key={t.uri + i} className="sp-item sp-track" onClick={() => spotify.playUri({ uris: [t.uri] })}>
+                              <div key={t.uri + i} className="sp-item sp-track"
+                                onClick={() => spotify.playUri({ context_uri: p.uri, offset: { uri: t.uri } })}>
                                 <span className="sp-item-name">{t.name}</span>
                                 <span className="sp-item-sub">{(t.artists || []).map((a) => a.name).join(", ")}</span>
                               </div>

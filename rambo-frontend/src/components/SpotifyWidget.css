@@ -126,3 +126,18 @@
 .sp-connect:hover { filter: brightness(1.08); }
 .sp-logo { font-size: 14px; }
 .sp-note { font-size: 10px; color: var(--text-dim, #9a8a6a); }
+
+/* Auto-surfaced reconnect prompt (token missing a required scope) */
+.sp-reconnect-banner {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: rgba(232, 177, 90, 0.16);
+  border: 1px solid var(--accent, #e8b15a);
+  color: var(--accent-glow, #ffd98a);
+  font-size: 10px; letter-spacing: 0.04em; text-align: center;
+  cursor: pointer;
+  animation: spPulse 1.8s ease-in-out infinite;
+}
+.sp-reconnect-banner:hover { background: rgba(232, 177, 90, 0.26); }
+@keyframes spPulse { 0%,100% { box-shadow: 0 0 0 rgba(232,177,90,0); } 50% { box-shadow: 0 0 12px rgba(232,177,90,0.5); } }

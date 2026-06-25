@@ -248,6 +248,7 @@ class SpotifyControl(BaseModel):
     device_id: str | None = None
     context_uri: str | None = None
     uris: list[str] | None = None
+    offset: dict | None = None
     play: bool = True
 
 
@@ -268,6 +269,7 @@ async def spotify_status():
     return {
         "configured": spotify_mod.is_configured(),
         "connected": await _spotify.is_connected(),
+        "needs_reconnect": await _spotify.needs_reconnect(),
     }
 
 
@@ -348,7 +350,8 @@ async def spotify_search(q: str):
 
 @app.post("/spotify/play")
 async def spotify_play(ctrl: SpotifyControl):
-    return await _spotify.play(device_id=ctrl.device_id, context_uri=ctrl.context_uri, uris=ctrl.uris)
+    return await _spotify.play(device_id=ctrl.device_id, context_uri=ctrl.context_uri,
+                               uris=ctrl.uris, offset=ctrl.offset)
 
 
 @app.post("/spotify/pause")

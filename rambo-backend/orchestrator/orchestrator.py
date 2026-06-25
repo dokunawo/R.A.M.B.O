@@ -274,7 +274,14 @@ class Orchestrator:
             if not tracks:
                 return f'Couldn\'t find "{q}" on Spotify.'
             top = tracks[0]
-            played = await client.play(device_id=dev, uris=[top["uri"]])
+            # Play within the track's album context (offset to the track) so the
+            # next/previous buttons have somewhere to go instead of pausing at the
+            # end of a one-track queue. Fall back to the bare track if no album.
+            album = (top.get("album") or {}).get("uri")
+            if album:
+                played = await client.play(device_id=dev, context_uri=album, offset={"uri": top["uri"]})
+            else:
+                played = await client.play(device_id=dev, uris=[top["uri"]])
             if self._spotify_failed(played):
                 return self._NO_DEVICE
             artists = ", ".join(a.get("name", "") for a in top.get("artists", []))

@@ -145,6 +145,16 @@ class SpotifyClient:
     async def is_connected(self) -> bool:
         return (await self._repo.get()) is not None
 
+    async def needs_reconnect(self) -> bool:
+        """True when connected but the stored token is missing one of the scopes
+        we now require (e.g. a scope added after the user first authorized) — so
+        the UI can auto-surface a reconnect instead of failing silently."""
+        row = await self._repo.get()
+        if not row:
+            return False
+        have = set((row.get("scope") or "").split())
+        return not set(SCOPES.split()).issubset(have)
+
     # ── Web API helpers ──────────────────────────────────────────────
     async def _request(self, method: str, path: str, *, params=None, json=None) -> dict:
         tok = await self.access_token()
@@ -217,17 +227,33 @@ class SpotifyClient:
             params={"limit": limit, "fields": "items(track(name,uri,artists(name)))"},
         )
 
-    async def liked(self, limit: int = 50) -> dict:
-        """The user's 'Liked Songs' (saved tracks). No playlist URI exists for
-        these, so playback uses the track URIs directly."""
-        return await self._request("GET", "/me/tracks", params={"limit": limit})
+    async def liked(self, max_total: int = 500) -> dict:
+        """The user's 'Liked Songs' (saved tracks). /me/tracks returns max 50 per
+        call, so page through up to max_total. No playlist URI exists for these,
+        so playback uses the track URIs directly."""
+        items: list = []
+        offset = 0
+        while len(items) < max_total:
+            page = await self._request(
+                "GET", "/me/tracks", params={"limit": 50, "offset": offset},
+            )
+            if not isinstance(page, dict) or page.get("error"):
+                if not items:
+                    return page  # surface the error if we got nothing
+                break
+            batch = page.get("items", [])
+            items.extend(batch)
+            if len(batch) < 50:
+                break
+            offset += 50
+        return {"items": items[:max_total]}
 
     async def search(self, q: str, type_: str = "track", limit: int = 10) -> dict:
         # Spotify caps search limit at 10 for development-mode apps; >10 → 400.
         return await self._request("GET", "/search", params={"q": q, "type": type_, "limit": min(limit, 10)})
 
     async def play(self, device_id: str | None = None, context_uri: str | None = None,
-                   uris: list[str] | None = None) -> dict:
+                   uris: list[str] | None = None, offset: dict | None = None) -> dict:
         # Resolve to a LIVE device (the passed id may be stale from a page reload),
         # so playback actually lands on the R.A.M.B.O player.
         dev = await self.resolve_device(device_id)
@@ -238,6 +264,8 @@ class SpotifyClient:
             body["context_uri"] = context_uri
         if uris:
             body["uris"] = uris
+        if offset:  # start position within a context/uris ({"uri":..} or {"position":N})
+            body["offset"] = offset
         res = await self._request("PUT", "/me/player/play", params={"device_id": dev}, json=body or None)
         # If the device isn't active yet, Spotify 404s ("Device not found") — wake
         # it with a transfer, then retry once.
@@ -263,9 +291,10 @@ class SpotifyClient:
         """Move playback onto the R.A.M.B.O browser device."""
         return await self._request("PUT", "/me/player", json={"device_ids": [device_id], "play": play})
 
-    async def play_liked(self, device_id: str | None = None, limit: int = 50) -> dict:
-        """Play the user's Liked Songs (saved tracks) on the given device."""
-        data = await self.liked(limit=limit)
+    async def play_liked(self, device_id: str | None = None) -> dict:
+        """Play the user's Liked Songs. Spotify's play accepts up to 100 uris, so
+        queue the 100 most-recent saved tracks (next/prev advance through them)."""
+        data = await self.liked(max_total=100)
         items = data.get("items", []) if isinstance(data, dict) else []
         uris = [it["track"]["uri"] for it in items if it.get("track")]
         if not uris:
