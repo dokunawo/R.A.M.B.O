@@ -10,8 +10,11 @@ by the orchestrator after the loop finishes.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import os
+import shlex
 from pathlib import Path
 from typing import Any
 
@@ -19,8 +22,18 @@ import model_config
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 14
+MAX_ITERATIONS = 16
 _MAX_FILE_CHARS = 20_000
+_TEST_TIMEOUT = 180          # seconds; a runaway test must not hang the loop
+_MAX_TEST_OUTPUT = 8_000     # chars of pytest output fed back to the model
+
+# How the dev lane runs tests. The agent can only invoke THIS command (pytest) on
+# a worktree path — not arbitrary shell. Overridable for other project layouts.
+#   RAMBO_TEST_CMD  default "python -m pytest -q"
+#   RAMBO_TEST_CWD  default "rambo-backend" (relative to the worktree root; this
+#                   repo's tests run from there so imports resolve)
+_DEFAULT_TEST_CMD = "python -m pytest -q"
+_DEFAULT_TEST_CWD = "rambo-backend"
 
 _CONTRACT = """
 
@@ -96,23 +109,87 @@ def _tool_defs() -> list[dict]:
                 "required": ["path", "old_string", "new_string"],
             },
         },
+        {
+            "name": "run_tests",
+            "description": (
+                "Run the project's tests (pytest) on a path inside the worktree and "
+                "return pass/fail plus output. Use this to watch your new test FAIL "
+                "before you implement, and PASS after. Pass the path to a test file or "
+                "directory; keep it narrow (the specific test you wrote) so it's fast."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Test file or dir, relative to the worktree root"},
+                },
+                "required": ["path"],
+            },
+        },
     ]
 
 
 class CodingAgent:
     def __init__(self, llm_client, worktree_path: Path, personality_text: str = "",
-                 model: str | None = None, on_event=None):
+                 model: str | None = None, on_event=None, playbooks: str | None = None):
         self._llm = llm_client
         self._worktree = Path(worktree_path)
         self._model = model or model_config.default_model()
-        self._system = (personality_text or "") + _CONTRACT
+        # System prompt = RAMBO's voice + the self-modification contract + the
+        # engineering playbooks (Phase 4: TDD / debugging / verification).
+        from dev_agent.playbooks import load_playbooks
+        pb = load_playbooks() if playbooks is None else playbooks
+        self._system = (personality_text or "") + _CONTRACT + pb
         self._on_event = on_event or (lambda *a, **k: None)
+        self._test_cmd = shlex.split(os.environ.get("RAMBO_TEST_CMD", _DEFAULT_TEST_CMD))
+        self._test_cwd = os.environ.get("RAMBO_TEST_CWD", _DEFAULT_TEST_CWD)
         # Exact set of worktree-relative paths the agent wrote/edited. The diff
         # shown to the operator is built from ONLY these — never `git add -A` —
         # so nothing the agent didn't touch can leak into the review.
         self.touched: set[str] = set()
 
-    def _exec_tool(self, name: str, inp: dict) -> str:
+    async def _run_tests(self, path: str) -> str:
+        """Run pytest on a worktree-confined path. pytest only — never arbitrary
+        shell — so the agent's reach is bounded. Runs in an isolated worktree, so
+        it exercises the agent's draft, never the live process."""
+        try:
+            target = _confine(self._worktree, path)  # rejects escapes
+        except ValueError as e:
+            return json.dumps({"error": str(e)})
+        if not target.exists():
+            return json.dumps({"error": f"Path not found: {path}"})
+
+        cwd = (self._worktree / self._test_cwd) if self._test_cwd else self._worktree
+        if not cwd.is_dir():
+            cwd = self._worktree
+        try:
+            rel = target.relative_to(cwd.resolve())
+        except ValueError:
+            rel = target  # target outside cwd → pass absolute
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *self._test_cmd, str(rel),
+                cwd=str(cwd),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            try:
+                out, _ = await asyncio.wait_for(proc.communicate(), timeout=_TEST_TIMEOUT)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.communicate()
+                return json.dumps({"error": f"tests timed out after {_TEST_TIMEOUT}s",
+                                   "passed": False})
+        except FileNotFoundError:
+            return json.dumps({"error": f"test runner not found: {self._test_cmd[0]}"})
+
+        text = out.decode("utf-8", errors="replace")
+        return json.dumps({
+            "passed": proc.returncode == 0,
+            "returncode": proc.returncode,
+            "output": text[-_MAX_TEST_OUTPUT:],
+        })
+
+    async def _exec_tool(self, name: str, inp: dict) -> str:
         try:
             if name == "read_file":
                 p = _confine(self._worktree, inp["path"])
@@ -150,6 +227,8 @@ class CodingAgent:
                 p.write_text(text.replace(old, inp["new_string"], 1), encoding="utf-8")
                 self.touched.add(p.relative_to(self._worktree.resolve()).as_posix())
                 return json.dumps({"edited": inp["path"]})
+            if name == "run_tests":
+                return await self._run_tests(inp["path"])
             return json.dumps({"error": f"Unknown tool: {name}"})
         except ValueError as e:  # confinement violation
             return json.dumps({"error": str(e)})
@@ -178,7 +257,7 @@ class CodingAgent:
                 if getattr(block, "type", None) != "tool_use":
                     continue
                 self._on_event(tool=block.name, input=dict(block.input))
-                result = self._exec_tool(block.name, dict(block.input))
+                result = await self._exec_tool(block.name, dict(block.input))
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,

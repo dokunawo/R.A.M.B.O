@@ -127,8 +127,11 @@ async def create_workspace(change_id: str,
         raise GitWorkspaceError(f"refusing to use protected branch name {branch!r}")
 
     # Worktrees live OUTSIDE the main working tree so they never show up as
-    # untracked content in `git status` (which would trip the dirty-tree guard).
-    wt_root = root.parent / _WORKTREE_DIRNAME
+    # untracked content in `git status`. Default: a sibling dir of the repo. In
+    # containers (where the repo is mounted at a fixed path) set
+    # RAMBO_WORKTREE_DIR to a writable location off the mount, e.g. /tmp/rambo-worktrees.
+    wt_root = Path(os.environ["RAMBO_WORKTREE_DIR"]) if os.environ.get("RAMBO_WORKTREE_DIR") \
+        else root.parent / _WORKTREE_DIRNAME
     wt_root.mkdir(parents=True, exist_ok=True)
     worktree_path = wt_root / change_id
     if worktree_path.exists():
@@ -154,7 +157,10 @@ async def commit_paths(ws: GitWorkspace, message: str, paths: list[str]) -> bool
     staged = await _git_ok(ws.worktree_path, "diff", "--cached", "--name-only")
     if not staged.strip():
         return False  # nothing actually changed
-    await _git_ok(ws.worktree_path, *_IDENT, "commit", "-m", message)
+    # --no-verify: skip repo hooks (e.g. the pre-commit self-knowledge refresh that
+    # `git add`s context/self/rambo.md). The dev lane's commit must contain ONLY the
+    # agent's staged paths, or unrelated hook-generated files leak into the review diff.
+    await _git_ok(ws.worktree_path, *_IDENT, "commit", "--no-verify", "-m", message)
     return True
 
 
@@ -195,7 +201,7 @@ async def merge(ws: GitWorkspace) -> str:
     if on != ws.base_branch:
         await _git_ok(ws.repo_root, "checkout", ws.base_branch)
     out = await _git_ok(
-        ws.repo_root, *_IDENT, "merge", "--no-ff", ws.branch,
+        ws.repo_root, *_IDENT, "merge", "--no-ff", "--no-verify", ws.branch,
         "-m", f"RAMBO self-change {ws.change_id}: merge {ws.branch}",
     )
     return out

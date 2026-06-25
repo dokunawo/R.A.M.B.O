@@ -8,7 +8,17 @@ services:
       - "8000:8000"
     volumes:
       - ./rambo-backend:/app
-      - ./:/repo:ro          # full tree + .git, read-only — for self-awareness
+      # Full tree + .git, WRITABLE — read-only self-awareness (codebase_skill) plus
+      # the self-coding dev lane, which needs to create branches/worktrees, commit,
+      # and merge here. The dev lane never touches the live process directly: it
+      # works in an isolated worktree (off-mount, see RAMBO_WORKTREE_DIR) and only
+      # writes to this tree on an operator-approved merge.
+      - ./:/repo:rw
+    environment:
+      # Point the dev lane at the writable full-repo mount (where .git lives).
+      - RAMBO_REPO_ROOT=/repo
+      # Keep worktrees off the bind mount so they don't clutter the host tree.
+      - RAMBO_WORKTREE_DIR=/tmp/rambo-worktrees
     # Dev convenience: auto-restart uvicorn on .py edits (source is volume-mounted
     # above). Overrides the Dockerfile CMD, which stays the clean prod default.
     # Needs watchfiles → requirements pins uvicorn[standard].

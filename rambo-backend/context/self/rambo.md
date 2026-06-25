@@ -81,29 +81,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 115 commits:
+Last 14 days — 116 commits:
 
-- `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (25 minutes ago)`
-- `f6da9f6 docs: reflect consolidated agent roster in README (65 minutes ago)`
-- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (69 minutes ago)`
-- `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (4 hours ago)`
-- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (4 hours ago)`
-- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (5 hours ago)`
+- `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (38 minutes ago)`
+- `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (63 minutes ago)`
+- `f6da9f6 docs: reflect consolidated agent roster in README (2 hours ago)`
+- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (2 hours ago)`
+- `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (5 hours ago)`
+- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (5 hours ago)`
+- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (6 hours ago)`
 - `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (6 hours ago)`
-- `34a640e Consolidate agent fleet into 3 routable modes + services (6 hours ago)`
+- `34a640e Consolidate agent fleet into 3 routable modes + services (7 hours ago)`
 - `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (16 hours ago)`
 - `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (16 hours ago)`
 - `99a5b7b feat: recurring morning brief (on-screen card + email) (16 hours ago)`
-- `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (16 hours ago)`
-- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (16 hours ago)`
-- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (16 hours ago)`
+- `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (17 hours ago)`
+- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (17 hours ago)`
+- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (17 hours ago)`
 - `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (17 hours ago)`
 - `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (17 hours ago)`
 - `b3194fd feat: sound on by default + Settings panel with Sound toggle (17 hours ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (17 hours ago)`
-- `36477a6 fix: never surface ask-frequency / repeat-count to the operator (18 hours ago)`
-- `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (19 hours ago)`
-- … and 95 more
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (18 hours ago)`
+- `36477a6 fix: never surface ask-frequency / repeat-count to the operator (19 hours ago)`
+- … and 96 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
