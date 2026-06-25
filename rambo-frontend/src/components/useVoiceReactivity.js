@@ -20,12 +20,14 @@ const globalSpokenTurns = new Set();
 // Persisted listening on/off so an explicit stop STICKS across refreshes and
 // page navigations (otherwise the mic auto-starts again and keeps picking up
 // audio — e.g. while watching a video). Default ON.
+// RAMBO is an always-on kiosk: it should listen for "Operator" on every load.
+// We intentionally do NOT persist an "off" state — pausing is session-only (see
+// pauseListening). Persisting "off" was stranding the wake word across reloads
+// (the mic button used to hard-disable it permanently). Always start listening.
 export function listeningEnabled() {
-  try { return localStorage.getItem("rambo-listening") !== "off"; } catch { return true; }
+  return true;
 }
-function setListeningPref(on) {
-  try { localStorage.setItem("rambo-listening", on ? "on" : "off"); } catch { /* ignore */ }
-}
+function setListeningPref(_on) { /* intentionally no-op: never persist off across loads */ }
 
 export const CONV_STATES = {
   IDLE:       "idle",
@@ -523,9 +525,12 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   }, [startMic]);
 
   const toggleMic = useCallback(() => {
-    if (activeRef.current) stopListening();
-    else startListening();
-  }, [startListening, stopListening]);
+    // Soft pause (recognizer keeps running so "Operator" resumes hands-free) —
+    // NOT the old hard stopListening(), which persisted "off" and killed the wake
+    // word until a manual localStorage clear. If the mic is genuinely down, start it.
+    if (activeRef.current) pauseListening();
+    else startMic();
+  }, [pauseListening, startMic]);
 
   useEffect(() => {
     return () => {

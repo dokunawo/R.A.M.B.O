@@ -16,17 +16,25 @@ API := "http://localhost:8000"
 
 ; ── One-shot boot gesture ────────────────────────────────────────────────────
 ; Chrome forbids starting screen capture (getDisplayMedia) without a user gesture,
-; so RAMBO can't auto-share at page load. This sends a single harmless {F15} keydown
-; to the RAMBO window a few seconds after boot — F15 produces no character and is no
-; app shortcut, but DOES count as a user activation, which trips the app's armed
-; auto-start so screen share begins with zero clicks. Title set via public/index.html.
-SetTimer(BootGesture, -5000)   ; negative = run once, 5s after the script starts
+; so RAMBO can't auto-share at page load. This waits for the R.A.M.B.O window, lets
+; the React app load and arm its auto-start listener, then performs ONE real click
+; at a neutral spot — a guaranteed user activation that trips the share with zero
+; clicks from the operator. Title is set via rambo-frontend/public/index.html.
+SetTitleMatchMode 2            ; match a window whose title CONTAINS "R.A.M.B.O"
+SetTimer(BootGesture, -1000)   ; negative = run once, ~1s after the script starts
 BootGesture() {
-    if WinExist("R.A.M.B.O ahk_exe chrome.exe") {
-        WinActivate
-        Sleep 250
-        Send "{F15}"
-    }
+    win := "R.A.M.B.O ahk_exe chrome.exe"
+    if !WinWait(win, , 40)     ; wait up to 40s for the kiosk window to appear
+        return
+    Sleep 4000                 ; give the app time to load + arm armAutoStart()
+    if !WinExist(win)
+        return
+    WinActivate win
+    Sleep 300
+    WinGetPos &x, &y, &w, &h, win
+    ; Neutral target: horizontal center, upper-third — clear of the orb's mic button
+    ; (center-bottom), the agent roster (left edge), and system params (right edge).
+    Click x + w // 2, y + (h * 38 // 100)
 }
 
 post(path) {

@@ -514,7 +514,10 @@ function TransmissionScreen({ onAdvance }) {
       try { a.currentTime = 0; const p = a.play(); if (p) p.catch(() => {}); } catch { /* ignore */ }
     };
     tryPlay();                                   // autoplay attempt
-    const onGesture = () => tryPlay();           // retry on first interaction
+    // Retry on the first interaction ONLY if autoplay didn't take — otherwise a
+    // click during the intro would reset currentTime=0 and restart the sound that's
+    // already playing (the kiosk unlocks autoplay, so it's usually already going).
+    const onGesture = () => { if (a.paused) tryPlay(); };
     const evs = ["pointerdown", "keydown", "touchstart", "click"];
     evs.forEach(ev => window.addEventListener(ev, onGesture, { once: true }));
 
