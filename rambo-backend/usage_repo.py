@@ -68,7 +68,10 @@ class UsageRepo:
                 "  COALESCE(SUM(cache_read_input_tokens), 0)     AS total_cache_read, "
                 "  COALESCE(SUM(cost_usd), 0.0)                  AS total_cost, "
                 "  COUNT(*)                                      AS call_count "
-                "FROM usage WHERE created_at >= ? AND created_at <= ?",
+                # Exclude Voyage embeddings — they have their own EMBED chip and
+                # live in the free tier; counting them here would show phantom spend.
+                "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%'",
                 (start, end),
             )
             totals = dict(row[0])
@@ -78,6 +81,7 @@ class UsageRepo:
                 "  COALESCE(SUM(cost_usd), 0.0) AS cost, "
                 "  COUNT(*) AS calls "
                 "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%' "
                 "GROUP BY model ORDER BY cost DESC",
                 (start, end),
             )
@@ -90,6 +94,7 @@ class UsageRepo:
                 "  COALESCE(SUM(output_tokens), 0) AS output_tokens, "
                 "  COUNT(*) AS calls "
                 "FROM usage WHERE created_at >= ? AND created_at <= ? "
+                "  AND model NOT LIKE 'voyage%' "
                 "GROUP BY DATE(created_at) ORDER BY day DESC",
                 (start, end),
             )

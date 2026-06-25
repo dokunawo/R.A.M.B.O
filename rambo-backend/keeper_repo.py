@@ -11,7 +11,6 @@ pre-embedding behavior.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import struct
@@ -71,16 +70,28 @@ def _topic_threshold() -> float:
 
 
 def _recall_floor() -> float:
-    """Minimum cosine for a semantic_query hit to count (else substring fallback)."""
+    """Minimum cosine for a semantic_query hit to count (else substring fallback).
+    Set conservatively: short-text embeddings of *unrelated* phrases often score
+    ~0.4-0.5, so a low floor returns false-positive recalls instead of 'nothing
+    stored'. Tune live via RAMBO_RECALL_FLOOR."""
     try:
-        return float(os.environ.get("RAMBO_RECALL_FLOOR", "0.4"))
+        return float(os.environ.get("RAMBO_RECALL_FLOOR", "0.55"))
     except ValueError:
-        return 0.4
+        return 0.55
 
 
 def _topic_name_from(key: str, value: str) -> str:
     base = (key or value or "general").strip().lower()
     return " ".join(base.split()[:3]) or "general"
+
+
+# Cap the per-recall vector scan (no ANN index — cosine is computed in Python).
+# Newest memories are scanned first; raise via RAMBO_RECALL_SCAN_LIMIT if needed.
+def _recall_scan_limit() -> int:
+    try:
+        return max(1, int(os.environ.get("RAMBO_RECALL_SCAN_LIMIT", "1000")))
+    except ValueError:
+        return 1000
 
 
 class KeeperRepo:
@@ -123,6 +134,22 @@ class KeeperRepo:
             return best_name
         return None  # caller creates a new topic (it knows key/value for naming)
 
+    async def _new_topic(self, db, key: str, value: str, blob, now: str) -> str:
+        """Create a fresh topic seeded by this memory, with a collision-free name so
+        an unrelated cluster sharing a 3-word key prefix can't merge into it."""
+        base = _topic_name_from(key, value)
+        name, n = base, 2
+        while True:
+            cur = await db.execute("SELECT 1 FROM topics WHERE name=?", (name,))
+            if await cur.fetchone() is None:
+                break
+            name, n = f"{base} ({n})", n + 1
+        await db.execute(
+            "INSERT INTO topics (name, embedding, created_at) VALUES (?, ?, ?)",
+            (name, blob, now),
+        )
+        return name
+
     # (a) write -----------------------------------------------------------
     async def write(self, key: str, value: str, tags: str = "") -> int:
         """Store (or update) an entry by key. Embeds the value and assigns a topic
@@ -134,13 +161,8 @@ class KeeperRepo:
         async with aiosqlite.connect(self._db_path) as db:
             topic = await self._assign_topic(db, vec)
             if topic is None and vec is not None:
-                # No matching topic — auto-split: create a new one seeded by this memory.
-                topic = _topic_name_from(key, value)
-                await db.execute(
-                    "INSERT OR IGNORE INTO topics (name, embedding, created_at) "
-                    "VALUES (?, ?, ?)",
-                    (topic, blob, now),
-                )
+                # No semantic match — auto-split into a genuinely new topic.
+                topic = await self._new_topic(db, key, value, blob, now)
             await db.execute(
                 "INSERT INTO memories (key, value, tags, embedding, topic, created_at, updated_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?) "
@@ -150,6 +172,13 @@ class KeeperRepo:
                 "  updated_at=excluded.updated_at",
                 (key, value, tags, blob, topic, now, now),
             )
+            if vec is not None:
+                # GC topics no longer referenced (e.g. this memory moved clusters
+                # on update) so the topic table stays bounded.
+                await db.execute(
+                    "DELETE FROM topics WHERE name NOT IN "
+                    "(SELECT topic FROM memories WHERE topic IS NOT NULL)"
+                )
             await db.commit()
             cur = await db.execute("SELECT id FROM memories WHERE key=?", (key,))
             row = await cur.fetchone()
@@ -198,7 +227,8 @@ class KeeperRepo:
             db.row_factory = aiosqlite.Row
             rows = await db.execute_fetchall(
                 "SELECT id, key, value, tags, topic, embedding, updated_at FROM memories "
-                "WHERE embedding IS NOT NULL"
+                "WHERE embedding IS NOT NULL ORDER BY updated_at DESC LIMIT ?",
+                (_recall_scan_limit(),),
             )
         floor = _recall_floor()
         scored: list[tuple[float, dict]] = []

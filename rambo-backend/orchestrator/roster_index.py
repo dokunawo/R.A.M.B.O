@@ -50,6 +50,11 @@ class RosterIndex:
         self._cache: dict[str, list[float]] = {}
 
     async def _ensure_embedded(self, lines: list[str]) -> None:
+        # Evict entries for roster lines that no longer exist (despawned Factory
+        # agents, changed descriptions) so the cache stays bounded to the live roster.
+        current = set(lines)
+        if len(self._cache) > len(current):
+            self._cache = {ln: v for ln, v in self._cache.items() if ln in current}
         missing = [ln for ln in lines if ln not in self._cache]
         if not missing:
             return
