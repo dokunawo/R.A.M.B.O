@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
-import { isMuted, setMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
+import { getVolume, setVolume } from "./audioEngine";
 import { frameForGoal, startShare, stopShare, isSharing, armAutoStart } from "./screenVision";
 import "./VoiceControls.css";
 
@@ -240,61 +240,9 @@ export function usePageVoice({ onCommandCenter } = {}) {
   return { ...voice, voiceText, setVoiceText, speakRef, commandLog, clearCommandLog, executeCommand, busy };
 }
 
-function VolumeSvg({ vol }) {
-  // vol 0-100: muted = X, low (<34) = no arcs, mid (34-66) = 1 arc, high (>66) = 2 arcs
-  const m = vol === 0;
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-      {m ? (
-        <>
-          <line x1="17" y1="9" x2="23" y2="15"/>
-          <line x1="23" y1="9" x2="17" y2="15"/>
-        </>
-      ) : (
-        <>
-          {vol > 33 && <path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none"/>}
-          {vol > 66 && <path d="M18.5 5.5a9 9 0 0 1 0 13" fill="none"/>}
-        </>
-      )}
-    </svg>
-  );
-}
-
-const VOL_STEPS = [100, 75, 50, 25, 0];
-
 export function VoiceControls({ micActive, toggleMic, convState }) {
-  const [vol, setVol] = useState(isMuted() ? 0 : getVolume());
-  const volTimerRef = useRef(null);
-  const volLongPressRef = useRef(false);
-
-  const cycleVolume = () => {
-    resumeAudio();
-    const cur = vol;
-    const next = VOL_STEPS.find(s => s < cur) ?? 100;
-    const v = setVolume(next);
-    setVol(v);
-  };
-
-  // Long-press (600ms) = full reset → unmuted at max volume. Tap = cycle.
-  const fullResetVolume = () => {
-    resumeAudio();
-    const v = setVolume(100);   // volume > 0 also clears the mute flag
-    setVol(v);
-  };
-  const onVolPointerDown = () => {
-    volLongPressRef.current = false;
-    volTimerRef.current = setTimeout(() => {
-      volLongPressRef.current = true;
-      fullResetVolume();
-    }, 600);
-  };
-  const cancelVolPress = () => { if (volTimerRef.current) { clearTimeout(volTimerRef.current); volTimerRef.current = null; } };
-  const onVolClick = () => {
-    if (volLongPressRef.current) { volLongPressRef.current = false; return; }
-    cycleVolume();
-  };
-
+  // Volume now lives in the top-right Settings panel (gear icon). Voice commands
+  // ("volume 50", "mute", …) still adjust it via setVolume in tryVolumeCommand.
   const isListening = convState === CONV_STATES.LISTENING;
   const isProcessing = convState === CONV_STATES.PROCESSING;
   const isError = convState === CONV_STATES.ERROR;
@@ -338,14 +286,6 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
               <line x1="12" y1="19" x2="12" y2="22"/>
             </svg>
           )}
-        </button>
-        <button className="vc-vol-secondary" type="button"
-          onClick={onVolClick}
-          onPointerDown={onVolPointerDown}
-          onPointerUp={cancelVolPress}
-          onPointerLeave={cancelVolPress}
-          title={vol === 0 ? "Muted — tap to restore · hold to reset to max" : `Volume ${vol}% — tap to adjust · hold to reset to max`}>
-          <VolumeSvg vol={vol} />
         </button>
       </div>
       {isError ? (

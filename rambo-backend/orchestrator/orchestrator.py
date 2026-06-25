@@ -82,6 +82,9 @@ class Orchestrator:
         # Self-coding (dev) lane — set later by main.py via set_dev_agent.
         self.dev_repo = None
 
+        # Standalone builds — set later by main.py via set_builds.
+        self.builds_repo = None
+
         # Dispatch log — set later via set_dispatch_repo (best-effort, may be None).
         self.dispatch_repo = None
 
@@ -138,6 +141,10 @@ class Orchestrator:
     def set_dev_agent(self, dev_repo):
         """Give the orchestrator access to the self-coding (dev) lane repo."""
         self.dev_repo = dev_repo
+
+    def set_builds(self, builds_repo):
+        """Give the orchestrator access to the standalone-builds repo."""
+        self.builds_repo = builds_repo
 
     def set_dispatch_repo(self, dispatch_repo):
         """Give the orchestrator a durable dispatch log (best-effort)."""
@@ -596,6 +603,14 @@ class Orchestrator:
         )
         targets.add("dev")
 
+        lines.append(
+            "- build (standalone app): when the operator asks RAMBO to BUILD a "
+            "NEW standalone app, script, tool, or project (separate from RAMBO "
+            "itself). Lands in a builds/ folder the operator can open on their "
+            "desktop. Use this for 'build me a …', not for editing RAMBO's own code."
+        )
+        targets.add("build")
+
         for skill in SKILLS:
             lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
             targets.add(skill["name"])
@@ -628,6 +643,9 @@ class Orchestrator:
 
             if target == "dev":
                 return await self._run_dev_session(task)
+
+            if target == "build":
+                return await self._run_build_session(task)
 
             skill = next((s for s in SKILLS if s["name"] == target), None)
             if skill:
@@ -712,6 +730,46 @@ class Orchestrator:
             f"Drafted the change on an isolated branch (id {change_id}) — nothing is "
             f"merged. It touches {affects}. {impact.get('summary','')} {verdict} "
             f"It's waiting in the review dock for you to look at the diff and decide."
+        )
+
+    async def _run_build_session(self, task: str) -> str:
+        """Standalone build lane: build a NEW project into builds/<slug>/ that the
+        operator can open on their desktop. Not a RAMBO self-edit — no merge gate."""
+        if not self.builds_repo or not self.llm:
+            return ("The build lane isn't available right now "
+                    "(needs the builds repo and an API key configured).")
+        from dev_agent import builds as builds_mod
+        import uuid
+
+        # Derive a short name from the task for the slug.
+        name = task.strip()[:48] or "build"
+        slug = builds_mod.slugify(name)
+        if await self.builds_repo.slug_taken(slug):
+            slug = f"{slug}-{uuid.uuid4().hex[:4]}"
+        await self.builds_repo.create(uuid.uuid4().hex[:12], slug, name, task)
+        await self._set_status("engineer", "working")
+        await self.broadcast(f"[Engineer] Building: {task}")
+
+        async def _emit(**kw):
+            await self.ws.broadcast_json({"t": "build_progress", "slug": slug, **kw})
+
+        try:
+            result = await builds_mod.build_app(
+                llm=self.llm, repo=self.builds_repo, slug=slug, name=name, goal=task,
+                personality_text=self.personality_text, on_event=lambda **k: asyncio.create_task(_emit(**k)),
+            )
+        finally:
+            await self.broadcast(f"[Engineer] Finished building: {task}")
+            await self._set_status("engineer", "idle")
+
+        if result.get("error"):
+            return f"I hit a problem building that: {result['error']}"
+        host_path = result.get("host_path", "the builds folder")
+        files = result.get("files") or []
+        return (
+            f"Built it — it's in `{host_path}` ({len(files)} file"
+            f"{'' if len(files) == 1 else 's'}). It's in the Builds dock; "
+            f"hit Open and I'll pop it up on your desktop."
         )
 
     async def _run_core_agent(self, agent_name: str, task_desc: str) -> str:

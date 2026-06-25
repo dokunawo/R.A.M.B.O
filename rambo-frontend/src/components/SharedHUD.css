@@ -561,6 +561,72 @@
   color: #cfd6dd;
 }
 
+/* ── Builds dock (standalone apps RAMBO built) ────────────────────── */
+.hud-builds-wrap {
+  position: fixed;
+  top: 260px;
+  left: 20px;
+  z-index: 11;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 9.5px;
+  pointer-events: auto;
+}
+.hud-builds-tag {
+  color: #c08bff;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+.hud-builds-path {
+  font-size: 9px;
+  color: var(--accent, #e8b15a);
+  word-break: break-all;
+  margin: 2px 0;
+}
+
+/* ── Active Engineer task progress bar (top-center) ───────────────── */
+.hud-task-bar {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, 82vw);
+  z-index: 12;
+  padding: 7px 12px 9px;
+  background: rgba(8, 9, 11, 0.82);
+  border: 1px solid rgba(63, 214, 168, 0.3);
+  border-radius: 6px;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  pointer-events: none;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+}
+.hud-task-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+}
+.hud-task-label { color: #3fd6a8; font-weight: 600; }
+.hud-task-eta { color: var(--text-dim, #9aa3ad); }
+.hud-task-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.hud-task-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #2aa688, #3fd6a8);
+  box-shadow: 0 0 10px rgba(63, 214, 168, 0.6);
+  transition: width 0.12s linear;
+}
+.hud-task-fill-done {
+  background: linear-gradient(90deg, #00c46a, #00ff88);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.7);
+}
+
 /* ── Sound gate (autoplay-blocked fallback) ───────────────────── */
 .hud-soundgate {
   position: fixed;
@@ -735,4 +801,30 @@
   color: var(--text-dim, #7a7a7a);
   background: transparent;
   border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Volume slider (in the Settings panel) */
+.hud-vol-row {
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.hud-vol-val {
+  color: var(--accent, #e8b15a);
+  font-size: 10px;
+}
+.hud-vol-slider {
+  width: 100%;
+  margin: 4px 0 2px;
+  height: 4px;
+  cursor: pointer;
+  accent-color: var(--accent, #e8b15a);
+  background: transparent;
+}
+.hud-vol-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: var(--text-dim, #7a7a7a);
+  font-family: var(--mono, "JetBrains Mono", monospace);
 }

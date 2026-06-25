@@ -12,6 +12,15 @@ let deviceId = null;
 let sdkLoading = false;
 let initStarted = false;
 
+// Music (Spotify player) volume 0..1, persisted so the Settings slider sticks
+// across reloads and applies as soon as the player connects.
+let musicVol = (() => {
+  try {
+    const v = parseFloat(localStorage.getItem("rambo-music-volume"));
+    return v >= 0 && v <= 1 ? v : 0.6;
+  } catch { return 0.6; }
+})();
+
 let state = {
   configured: false,   // SPOTIFY_CLIENT_ID/SECRET present on the backend
   connected: false,    // OAuth completed
@@ -88,13 +97,14 @@ export async function init() {
   player = new window.Spotify.Player({
     name: "R.A.M.B.O",
     getOAuthToken: (cb) => { getToken().then((t) => { if (t) cb(t); }); },
-    volume: 0.6,
+    volume: musicVol,
   });
 
   player.addListener("ready", ({ device_id }) => {
     deviceId = device_id;
     state.ready = true;
     state.error = null;
+    try { player.setVolume(musicVol); } catch { /* ignore */ }
     emit();
     // Register the device so backend voice commands ("play X", "next song") can
     // target this player even before anything is playing.
@@ -154,7 +164,7 @@ function setupMediaSession() {
 
 // ── Ducking: drop the music volume while R.A.M.B.O is listening or speaking so
 // the mic doesn't capture the song and you can hear R.A.M.B.O over it. ─────────
-let preDuckVolume = 0.6;
+let preDuckVolume = musicVol;
 let ducked = false;
 export async function setVoiceDuck(on) {
   if (!player) return;
@@ -162,13 +172,26 @@ export async function setVoiceDuck(on) {
     if (on && !ducked) {
       ducked = true;
       const v = await player.getVolume();
-      preDuckVolume = v > 0.05 ? v : 0.6;
+      preDuckVolume = v > 0.05 ? v : musicVol;
       await player.setVolume(0.1);
     } else if (!on && ducked) {
       ducked = false;
       await player.setVolume(preDuckVolume);
     }
   } catch { /* ignore */ }
+}
+
+// Set the Spotify music volume from a 0-100 percentage (the Settings slider).
+// Persists, and if the player is currently ducked (RAMBO speaking/listening)
+// updates the level it will restore to rather than fighting the duck.
+export async function setMusicVolume(pct) {
+  const v01 = Math.max(0, Math.min(1, (pct || 0) / 100));
+  musicVol = v01;
+  try { localStorage.setItem("rambo-music-volume", String(v01)); } catch { /* ignore */ }
+  preDuckVolume = v01;
+  if (player && !ducked) {
+    try { await player.setVolume(v01); } catch { /* ignore */ }
+  }
 }
 
 // Open the OAuth popup, poll until connected, then bring the player up.
