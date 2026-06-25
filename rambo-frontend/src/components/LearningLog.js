@@ -12,16 +12,12 @@ import "./AgentPage.css";
 const API = "http://localhost:8000";
 
 const AGENT_NAV = [
-  { key: "architect", name: "Architect", avatar: "🧠", color: "#7b6ff0" },
-  { key: "engineer",  name: "Engineer",  avatar: "⚙️", color: "#e8b15a" },
-  { key: "seeker",    name: "Seeker",    avatar: "🔍", color: "#00d4aa" },
-  { key: "analyst",   name: "Analyst",   avatar: "📊", color: "#4a9eff" },
-  { key: "sentinel",  name: "Sentinel",  avatar: "🛡️", color: "#ff4466" },
-  { key: "steward",   name: "Steward",   avatar: "💰", color: "#22c55e" },
-  { key: "link",      name: "Link",      avatar: "🔗", color: "#e879f9" },
-  { key: "keeper",    name: "Keeper",    avatar: "📚", color: "#f59e0b" },
-  { key: "echo",      name: "Echo",      avatar: "📡", color: "#06b6d4" },
-  { key: "pilot",     name: "Pilot",     avatar: "🎯", color: "#fb923c" },
+  { key: "planner",    name: "Planner",    avatar: "🧭", color: "#7b6ff0" },
+  { key: "executor",   name: "Executor",   avatar: "⚙️", color: "#e8b15a" },
+  { key: "researcher", name: "Researcher", avatar: "🔍", color: "#00d4aa" },
+  { key: "keeper",     name: "Keeper",     avatar: "📚", color: "#f59e0b" },
+  { key: "sentinel",   name: "Sentinel",   avatar: "🛡️", color: "#ff4466" },
+  { key: "pilot",      name: "Pilot",      avatar: "🎯", color: "#fb923c" },
 ];
 
 function LiveClock() {

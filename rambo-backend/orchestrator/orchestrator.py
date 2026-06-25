@@ -270,17 +270,29 @@ class Orchestrator:
         members = next((m for k, _n, m in self.DISPLAY_GROUPS if k == key), [key])
         return agent_tracker.get_detail_merged(members)
 
+    def _display_key(self, name: str) -> str:
+        """Map an internal shell agent (architect, engineer, …) to the consolidated
+        lineup key the UI shows (planner, executor, …). Services and unknown names
+        map to themselves so live broadcasts stay consistent with /agents/status."""
+        for key, _n, members in self.DISPLAY_GROUPS:
+            if name in members:
+                return key
+        return name
+
     async def _set_status(self, name: str, status: str):
+        # Track per-shell (get_status aggregates), but broadcast the display key
+        # so the live UI matches the consolidated lineup.
         self.agent_status[name] = status
-        await self.broadcast(f"STATUS:{name}:{status}")
+        await self.broadcast(f"STATUS:{self._display_key(name)}:{status}")
 
     async def _contact(self, name: str):
         # structured (for the UI) + a human-readable log line
-        await self.broadcast(json.dumps({"t": "contact", "agent": name}))
-        await self.broadcast(f"[Pilot] Contacting {name.capitalize()} agent to finish the job.")
+        display = self._display_key(name)
+        await self.broadcast(json.dumps({"t": "contact", "agent": display}))
+        await self.broadcast(f"[Pilot] Contacting {display.capitalize()} to finish the job.")
 
     async def _response(self, name: str, text: str):
-        await self.broadcast(json.dumps({"t": "response", "agent": name, "text": text}))
+        await self.broadcast(json.dumps({"t": "response", "agent": self._display_key(name), "text": text}))
 
     # ── Dispatch log helpers (best-effort — never raise) ──────────
 
@@ -418,20 +430,21 @@ class Orchestrator:
 
     async def _run_skill(self, skill: dict, goal: str, ctx: dict) -> str:
         agent_name = skill["agent"]
+        label = self._display_key(agent_name).capitalize()
         await self._set_status(agent_name, "working")
         agent_tracker.record_task_start(agent_name, goal)
-        await self.broadcast(f"[{agent_name.capitalize()}] Working on: {goal}")
+        await self.broadcast(f"[{label}] Working on: {goal}")
         try:
             result = await skill["run"](goal, ctx)
             agent_tracker.record_task_end(agent_name, goal, success=True)
             agent_tracker.add_learning(
                 f"Completed skill '{skill['name']}' for: {goal}",
-                source=agent_name.capitalize(), category=skill["name"],
+                source=label, category=skill["name"],
             )
         except Exception as e:
             result = f"[{skill['name']}] error: {e}"
             agent_tracker.record_task_end(agent_name, goal, success=False)
-        await self.broadcast(f"[{agent_name.capitalize()}] Finished: {goal}")
+        await self.broadcast(f"[{label}] Finished: {goal}")
         await self._set_status(agent_name, "idle")
         return result
 
@@ -442,7 +455,8 @@ class Orchestrator:
         await self._contact(agent_name)
         await self._set_status(agent_name, "working")
         agent_tracker.record_task_start(agent_name, task_desc)
-        await self.broadcast(f"[{agent_name.capitalize()}] Starting: {task_desc}")
+        label = self._display_key(agent_name).capitalize()
+        await self.broadcast(f"[{label}] Starting: {task_desc}")
 
         if agent_name in ("engineer", "steward", "link"):
             sentinel = self.agents["sentinel"]
@@ -475,7 +489,7 @@ class Orchestrator:
             agent_tracker.record_task_end(agent_name, task_desc, success=True)
 
         await self._response(agent_name, output)
-        await self.broadcast(f"[{agent_name.capitalize()}] Finished: {task_desc}")
+        await self.broadcast(f"[{label}] Finished: {task_desc}")
         await self._set_status(agent_name, "idle")
         return output
 
@@ -487,9 +501,9 @@ class Orchestrator:
         pilot     = self.agents["pilot"]
 
         await self._set_status("architect", "working")
-        await self.broadcast(f"[Architect] Creating plan for goal: {goal}")
+        await self.broadcast(f"[Planner] Creating plan for goal: {goal}")
         plan = architect.create_plan(goal)
-        await self.broadcast(f"[Architect] Plan created with {len(plan)} steps.")
+        await self.broadcast(f"[Planner] Plan created with {len(plan)} steps.")
         await self._set_status("architect", "idle")
 
         await self._set_status("pilot", "working")

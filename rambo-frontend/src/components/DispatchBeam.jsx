@@ -7,16 +7,16 @@ const ORBIT_TILT   = 0.3;
 const ORBIT_SPEED  = 0.08;
 const BEAM_DURATION = 1.6;
 
+// Indices + colors mirror the AgentConstellation lineup order (6 nodes) so
+// dispatch beams point at the right orbiting node.
 const AGENT_INDICES = {
-  architect: 0, scout: 1, analyst: 2, engineer: 3, pilot: 4,
-  keeper: 5, link: 6, sentinel: 7, steward: 8, echo: 9,
+  planner: 0, executor: 1, researcher: 2, keeper: 3, sentinel: 4, pilot: 5,
 };
-const TOTAL = 10;
+const TOTAL = 6;
 
 const AGENT_COLORS = {
-  architect: "#7b6ff0", scout: "#06b6d4", analyst: "#8b5cf6",
-  engineer: "#f59e0b", pilot: "#ec4899", keeper: "#10b981",
-  link: "#a78bfa", sentinel: "#ef4444", steward: "#22c55e", echo: "#3b82f6",
+  planner: "#7b6ff0", executor: "#f59e0b", researcher: "#06b6d4",
+  keeper: "#10b981", sentinel: "#ef4444", pilot: "#ec4899",
 };
 
 function getAgentPosition(key, elapsedTime) {
