@@ -25,6 +25,7 @@ except ImportError:
     _HAS_GDRIVE = False
 
 from chief_of_staff import chief_of_staff_skill as _cos_skill
+from codebase_skill import codebase_skill as _codebase_skill
 
 
 WEATHER_CODES = {
@@ -170,6 +171,19 @@ SKILLS = [
             "whats the latest", "current news", "look it up", "find online",
         )),
         "run": web_search_skill,
+    },
+    {
+        "name": "codebase",
+        "agent": "seeker",
+        "match": lambda g: any(w in g.lower() for w in (
+            "what changed", "what did we change", "what did we just",
+            "recent changes", "recent commits", "latest commit", "last commit",
+            "git log", "what did you change", "what's new in", "whats new in",
+            "your code", "your repo", "your codebase", "your source code",
+            "how are you built", "how were you built", "what's in your",
+            "whats in your",
+        )),
+        "run": _codebase_skill,
     },
     {
         "name": "notify",

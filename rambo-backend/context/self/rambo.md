@@ -31,6 +31,7 @@ open-ended research.
 | --- | --- | --- |
 | weather | seeker | match, weather, temperature, forecast, how hot, how cold |
 | web_search | seeker | match, search the web, web search, search online, look online, look up… |
+| codebase | seeker | match, what changed, what did we change, what did we just, recent changes, recent commits… |
 | notify | echo | match, email me, notify me, send me an email, send an email, email this… |
 | calendar | pilot | match, calendar, schedule, event, meeting, appointment… |
 | drive | keeper | match, drive, my files, my documents, google doc, find file… |
@@ -80,29 +81,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 107 commits:
+Last 14 days — 109 commits:
 
+- `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (16 minutes ago)`
+- `34a640e Consolidate agent fleet into 3 routable modes + services (29 minutes ago)`
 - `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (10 hours ago)`
 - `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (10 hours ago)`
 - `99a5b7b feat: recurring morning brief (on-screen card + email) (10 hours ago)`
 - `e6206ec fix: route email/notify intents to Echo (notify skill), not converse (10 hours ago)`
-- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (10 hours ago)`
-- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (10 hours ago)`
+- `0f9cf33 feat: connect agent backends — Seeker web search, Echo email, integration health (11 hours ago)`
+- `7851539 feat: wire Keeper agent to real storage + remove dead dict stub (11 hours ago)`
 - `56c5881 feat: real SQLite persistence for Keeper (write/read/query/confirm + REST) (11 hours ago)`
 - `e5a6e71 feat: hands-free 'command center' voice command opens the Command Center (11 hours ago)`
 - `b3194fd feat: sound on by default + Settings panel with Sound toggle (11 hours ago)`
-- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (11 hours ago)`
+- `cff3b2b feat: clear-all-responses action (button + voice) on all pages (12 hours ago)`
 - `36477a6 fix: never surface ask-frequency / repeat-count to the operator (13 hours ago)`
 - `3112cec feat: voice UX overhaul — Operator wake word, reliable mic stop/pause, agent-page cost chips (13 hours ago)`
 - `06a22e7 feat: ElevenLabs voice-credit tracker chip (top-right, below API cost) (15 hours ago)`
 - `4edbecb docs: design for ElevenLabs voice-credit tracker (15 hours ago)`
-- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (15 hours ago)`
-- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (15 hours ago)`
+- `16a9c57 feat: bump R.A.M.B.O version III -> V via single RAMBO_VERSION constant (16 hours ago)`
+- `89b0c63 fix: console plays ElevenLabs voice, pin R.A.M.B.O name, remove dispatch beams (16 hours ago)`
 - `825e783 feat: add converse target + prefer action over clarifying (16 hours ago)`
-- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (16 hours ago)`
-- `396c256 feat: play ElevenLabs segment audio and pulse orb to RAMBO voice (16 hours ago)`
-- `7aaa70b feat: initialize ElevenLabs TTS on startup when API key present (17 hours ago)`
-- … and 87 more
+- `f53d45a docs: document ELEVENLABS_* env vars in .env.example (17 hours ago)`
+- … and 89 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
