@@ -10,3 +10,7 @@ python-dotenv
 google-auth
 google-auth-oauthlib
 google-api-python-client
+# Needed at runtime by the self-coding dev lane's run_tests tool (and the test
+# suite). The agent runs pytest inside an isolated worktree to close the TDD loop.
+pytest
+pytest-asyncio
