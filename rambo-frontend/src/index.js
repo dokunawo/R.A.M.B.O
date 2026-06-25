@@ -13,6 +13,16 @@ import "./App.css";
 // first interaction reliably trigger it on the root route, not only on /console.
 armAutoStart();
 
+// Tell the backend the UI has loaded and the screen-share listener is armed. The
+// AHK boot gesture polls /ui/ready and clicks ONLY after this — so it never clicks
+// on a blank, not-yet-loaded page. Ordering matters: arm first, then signal ready.
+// Retry until the backend acks (at cold boot the backend may still be coming up).
+(function signalUiReady(attempt) {
+  fetch("http://localhost:8000/ui/ready", { method: "POST" })
+    .then((r) => { if (!r.ok) throw new Error("not ok"); })
+    .catch(() => { if (attempt < 60) setTimeout(() => signalUiReady(attempt + 1), 1000); });
+})(0);
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>

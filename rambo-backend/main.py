@@ -1,5 +1,6 @@
 import asyncio
 import os
+import time
 from typing import Optional
 
 # Load .env BEFORE importing anything that reads os.environ (the orchestrator
@@ -63,6 +64,13 @@ _IN_FLIGHT: set[asyncio.Task] = set()
 _spotify_repo = SpotifyRepo()
 _spotify = SpotifyClient(_spotify_repo)
 _spotify_states: set[str] = set()
+
+# Frontend readiness handshake for the AHK boot gesture: the UI POSTs /ui/ready
+# once it has loaded (screen-share auto-start listener armed), and the helper
+# polls /ui/ready and only clicks to start screen share then — never on a blank,
+# not-yet-loaded page. monotonic() so it's immune to wall-clock changes; 0.0 at
+# process start means "not ready" until the current frontend checks in.
+_ui_ready_at: float = 0.0
 
 
 @app.on_event("startup")
@@ -241,6 +249,23 @@ async def tts_usage_dashboard():
 @app.get("/usage/embed")
 async def embed_usage_dashboard():
     return await get_embed_dashboard(_usage_repo)
+
+
+# ── UI readiness (for the AHK screen-share boot gesture) ─────────────
+@app.post("/ui/ready")
+async def ui_ready_set():
+    """The frontend calls this once it has loaded and armed its screen-share
+    auto-start listener, so the AHK helper knows it's safe to click."""
+    global _ui_ready_at
+    _ui_ready_at = time.monotonic()
+    return {"ok": True}
+
+
+@app.get("/ui/ready")
+async def ui_ready_get():
+    """True only if the frontend checked in recently — so the helper never acts
+    on a stale signal from a previous page load/session."""
+    return {"ready": (time.monotonic() - _ui_ready_at) < 60}
 
 
 # ── Spotify (in-app player via Web Playback SDK) ─────────────────────

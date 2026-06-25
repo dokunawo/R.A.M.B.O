@@ -29,7 +29,20 @@ BootGesture() {
     ; while Docker + the frontend come up. Hotkeys stay responsive during this wait.
     if !WinWait(win, , 300)
         return
-    Sleep 4000                 ; give the app time to load + arm armAutoStart()
+    ; Wait for the React app to actually LOAD and arm its screen-share listener —
+    ; it POSTs /ui/ready when ready. Polling this (not a fixed sleep) is what stops
+    ; the click from landing on a blank, not-yet-loaded page. Poll up to ~120s.
+    ready := false
+    loop 240 {
+        if uiReady() {
+            ready := true
+            break
+        }
+        Sleep 500
+    }
+    if !ready
+        return
+    Sleep 1200                 ; let Phase 1 paint settle before the click
     if !WinExist(win)
         return
     WinActivate win
@@ -38,6 +51,19 @@ BootGesture() {
     ; Neutral target: horizontal center, upper-third — clear of the orb's mic button
     ; (center-bottom), the agent roster (left edge), and system params (right edge).
     Click x + w // 2, y + (h * 38 // 100)
+}
+
+; True once the frontend has reported it's loaded (POSTed /ui/ready recently).
+uiReady() {
+    try {
+        req := ComObject("WinHttp.WinHttpRequest.5.1")
+        req.Open("GET", API . "/ui/ready", false)
+        req.SetTimeouts(1500, 1500, 1500, 2500)
+        req.Send()
+        return InStr(req.ResponseText, '"ready":true') > 0
+    } catch {
+        return false
+    }
 }
 
 post(path) {
