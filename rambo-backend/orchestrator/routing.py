@@ -78,7 +78,7 @@ Rules:
 1. Pick targets ONLY from the roster below. Never invent a target name.
 2. Ordering: a design/planning step must precede an implementation step. If a \
 request needs planning then building, emit them as separate ordered steps \
-(e.g. architect, then orchestrate/engineer).
+(e.g. planner, then executor).
 3. Decomposition: a multi-step request becomes MULTIPLE ordered steps, not \
 one blurred step. A single focused request is one step.
 4. Strongly prefer acting over asking. Default to dispatch: pick the \
@@ -98,8 +98,8 @@ help — what are you working on?" or "Sure — did you mean the weather, or \
 something else?"
 6. Prefer a specific skill or spawned agent when one squarely fits. Use \
 "orchestrate" for open-ended, multi-agent build/research goals that need the \
-full planning pipeline. Use a single core agent only for a focused task it \
-owns.
+full planning pipeline. Use a single mode (planner, executor, researcher) only \
+for a focused task it owns.
 7. Keep each step's task in natural language, phrased for that target.
 8. MEMORY: any request to remember, save, store, note, memorize, recall, or \
 look up something the operator told you ALWAYS routes to "keeper" — never to \

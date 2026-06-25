@@ -22,16 +22,12 @@ import "./SplashScreen.css";
 /* ------------------------------------------------------------------ */
 
 const AGENT_ROSTER = [
-  { key: "architect", name: "Architect", role: "Strategic Planning",  desc: "Decomposes goals into executable task hierarchies" },
-  { key: "engineer",  name: "Engineer",  role: "Code Execution",      desc: "Generates and executes technical implementations" },
-  { key: "seeker",    name: "Seeker",    role: "Intelligence",         desc: "Researches and retrieves critical information" },
-  { key: "analyst",   name: "Analyst",   role: "Data Analysis",        desc: "Processes patterns and extracts actionable insights" },
-  { key: "sentinel",  name: "Sentinel",  role: "Security",             desc: "Reviews all actions for risk and threat assessment" },
-  { key: "steward",   name: "Steward",   role: "Resource Management",  desc: "Optimizes and manages operational system resources" },
-  { key: "link",      name: "Link",      role: "Integration",          desc: "Interfaces with external APIs and data services" },
-  { key: "keeper",    name: "Keeper",    role: "Memory",               desc: "Persists knowledge across operational cycles" },
-  { key: "echo",      name: "Echo",      role: "Communication",        desc: "Synthesizes and delivers final responses" },
-  { key: "pilot",     name: "Pilot",     role: "Task Coordination",    desc: "Manages execution queue and agent deployment" },
+  { key: "planner",    name: "Planner",    role: "Strategy & Synthesis",   desc: "Decomposes goals into executable plans, then voices the result" },
+  { key: "executor",   name: "Executor",   role: "Build & Integration",    desc: "Ships code, wires integrations, and handles resource actions" },
+  { key: "researcher", name: "Researcher", role: "Intelligence & Analysis", desc: "Researches, retrieves, and extracts the pattern in the data" },
+  { key: "keeper",     name: "Keeper",     role: "Memory",                 desc: "Persists knowledge across operational cycles" },
+  { key: "sentinel",   name: "Sentinel",   role: "Security",               desc: "Reviews all actions for risk and threat assessment" },
+  { key: "pilot",      name: "Pilot",      role: "Task Coordination",      desc: "Manages execution queue and agent deployment" },
 ];
 
 const BOOT_LOG = [

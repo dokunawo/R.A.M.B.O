@@ -153,48 +153,37 @@ function LiveClock() {
 }
 
 const AGENT_META = {
-  architect: {
-    name: "Architect", role: "Strategic Planning",
-    desc: "Plans the build before anyone writes a line of code. Decomposes goals into executable task hierarchies.",
-    color: "#7b6ff0", avatar: "🧠",
+  planner: {
+    name: "Planner", role: "Strategy & Synthesis",
+    desc: "Plans the build before anyone writes a line of code, then voices the result. Decomposes goals into executable hierarchies and synthesizes the final answer.",
+    color: "#7b6ff0", avatar: "🧭",
     objectives: [
       "Break down goals into coherent, prioritized plans",
       "Maintain structural integrity across multi-step operations",
-      "Guide task delegation to appropriate specialist agents",
-      "Validate architecture decisions against system constraints",
+      "Synthesize multi-step results into a clear operator-facing answer",
+      "Validate decisions against system constraints",
     ],
   },
-  engineer: {
-    name: "Engineer", role: "Code Execution",
-    desc: "Writes and ships the actual code. Generates and executes technical implementations with precision.",
+  executor: {
+    name: "Executor", role: "Build & Integration",
+    desc: "Does the work: writes and ships code, wires up external integrations, and handles budgeting/resource actions — all behind the Sentinel gate.",
     color: "#e8b15a", avatar: "⚙️",
     objectives: [
-      "Implement code artifacts from Architect task specifications",
-      "Ensure test coverage for all generated implementations",
-      "Apply secure coding patterns by default",
-      "Manage version-safe module integrations",
+      "Implement code artifacts from the Planner's specifications",
+      "Interface with external APIs, webhooks, and data connectors",
+      "Track resource and budget actions",
+      "Apply secure patterns by default; respect approval gating",
     ],
   },
-  seeker: {
-    name: "Seeker", role: "Intelligence Gathering",
-    desc: "Goes and finds the answer. Gathering external intelligence — collecting, parsing, and returning live insights.",
+  researcher: {
+    name: "Researcher", role: "Intelligence & Analysis",
+    desc: "Goes and finds the answer, then makes sense of it. Gathers external intelligence and extracts the pattern in messy data.",
     color: "#00d4aa", avatar: "🔍",
     objectives: [
       "Perform real-time web/API research on command",
       "Aggregate and cross-reference multiple data sources",
-      "Surface key findings in structured, consumable format",
-      "Score source reliability and freshness automatically",
-    ],
-  },
-  analyst: {
-    name: "Analyst", role: "Data Analysis",
-    desc: "Turns raw numbers into a read. Spot-checks and extracts the pattern in messy data.",
-    color: "#4a9eff", avatar: "📊",
-    objectives: [
-      "Classify data sets across time, identity, and structures",
-      "Build predictive assessments for probabilistic outcomes",
-      "Generate visual-ready data summaries for the operator",
-      "Track confidence and anomaly levels across all data feeds",
+      "Classify data and surface key findings in consumable form",
+      "Score source reliability and track confidence/anomaly levels",
     ],
   },
   sentinel: {
@@ -208,28 +197,6 @@ const AGENT_META = {
       "Track approval history and generate audit reports",
     ],
   },
-  steward: {
-    name: "Steward", role: "Resource & Budget Management",
-    desc: "Income, expenses, savings, and investments — tracked, never missed, without approval.",
-    color: "#22c55e", avatar: "💰",
-    objectives: [
-      "Track all financial transactions by category",
-      "Maintain real-time budget with forecasting projections",
-      "Alert on anomalous spending or missed savings targets",
-      "Provide monthly summaries and variance analysis",
-    ],
-  },
-  link: {
-    name: "Link", role: "External Integration",
-    desc: "Designs how R.A.M.B.O talks to the outside world. API calls, webhooks, and data connectors.",
-    color: "#e879f9", avatar: "🔗",
-    objectives: [
-      "Integrate third-party services via REST/GraphQL/WebSocket",
-      "Maintain connection health and failover mechanisms",
-      "Transform external data formats to internal schema",
-      "Enforce rate-limiting and connection security",
-    ],
-  },
   keeper: {
     name: "Keeper", role: "Storage & Memory",
     desc: "Owns the notebook — what gets remembered and how. Persists knowledge across operational cycles.",
@@ -239,17 +206,6 @@ const AGENT_META = {
       "Maintain structured knowledge base with relationships",
       "Garbage-collect stale or contradicted memories",
       "Serve fast lookups during active orchestrations",
-    ],
-  },
-  echo: {
-    name: "Echo", role: "Communication & Synthesis",
-    desc: "The voice Sir actually hears. Synthesizes results from all agents into clear, actionable responses.",
-    color: "#06b6d4", avatar: "📡",
-    objectives: [
-      "Compose final operator-facing responses from agent outputs",
-      "Maintain conversational tone and formatting standards",
-      "Deduplicate and prioritize multi-agent result sets",
-      "Adapt detail level to operator context and preferences",
     ],
   },
   pilot: {

@@ -1,20 +1,17 @@
-// AgentConstellation.jsx — Tier 4: 10 agent nodes orbiting the cosmic orb
+// AgentConstellation.jsx — Tier 4: agent nodes orbiting the cosmic orb
 // as a floating 3D constellation with status-driven glow and depth-fading labels.
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
+// Consolidated lineup — 3 routable modes + keeper/sentinel/pilot services.
 const AGENTS = [
-  { key: "architect",  label: "ARCHITECT",  color: "#7b6ff0" },
-  { key: "scout",      label: "SCOUT",      color: "#06b6d4" },
-  { key: "analyst",    label: "ANALYST",     color: "#8b5cf6" },
-  { key: "engineer",   label: "ENGINEER",    color: "#f59e0b" },
-  { key: "pilot",      label: "PILOT",       color: "#ec4899" },
+  { key: "planner",    label: "PLANNER",     color: "#7b6ff0" },
+  { key: "executor",   label: "EXECUTOR",    color: "#f59e0b" },
+  { key: "researcher", label: "RESEARCHER",  color: "#06b6d4" },
   { key: "keeper",     label: "KEEPER",      color: "#10b981" },
-  { key: "link",       label: "LINK",        color: "#a78bfa" },
   { key: "sentinel",   label: "SENTINEL",    color: "#ef4444" },
-  { key: "steward",    label: "STEWARD",     color: "#22c55e" },
-  { key: "echo",       label: "ECHO",         color: "#3b82f6" },
+  { key: "pilot",      label: "PILOT",       color: "#ec4899" },
 ];
 
 const ORBIT_RADIUS = 2.8;

@@ -17,17 +17,16 @@ class OrbErrorBoundary extends Component {
   render() { return this.state.hasError ? null : this.props.children; }
 }
 
+// Consolidated lineup: 3 routable modes + the distinct services (keeper, the
+// sentinel gate, the pilot queue). The former Architect/Engineer/Seeker/Analyst/
+// Steward/Link/Echo shells now live behind these modes.
 const AGENTS = [
-  { key: "architect", name: "Architect", avatar: "🧠", color: "#7b6ff0" },
-  { key: "engineer",  name: "Engineer",  avatar: "⚙️", color: "#e8b15a" },
-  { key: "seeker",    name: "Seeker",    avatar: "🔍", color: "#00d4aa" },
-  { key: "analyst",   name: "Analyst",   avatar: "📊", color: "#4a9eff" },
-  { key: "sentinel",  name: "Sentinel",  avatar: "🛡️", color: "#ff4466" },
-  { key: "steward",   name: "Steward",   avatar: "💰", color: "#22c55e" },
-  { key: "link",      name: "Link",      avatar: "🔗", color: "#e879f9" },
-  { key: "keeper",    name: "Keeper",    avatar: "📚", color: "#f59e0b" },
-  { key: "echo",      name: "Echo",      avatar: "📡", color: "#06b6d4" },
-  { key: "pilot",     name: "Pilot",     avatar: "🎯", color: "#fb923c" },
+  { key: "planner",    name: "Planner",    avatar: "🧭", color: "#7b6ff0" },
+  { key: "executor",   name: "Executor",   avatar: "⚙️", color: "#e8b15a" },
+  { key: "researcher", name: "Researcher", avatar: "🔍", color: "#00d4aa" },
+  { key: "keeper",     name: "Keeper",     avatar: "📚", color: "#f59e0b" },
+  { key: "sentinel",   name: "Sentinel",   avatar: "🛡️", color: "#ff4466" },
+  { key: "pilot",      name: "Pilot",      avatar: "🎯", color: "#fb923c" },
 ];
 
 const STATUS_COLORS = {

@@ -140,7 +140,7 @@ async def get_agent_status():
 
 @app.get("/agents/{agent_key}/detail")
 async def get_agent_detail(agent_key: str):
-    return agent_tracker.get_detail(agent_key)
+    return rambo.detail_for(agent_key)
 
 
 @app.get("/system/stats")
