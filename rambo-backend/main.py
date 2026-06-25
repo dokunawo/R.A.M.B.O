@@ -30,6 +30,8 @@ from factory.tool_registry import build_default_registry
 from factory.pipeline import SpawnPipeline
 from factory.approval import handle_approve, handle_reject
 from factory.registry_watcher import RegistryWatcher
+from dev_agent.repo import DevRepo
+from dev_agent import session as dev_session
 from spotify_repo import SpotifyRepo
 from spotify_client import SpotifyClient, SCOPES
 import spotify_client as spotify_mod
@@ -56,6 +58,7 @@ _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
 _watcher: RegistryWatcher | None = None
+_dev_repo = DevRepo()
 _IN_FLIGHT: set[asyncio.Task] = set()
 _spotify_repo = SpotifyRepo()
 _spotify = SpotifyClient(_spotify_repo)
@@ -127,6 +130,12 @@ async def _init_factory():
         )
         _watcher.start()
         rambo.set_factory(_factory_repo, _tool_registry)
+
+
+@app.on_event("startup")
+async def _init_dev_agent():
+    await _dev_repo.init_db()
+    rambo.set_dev_agent(_dev_repo)
 
 manager = rambo.ws
 
@@ -543,6 +552,66 @@ async def factory_agents():
 
 
 # ── Tier 4: tool confirmation gate ───────────────────────────────
+
+# ── Self-coding (dev agent) endpoints ────────────────────────────
+
+
+class ProposeRequest(BaseModel):
+    goal: str
+
+
+@app.post("/dev/propose")
+async def dev_propose(req: ProposeRequest):
+    if rambo.llm is None:
+        return {"error": "LLM client not configured — cannot run the dev agent"}
+    import uuid
+    change_id = uuid.uuid4().hex[:12]
+    await _dev_repo.create(change_id, req.goal)
+
+    async def _drive():
+        def _emit(**kw):
+            asyncio.create_task(manager.broadcast_json({"t": "dev_progress", "id": change_id, **kw}))
+        await dev_session.draft_change(
+            llm=rambo.llm, repo=_dev_repo, change_id=change_id, goal=req.goal,
+            personality_text=rambo.personality_text, on_event=_emit,
+        )
+
+    task = asyncio.create_task(_drive())
+    _IN_FLIGHT.add(task)
+    task.add_done_callback(_IN_FLIGHT.discard)
+    return {"id": change_id, "status": "drafting"}
+
+
+@app.get("/dev/pending")
+async def dev_pending():
+    return await _dev_repo.list_pending()
+
+
+@app.get("/dev/change/{change_id}")
+async def dev_change(change_id: str):
+    row = await _dev_repo.get(change_id)
+    if row is None:
+        return {"error": "not found"}
+    return row
+
+
+@app.post("/dev/merge/{change_id}")
+async def dev_merge(change_id: str):
+    result = await dev_session.merge_change(_dev_repo, change_id)
+    if result.get("status") == "merged":
+        await manager.broadcast(f"[R.A.M.B.O] Merged self-change {change_id}. Restart to take it live.")
+    return result
+
+
+@app.post("/dev/reject/{change_id}")
+async def dev_reject(change_id: str):
+    return await dev_session.reject_change(_dev_repo, change_id)
+
+
+@app.post("/dev/escalate/{change_id}")
+async def dev_escalate(change_id: str):
+    return await dev_session.escalate_change(_dev_repo, change_id)
+
 
 from factory import confirmations as _confirmations
 

@@ -41,6 +41,22 @@ class TestAppendVoiceCue:
         result = append_voice_cue(msgs)
         assert result == original
 
+    def test_cue_appended_to_text_block_in_multimodal_turn(self):
+        # Vision turns carry [text, image]; the cue should land on the text block.
+        msgs = [
+            {"role": "user", "content": [
+                {"type": "text", "text": "what's on my screen?"},
+                {"type": "image", "source": {"type": "base64",
+                                             "media_type": "image/jpeg", "data": "abc"}},
+            ]},
+        ]
+        result = append_voice_cue(msgs)
+        text_block = result[-1]["content"][0]
+        assert text_block["text"].startswith("what's on my screen?")
+        assert "Voice check" in text_block["text"]
+        # image block untouched
+        assert result[-1]["content"][1]["type"] == "image"
+
     def test_cue_skipped_for_empty_messages(self):
         assert append_voice_cue([]) == []
 

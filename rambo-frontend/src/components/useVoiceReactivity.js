@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
+import { setVoiceDuck } from "./spotifyEngine";
 
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
@@ -188,6 +189,14 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
   const [transcript, setTranscript] = useState("");
+
+  // Duck Spotify while R.A.M.B.O is engaged (listening/processing/speaking) so the
+  // mic doesn't pick up the music and you can hear R.A.M.B.O over it.
+  useEffect(() => {
+    setVoiceDuck(state === CONV_STATES.LISTENING
+      || state === CONV_STATES.PROCESSING
+      || state === CONV_STATES.SPEAKING);
+  }, [state]);
 
   const onTranscriptRef      = useRef(onTranscript);
   const onFinalTranscriptRef = useRef(onFinalTranscript);

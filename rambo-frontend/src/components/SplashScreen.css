@@ -1299,8 +1299,8 @@
   bottom: 22px;
   left: 24px;
   z-index: 10;
-  width: 420px;
-  max-width: 36vw;
+  width: 580px;
+  max-width: 48vw;
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -134,7 +134,17 @@ def append_voice_cue(messages: list[dict]) -> list[dict]:
     if last.get("role") != "user":
         return messages
     content = last.get("content")
-    if not isinstance(content, str):
+    if isinstance(content, str):
+        messages[-1] = {**last, "content": f"{content}\n\n{_VOICE_CUE}"}
         return messages
-    messages[-1] = {**last, "content": f"{content}\n\n{_VOICE_CUE}"}
+    if isinstance(content, list):
+        # Multimodal turn (e.g. vision: [text, image]) — append the cue to the
+        # last text block so the voiced answer still sounds like R.A.M.B.O. Lists
+        # with no text block (e.g. tool_result turns) are left untouched.
+        new_content = [dict(b) if isinstance(b, dict) else b for b in content]
+        for blk in reversed(new_content):
+            if isinstance(blk, dict) and blk.get("type") == "text":
+                blk["text"] = f"{blk.get('text', '')}\n\n{_VOICE_CUE}"
+                messages[-1] = {**last, "content": new_content}
+                break
     return messages

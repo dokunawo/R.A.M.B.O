@@ -10,11 +10,13 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
 } from "./audioEngine";
+import { startShare, stopShare, isSharing, onShareChange, frameForGoal } from "./screenVision";
+import SpotifyWidget from "./SpotifyWidget";
 import "./SplashScreen.css";
 
 /* ------------------------------------------------------------------ */
@@ -818,8 +820,17 @@ function ActivityFeed({ activity }) {
 function CommandConsole({ connected, onResult, voiceText, voiceState, onVoiceExecuted }) {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sharing, setSharing] = useState(isSharing());
   const locRef = useRef({ lat: null, lon: null });
   const voiceSubmitTimer = useRef(null);
+
+  // Keep the SCREEN toggle in sync (incl. the browser's own "Stop sharing").
+  useEffect(() => onShareChange(setSharing), []);
+
+  const toggleScreen = async () => {
+    if (isSharing()) { stopShare(); return; }
+    try { await startShare(); } catch { /* user cancelled the picker, or unsupported */ }
+  };
 
   useEffect(() => {
     if (voiceText && voiceState === "listening") {
@@ -850,10 +861,13 @@ function CommandConsole({ connected, onResult, voiceText, voiceState, onVoiceExe
     if (!g || busy) return;
     setBusy(true);
     try {
+      const image = frameForGoal(g);  // screen frame when sharing + screen-directed
+      const body = { goal: g, lat: locRef.current.lat, lon: locRef.current.lon };
+      if (image) body.image = image;
       const res = await fetch(`${API}/rambo/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: g, lat: locRef.current.lat, lon: locRef.current.lon }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       const responseText = data.response || "(no response)";
@@ -889,6 +903,14 @@ function CommandConsole({ connected, onResult, voiceText, voiceState, onVoiceExe
           spellCheck={false}
           autoComplete="off"
         />
+        <button
+          type="button"
+          className={`hud-cmd-screen ${sharing ? "on" : ""}`}
+          onClick={toggleScreen}
+          title={sharing ? "R.A.M.B.O can see your screen — click to stop" : "Let R.A.M.B.O see your screen"}
+        >
+          {sharing ? "👁 SCREEN ON" : "👁 SCREEN"}
+        </button>
         <button className="cmd-exec" type="submit" disabled={busy || !goal.trim()}>
           {busy ? "RUNNING…" : "EXECUTE"}
         </button>
@@ -1274,8 +1296,10 @@ export default function SplashScreen({
           <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
           <ConfirmationDock />
           <HandoffDock />
+          <CodeReviewDock />
           <SoundGate />
           <SettingsPanel />
+          <SpotifyWidget />
 
           {(Object.keys(responses).length > 0 || result) && (
             <button className="hud-clear-btn" onClick={clearAll}

@@ -1,0 +1,128 @@
+/* Spotify widget — matches the R.A.M.B.O gold-glass HUD aesthetic. */
+
+/* Docked bottom-left, just above the "issue a directive" command bar. */
+.spdg {
+  position: fixed;
+  bottom: 184px;
+  left: 24px;
+  width: 420px;
+  max-width: 40vw;
+  z-index: 12;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(232, 177, 90, 0.28);
+  border-radius: 6px;
+  background: var(--glass-bg, rgba(20, 16, 8, 0.55));
+  backdrop-filter: var(--glass-blur, blur(10px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(10px));
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(232, 177, 90, 0.05);
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  color: var(--text-hi, #e8eef2);
+}
+
+.spdg-compact {
+  bottom: 116px;
+  width: 320px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sp-main { display: flex; gap: 12px; }
+
+.sp-art {
+  width: 64px; height: 64px; flex: 0 0 64px;
+  border-radius: 4px; overflow: hidden;
+  background: rgba(232, 177, 90, 0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent, #e8b15a); font-size: 22px;
+}
+.spdg-compact .sp-art { width: 38px; height: 38px; flex-basis: 38px; }
+.sp-art img { width: 100%; height: 100%; object-fit: cover; }
+.sp-art-sm { font-size: 15px; }
+
+.sp-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.sp-meta { min-width: 0; }
+.sp-titlerow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sp-title { font-size: 12px; color: var(--text-hi, #e8eef2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-sub { font-size: 10px; color: var(--text-dim, #9a8a6a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Equalizer bars beside the song name — always visible at a static level,
+   animate only while a track is playing. */
+.sp-wave { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; flex: 0 0 auto; }
+.sp-wave i { width: 2px; height: 4px; background: var(--accent, #e8b15a); border-radius: 1px; box-shadow: 0 0 4px rgba(232, 177, 90, 0.4); }
+.sp-wave.on i { animation: spBars 0.9s ease-in-out infinite; }
+.sp-wave.on i:nth-child(2) { animation-delay: 0.18s; }
+.sp-wave.on i:nth-child(3) { animation-delay: 0.36s; }
+.sp-wave.on i:nth-child(4) { animation-delay: 0.12s; }
+.sp-wave.on i:nth-child(5) { animation-delay: 0.30s; }
+@keyframes spBars { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+
+.sp-seek { display: flex; align-items: center; gap: 8px; }
+.sp-time { font-size: 9px; color: var(--text-dim, #9a8a6a); width: 30px; text-align: center; }
+.sp-bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(232, 177, 90, 0.15); cursor: pointer; }
+.sp-bar-fill { height: 100%; border-radius: 2px; background: var(--accent, #e8b15a); box-shadow: 0 0 6px var(--accent-glow, #ffd98a); }
+
+.sp-row { display: flex; align-items: center; justify-content: space-between; }
+.sp-controls { display: flex; align-items: center; gap: 12px; }
+.sp-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--accent, #e8b15a); opacity: 0.9;
+  transition: opacity 0.12s, transform 0.12s;
+}
+.sp-btn:hover { opacity: 1; transform: scale(1.12); }
+.sp-mini { opacity: 0.6; }            /* shuffle — gold, dimmed until active */
+.sp-mini.sp-on { opacity: 1; filter: drop-shadow(0 0 5px var(--accent-glow, #ffd98a)); }
+.sp-play {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--accent, #e8b15a); color: #1a1206;   /* dark triangle on gold */
+  box-shadow: 0 0 10px var(--accent-glow, rgba(232, 177, 90, 0.5));
+}
+.sp-play:hover { transform: scale(1.06); }
+
+.sp-toggle {
+  background: none; border: 1px solid rgba(232, 177, 90, 0.4); border-radius: 3px;
+  color: var(--accent, #e8b15a); font-family: inherit; font-size: 9px; letter-spacing: 0.1em;
+  padding: 3px 8px; cursor: pointer;
+}
+.sp-toggle.on, .sp-toggle:hover { background: rgba(232, 177, 90, 0.16); }
+
+.sp-panel { margin-top: 10px; border-top: 1px solid rgba(232, 177, 90, 0.14); padding-top: 8px; }
+.sp-search { display: flex; gap: 6px; margin-bottom: 8px; }
+.sp-search input {
+  flex: 1; background: rgba(232, 177, 90, 0.06); border: 1px solid rgba(232, 177, 90, 0.2);
+  border-radius: 3px; color: var(--text-hi, #e8eef2); font-family: inherit; font-size: 11px;
+  padding: 5px 8px; outline: none;
+}
+.sp-search button { background: rgba(232, 177, 90, 0.16); border: 1px solid rgba(232, 177, 90, 0.4); border-radius: 3px; cursor: pointer; }
+
+.sp-list { max-height: 150px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(232,177,90,0.3) transparent; }
+.sp-list-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 3px; }
+.sp-list-label { font-size: 8px; letter-spacing: 0.14em; color: var(--text-dim, #9a8a6a); }
+.sp-reconnect { background: none; border: none; color: var(--text-dim, #9a8a6a); font-family: inherit; font-size: 8px; cursor: pointer; }
+.sp-reconnect:hover { color: var(--accent, #e8b15a); }
+
+.sp-item { display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; border-radius: 3px; cursor: pointer; }
+.sp-item:hover { background: rgba(232, 177, 90, 0.12); }
+.sp-item-name { font-size: 11px; color: var(--text-hi, #e8eef2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-item-sub { font-size: 9px; color: var(--text-dim, #9a8a6a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-empty { font-size: 10px; color: var(--text-dim, #9a8a6a); opacity: 0.7; padding: 4px 6px; }
+
+.sp-liked .sp-item-name { color: var(--accent, #e8b15a); }
+.sp-pl { display: flex; align-items: center; justify-content: space-between; flex-direction: row; }
+.sp-pl-play { color: var(--accent, #e8b15a); font-size: 11px; opacity: 0.7; padding: 0 4px; flex: 0 0 auto; }
+.sp-pl-play:hover { opacity: 1; }
+.sp-tracks { margin-left: 10px; border-left: 1px solid rgba(232, 177, 90, 0.22); padding-left: 6px; }
+.sp-track .sp-item-name { font-size: 10px; }
+
+.sp-connect {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--accent, #e8b15a); color: #1a1206; border: none; border-radius: 20px;
+  font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 7px 16px; cursor: pointer; box-shadow: 0 0 12px var(--accent-glow, rgba(232, 177, 90, 0.5));
+}
+.sp-connect:hover { filter: brightness(1.08); }
+.sp-logo { font-size: 14px; }
+.sp-note { font-size: 10px; color: var(--text-dim, #9a8a6a); }

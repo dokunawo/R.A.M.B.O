@@ -108,6 +108,18 @@ also needs a GitHub MCP vault credential (push will work without it; PR open won
       Never `main`, never the live process.
 
 ## Phase 3 — Wire into the orchestrator  *(the real work — budget the most time here)*
+
+> ✅ **BUILT as the HYBRID architecture (06/25).** Implemented as a git-isolated
+> `rambo-backend/dev_agent/` lane (worktree → coding agent → diff + impact +
+> recommendation → operator merge), NOT a `skills.py` skill. Files:
+> `dev_agent/{git_workspace,coding_agent,impact,session,repo}.py`, `/dev/*`
+> endpoints in `main.py`, `dev` target + `_run_dev_session` in `orchestrator.py`,
+> `CodeReviewDock` in `rambo-frontend/src/components/SharedHUD.js`. Full detail
+> in the approved plan: `C:\Users\dokun\.claude\plans\which-option-do-you-rosy-pretzel.md`.
+> Tests: 307 pass (incl. `test_git_workspace.py`, `test_dev_repo.py`). Live UI
+> needs a backend restart (uvicorn no auto-reload). The sub-bullets below were
+> the original generic sketch; the Hybrid plan superseded them.
+
 - [ ] New skill/intent in `rambo-backend/skills.py` (e.g. `dev` / `build`) that
       matches "RAMBO, fix the X bug" / "add a Y endpoint."
 - [ ] On match, `orchestrator.py` **starts a Managed Agents session** instead of

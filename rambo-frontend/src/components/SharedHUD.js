@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { audioRunning, isMuted, setMuted, resumeAudio } from "./audioEngine";
+import { startShare, stopShare, isSharing, onShareChange, frameForGoal } from "./screenVision";
 import "./SharedHUD.css";
 
 const API = "http://localhost:8000";
@@ -600,6 +601,97 @@ export function HandoffDock() {
   );
 }
 
+// ── Self-coding: code review dock ───────────────────────────────
+// RAMBO's proposed self-changes. Each card shows the recommendation, what the
+// change affects, and (on expand) the full diff — with Merge / Send to Claude /
+// Reject. Merge lands the branch on the base branch; nothing goes live until the
+// backend restarts (no auto-reload).
+
+const REC_LABEL = { merge: "SAFE TO MERGE", escalate: "ASK CLAUDE", hold: "HOLD" };
+
+function DevReviewCard({ change, onResolved }) {
+  const [busy, setBusy] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [showDiff, setShowDiff] = useState(false);
+  const impact = change.impact || {};
+  const rec = impact.recommendation || change.recommendation || "escalate";
+
+  const loadDiff = async () => {
+    if (showDiff) { setShowDiff(false); return; }
+    if (!detail) {
+      try {
+        const r = await fetch(`${API}/dev/change/${change.id}`);
+        if (r.ok) setDetail(await r.json());
+      } catch {}
+    }
+    setShowDiff(true);
+  };
+
+  const act = async (verb) => {
+    if (busy) return;
+    setBusy(true);
+    try { await fetch(`${API}/dev/${verb}/${change.id}`, { method: "POST" }); onResolved(); }
+    catch {} finally { setBusy(false); }
+  };
+
+  return (
+    <div className="hud-factory-card">
+      <div className="hud-factory-card-head">
+        <span className="hud-factory-name">{change.goal.slice(0, 60)}{change.goal.length > 60 ? "…" : ""}</span>
+        <span className={`hud-dev-rec hud-dev-rec-${rec}`}>{REC_LABEL[rec] || rec}</span>
+      </div>
+      {impact.summary && <div className="hud-factory-specialty">{impact.summary}</div>}
+      {impact.affects && impact.affects.length > 0 && (
+        <div className="hud-factory-tools">
+          {impact.affects.map((a, i) => <span key={i} className="hud-factory-tool">{a}</span>)}
+        </div>
+      )}
+      {impact.rationale && <div className="hud-factory-iter">risk: {impact.risk} — {impact.rationale}</div>}
+
+      <button className="hud-factory-cancel" onClick={loadDiff} disabled={busy}>
+        {showDiff ? "HIDE DIFF" : "VIEW DIFF"}
+      </button>
+      {showDiff && (
+        <pre className="hud-dev-diff">{(detail && detail.diff) || "// loading…"}</pre>
+      )}
+
+      <div className="hud-factory-actions">
+        <button className="hud-factory-approve" onClick={() => act("merge")} disabled={busy}>
+          {busy ? "…" : "MERGE"}
+        </button>
+        <button className="hud-factory-cancel" onClick={() => act("escalate")} disabled={busy}>
+          SEND TO CLAUDE
+        </button>
+        <button className="hud-factory-reject" onClick={() => act("reject")} disabled={busy}>
+          REJECT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function CodeReviewDock() {
+  const { items, refresh } = usePolledQueue("/dev/pending");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="hud-dev-wrap">
+      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+        <span className="hud-dev-tag">CODE REVIEW</span>
+        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ PROPOSED SELF-CHANGES</div>
+          {items.length === 0
+            ? <div className="hud-factory-empty">{"// no changes awaiting review"}</div>
+            : items.map(c => <DevReviewCard key={c.id} change={c} onResolved={refresh} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Fallback for when the browser blocked autoplay (e.g. the tab opened without a
 // gesture, or Chrome was already running so the --autoplay-policy flag didn't
 // apply). Shows a pill while audio is locked; one click unlocks it and it hides.
@@ -686,6 +778,7 @@ export function ActivityFeed({ activity }) {
 export function CommandInput({ connected }) {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sharing, setSharing] = useState(isSharing());
   const locRef = useRef({ lat: null, lon: null });
 
   useEffect(() => {
@@ -697,16 +790,28 @@ export function CommandInput({ connected }) {
     );
   }, []);
 
+  // Keep the toggle in sync with the screen-share state (incl. the browser's
+  // own "Stop sharing" button, which fires the stream's ended event).
+  useEffect(() => onShareChange(setSharing), []);
+
+  const toggleScreen = async () => {
+    if (isSharing()) { stopShare(); return; }
+    try { await startShare(); } catch { /* user cancelled the picker, or unsupported */ }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     const g = goal.trim();
     if (!g || busy) return;
     setBusy(true);
     try {
+      const image = frameForGoal(g);  // screen frame when sharing + screen-directed
+      const body = { goal: g, lat: locRef.current.lat, lon: locRef.current.lon };
+      if (image) body.image = image;
       await fetch(`${API}/rambo/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: g, lat: locRef.current.lat, lon: locRef.current.lon }),
+        body: JSON.stringify(body),
       });
       setGoal("");
     } catch {} finally { setBusy(false); }
@@ -728,6 +833,14 @@ export function CommandInput({ connected }) {
           spellCheck={false}
           autoComplete="off"
         />
+        <button
+          type="button"
+          className={`hud-cmd-screen ${sharing ? "on" : ""}`}
+          onClick={toggleScreen}
+          title={sharing ? "R.A.M.B.O can see your screen — click to stop" : "Let R.A.M.B.O see your screen"}
+        >
+          {sharing ? "👁 SCREEN ON" : "👁 SCREEN"}
+        </button>
         <button className="hud-cmd-exec" type="submit" disabled={busy || !goal.trim()}>
           {busy ? "RUNNING…" : "EXECUTE"}
         </button>
