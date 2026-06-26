@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 136 commits:
+Last 14 days — 137 commits:
 
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (8 minutes ago)`
-- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (12 minutes ago)`
-- `e02da85 docs: EV Brain (home runs) design spec (17 minutes ago)`
-- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (50 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (11 minutes ago)`
+- `917c2fc docs: lock Pick output shape + card styling to the CMC card (19 minutes ago)`
+- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (23 minutes ago)`
+- `e02da85 docs: EV Brain (home runs) design spec (28 minutes ago)`
+- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (61 minutes ago)`
 - `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (6 hours ago)`
 - `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (6 hours ago)`
 - `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (9 hours ago)`
 - `7214c2c Fix backend healthcheck: use Python urllib instead of missing curl (10 hours ago)`
 - `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (10 hours ago)`
 - `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (18 hours ago)`
-- `752260e UI: stack left docks in a rail (no overlap) + split volume controls (18 hours ago)`
+- `752260e UI: stack left docks in a rail (no overlap) + split volume controls (19 hours ago)`
 - `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (19 hours ago)`
 - `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (19 hours ago)`
 - `1ff262d Engineer builds: standalone build lane, desktop-open, progress bar, volume (26 hours ago)`
 - `1a7c41e Gate screen-share boot click on a frontend-ready handshake (27 hours ago)`
 - `f3b2045 Front-load the media-key helper in startup so keys work from login (27 hours ago)`
-- `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (27 hours ago)`
+- `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (28 hours ago)`
 - `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (28 hours ago)`
 - `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (28 hours ago)`
-- `1ea1d61 Self-coding lane: closed-loop TDD, playbooks, container git access (2 days ago)`
-- … and 116 more
+- … and 117 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
