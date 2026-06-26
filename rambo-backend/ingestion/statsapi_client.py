@@ -88,6 +88,46 @@ def fetch_active_players(season: int, *, client: Optional[httpx.Client] = None) 
             client.close()
 
 
+def fetch_team_stats(season: int, *, client: Optional[httpx.Client] = None) -> RunResult:
+    """All teams' season runs scored (hitting) + runs allowed (pitching), merged
+    into one item per team: {team_id, name, runs_scored, runs_allowed, games_played}.
+    Feeds the moneyline Pythagorean model. Lands under SOURCE_TEAMS."""
+    own = client is None
+    client = _client(client)
+    try:
+        def _splits(group: str) -> list[dict]:
+            params = {**cfg.DEFAULT_PARAMS["teams_stats"], "season": season, "group": group}
+            data = _get(client, cfg.ENDPOINTS["teams_stats"], params)
+            blocks = data.get("stats") or []
+            return blocks[0].get("splits", []) if blocks else []
+
+        teams: dict[int, dict[str, Any]] = {}
+        for sp in _splits("hitting"):
+            t = sp.get("team") or {}
+            tid = t.get("id")
+            if tid is None:
+                continue
+            teams[tid] = {"team_id": tid, "name": t.get("name"),
+                          "runs_scored": (sp.get("stat") or {}).get("runs"),
+                          "runs_allowed": None, "games_played": None}
+        for sp in _splits("pitching"):
+            t = sp.get("team") or {}
+            tid = t.get("id")
+            if tid is None:
+                continue
+            row = teams.setdefault(tid, {"team_id": tid, "name": t.get("name"),
+                                         "runs_scored": None})
+            stat = sp.get("stat") or {}
+            row["runs_allowed"] = stat.get("runs")
+            row["games_played"] = stat.get("gamesPlayed")
+        items = [{**v, "season": season} for v in teams.values()]
+        logger.info("statsapi team stats %s: %d teams", season, len(items))
+        return _run_result(cfg.SOURCE_TEAMS, "teams", items)
+    finally:
+        if own:
+            client.close()
+
+
 def fetch_player_stats(mlb_id: int, season: int, *,
                        group: str = "hitting",
                        client: Optional[httpx.Client] = None) -> RunResult:

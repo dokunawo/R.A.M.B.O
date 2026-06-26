@@ -30,7 +30,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
-from config.statsapi import SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS
+from config.statsapi import SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS
 
 logger = logging.getLogger("rambo.ingestion.normalize")
 
@@ -371,10 +371,31 @@ def map_props(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_team_stats(conn, item, scraped_at) -> bool:
+    """statsapi team stats item {team_id, season, runs_scored, runs_allowed, ...}
+    -> team_season_stats (UPSERT). Feeds the moneyline Pythagorean model."""
+    tid = _as_int(item.get("team_id"))
+    season = _as_int(item.get("season"))
+    if tid is None or season is None:
+        return False
+    conn.execute(
+        """INSERT INTO team_season_stats
+             (team_id, season, runs_scored, runs_allowed, games_played, source, scraped_at)
+           VALUES (?,?,?,?,?,'mlb',?)
+           ON CONFLICT(team_id, season) DO UPDATE SET
+             runs_scored=excluded.runs_scored, runs_allowed=excluded.runs_allowed,
+             games_played=excluded.games_played, scraped_at=excluded.scraped_at;""",
+        (tid, season, _as_int(item.get("runs_scored")), _as_int(item.get("runs_allowed")),
+         _as_int(item.get("games_played")), scraped_at),
+    )
+    return True
+
+
 DISPATCH: dict[str, Callable] = {
     SOURCE_ROSTER: map_roster,
     SOURCE_SCHEDULE: map_scoreboard,
     SOURCE_STATS: map_stats,
+    SOURCE_TEAMS: map_team_stats,
     "seemuapps/sports-odds-scraper": map_odds,
     "zen-studio/draftkings-pick6-player-props": map_props,
 }

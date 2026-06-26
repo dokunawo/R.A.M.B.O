@@ -3,10 +3,12 @@ import math
 from brains.ev.features import build_hr_features, build_count_features
 from brains.ev.hr_model import hr_probability, edge, breakeven
 from brains.ev.count_model import poisson_prob_over
+from brains.ev.moneyline_model import pythag_winpct, matchup_winprob, devig_two_way
 from brains.ev.types import Pick, CountFeatures
 
 _HEADSHOT = ("https://img.mlbstatic.com/mlb-photos/image/upload/"
              "w_180,q_auto/v1/people/{mlb_id}/headshot/67/current")
+_TEAM_LOGO = "https://www.mlbstatic.com/team-logos/{team_id}.svg"
 
 def _initials(name: str) -> str:
     toks = name.replace("-", " ").split()
@@ -108,6 +110,43 @@ class KMarket:
         return picks
 
 
+class MoneylineMarket:
+    """Team moneyline. Pythagorean win expectation (runs scored/allowed) blended via
+    log5, compared to the de-vigged sportsbook line. One +EV side per game.
+    Team-based: `mlb_id` carries the team id, headshot is the team logo, `breakeven`
+    holds the no-vig book win%, `multiplier` holds the American price."""
+    market_key = "ml"
+
+    def raw_picks(self, repo, date: str) -> list[Pick]:
+        season = int(date[:4])
+        picks: list[Pick] = []
+        for g in repo.moneyline_slate(date):
+            hr, ar = repo.team_runs(g["home_team_id"], season), repo.team_runs(g["away_team_id"], season)
+            if not hr or not ar:
+                continue
+            home_pyth = pythag_winpct(hr["runs_scored"], hr["runs_allowed"])
+            away_pyth = pythag_winpct(ar["runs_scored"], ar["runs_allowed"])
+            model_home = matchup_winprob(home_pyth, away_pyth)
+            book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
+            if model_home - book_home >= (1.0 - model_home) - book_away:
+                tid, abbr, opp = g["home_team_id"], g["home_team_abbr"], g["away_team_abbr"]
+                mp, bp, price, pyth = model_home, book_home, g["home_price"], home_pyth
+            else:
+                tid, abbr, opp = g["away_team_id"], g["away_team_abbr"], g["home_team_abbr"]
+                mp, bp, price, pyth = 1.0 - model_home, book_away, g["away_price"], away_pyth
+            abbr = abbr or ""
+            picks.append(Pick(
+                market="ml", mlb_id=tid, name=abbr.upper(), initials=abbr.upper(),
+                team=abbr, opponent=opp or "", hand="",
+                pick=f"MONEYLINE ({price:+d})", line=0.0, multiplier=float(price),
+                breakeven=round(bp, 4), model_p=round(mp, 4), edge=round(mp - bp, 4),
+                support=f"Pythag {pyth:.0%}", tags=["EDGE"], glow="gold",
+                headshot_url=_TEAM_LOGO.format(team_id=tid), rationale="",
+            ))
+        return picks
+
+
 REGISTRY: dict[str, object] = {
     "hr": HRMarket(), "hrr": HRRMarket(), "sb": SBMarket(), "k": KMarket(),
+    "ml": MoneylineMarket(),
 }

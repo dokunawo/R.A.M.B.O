@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 149 commits:
+Last 14 days — 150 commits:
 
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (3 minutes ago)`
-- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (21 minutes ago)`
-- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (27 minutes ago)`
-- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (30 minutes ago)`
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (32 minutes ago)`
-- `6421de7 feat(ev): HR market builds ranked Pick candidates (35 minutes ago)`
-- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (38 minutes ago)`
-- `588171f feat(ev): repo lookups for game context + pitcher hand (41 minutes ago)`
-- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (44 minutes ago)`
-- `487e92c feat(ev): Pick + HRFeatures types (card contract) (47 minutes ago)`
-- `be6fcce feat(ev): HR probability + Pick6 edge math (50 minutes ago)`
-- `433bdbb feat(ev): HR park-factor table (52 minutes ago)`
-- `b6ba289 docs: EV Brain (home runs) implementation plan (62 minutes ago)`
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (71 minutes ago)`
-- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (75 minutes ago)`
-- `e02da85 docs: EV Brain (home runs) design spec (80 minutes ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (8 minutes ago)`
+- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (11 minutes ago)`
+- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (29 minutes ago)`
+- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (36 minutes ago)`
+- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (38 minutes ago)`
+- `5252270 feat(ev): per-slate LLM explainer with templated fallback (41 minutes ago)`
+- `6421de7 feat(ev): HR market builds ranked Pick candidates (43 minutes ago)`
+- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (46 minutes ago)`
+- `588171f feat(ev): repo lookups for game context + pitcher hand (49 minutes ago)`
+- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (52 minutes ago)`
+- `487e92c feat(ev): Pick + HRFeatures types (card contract) (56 minutes ago)`
+- `be6fcce feat(ev): HR probability + Pick6 edge math (58 minutes ago)`
+- `433bdbb feat(ev): HR park-factor table (60 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (71 minutes ago)`
+- `917c2fc docs: lock Pick output shape + card styling to the CMC card (79 minutes ago)`
+- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (83 minutes ago)`
+- `e02da85 docs: EV Brain (home runs) design spec (88 minutes ago)`
 - `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (2 hours ago)`
 - `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (7 hours ago)`
 - `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (7 hours ago)`
-- `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (10 hours ago)`
-- … and 129 more
+- … and 130 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

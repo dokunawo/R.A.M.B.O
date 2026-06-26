@@ -22,7 +22,7 @@ from ingestion import statsapi_client as sapi
 from ingestion.raw_store import land_raw, pull_and_land
 
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
-STATSAPI_SOURCES = {"roster", "schedule", "stats"}
+STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats"}
 SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES)
 
 
@@ -68,6 +68,8 @@ def pull_source(conn: sqlite3.Connection, source: str,
             raise ValueError("stats source requires player_id")
         group = params.get("group", "hitting")   # "hitting" | "pitching"
         run = sapi.fetch_player_stats(int(pid), _season(params), group=group)
+    elif source == "team_stats":
+        run = sapi.fetch_team_stats(_season(params))
     else:
         raise KeyError(f"unknown source {source!r} (valid: {SOURCES})")
 

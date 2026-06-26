@@ -24,6 +24,7 @@ SPORT_ID = 1  # MLB
 SOURCE_ROSTER = "mlb/statsapi:roster"
 SOURCE_SCHEDULE = "mlb/statsapi:schedule"
 SOURCE_STATS = "mlb/statsapi:stats"
+SOURCE_TEAMS = "mlb/statsapi:teams"
 
 # Path suffixes under BASE. {placeholders} are filled by the Step 2 client.
 ENDPOINTS: dict[str, str] = {
@@ -33,6 +34,7 @@ ENDPOINTS: dict[str, str] = {
     "sport_players": "/sports/{sport_id}/players",   # all active players + bio, one call
     "people": "/people/{person_id}",
     "people_stats": "/people/{person_id}/stats",
+    "teams_stats": "/teams/stats",                   # all teams' season stats, one call/group
 }
 
 # Default query params per logical call (merged with runtime args).
@@ -48,4 +50,6 @@ DEFAULT_PARAMS: dict[str, dict] = {
     # VERIFY these stat/split keys against a real /people/{id}/stats response.
     "people_stats": {"stats": "season,statSplits,gameLog", "group": "hitting",
                      "sitCodes": "vr,vl"},
+    # All teams' season runs (group=hitting → scored, group=pitching → allowed).
+    "teams_stats": {"sportIds": SPORT_ID, "stats": "season"},
 }

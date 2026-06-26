@@ -126,6 +126,27 @@ class MlbRepo:
             "SELECT throws FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
         return row["throws"] if row else None
 
+    def team_runs(self, team_id: int, season: int) -> Optional[dict]:
+        row = self.conn.execute(
+            "SELECT runs_scored, runs_allowed FROM team_season_stats "
+            "WHERE team_id=? AND season=?", (team_id, season)).fetchone()
+        return dict(row) if row else None
+
+    def moneyline_slate(self, date: str) -> list[dict]:
+        """Games on `date` with a two-sided moneyline (latest snapshot), incl. team
+        ids/abbrs + home/away American prices."""
+        rows = self.conn.execute(
+            """SELECT g.game_pk, g.home_team_id, g.away_team_id,
+                      g.home_team_abbr, g.away_team_abbr,
+                      MAX(CASE WHEN o.side='home' THEN o.price END) AS home_price,
+                      MAX(CASE WHEN o.side='away' THEN o.price END) AS away_price
+               FROM games g
+               JOIN v_latest_odds o ON o.game_pk=g.game_pk AND o.market='moneyline'
+               WHERE g.official_date=?
+               GROUP BY g.game_pk""", (date,)).fetchall()
+        return [dict(r) for r in rows
+                if r["home_price"] is not None and r["away_price"] is not None]
+
     # -- health / ops --------------------------------------------------------
 
     def unresolved_prop_count(self) -> int:
