@@ -639,7 +639,12 @@ class Orchestrator:
                 return "\n".join(str(r) for r in results) if results else "(no output)"
 
             if target == "spotify":
-                return await self._run_spotify(task)
+                # Spotify is an external integration → light the Executor (link).
+                await self._set_status("link", "working")
+                try:
+                    return await self._run_spotify(task)
+                finally:
+                    await self._set_status("link", "idle")
 
             if target == "dev":
                 return await self._run_dev_session(task)
@@ -654,7 +659,12 @@ class Orchestrator:
             if self.factory_repo:
                 row = await self.factory_repo.get_agent_by_slug(target)
                 if row and row.get("status") == "active":
-                    return await self._run_spawned(row, task)
+                    # Spawned agents aren't in the lineup → light Pilot (dispatcher).
+                    await self._set_status("pilot", "working")
+                    try:
+                        return await self._run_spawned(row, task)
+                    finally:
+                        await self._set_status("pilot", "idle")
 
             # Router-facing modes resolve to their underlying shell agent.
             resolved = self._MODE_AGENTS.get(target, target)

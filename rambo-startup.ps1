@@ -170,6 +170,7 @@ $chromeFlags = @(
     "--hide-crash-restore-bubble",                 # never prompt to restore tabs after an unclean (shutdown) exit
     "--restore-last-session=false",                # boot to a single fresh tab, not the previous session's stray tabs
     "--autoplay-policy=no-user-gesture-required",  # intro sound, no click needed
+    "--force-device-scale-factor=0.8",             # boot the UI at 80% zoom (Daniel's preferred view) — no manual Ctrl+- needed
     # Screen vision: auto-pick the display so sharing starts with NO "Choose what
     # to share" dialog. The value is matched against the capture SOURCE NAME. On a
     # MULTI-MONITOR box the sources are "Screen 1" / "Screen 2" (NOT "Entire screen",
