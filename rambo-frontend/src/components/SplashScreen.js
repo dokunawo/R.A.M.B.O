@@ -11,7 +11,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, ProactiveDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, ProactiveDock, HistoryDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
@@ -986,7 +986,13 @@ function ResultBranch({ result, anchorEl, onClose }) {
       <div className="branch-panel" style={{ left: pos.x, top: pos.y }}>
         <div className="branch-head" onPointerDown={beginDrag}>
           <span className="branch-title">{label} · RESPONSE</span>
-          <button className="branch-close" type="button" onClick={onClose} aria-label="Close">✕</button>
+          <span style={{ display: "inline-flex", alignItems: "center" }}>
+            <button className="branch-copy" type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => { try { navigator.clipboard.writeText(`> ${result.goal}\n\n${result.text}`); } catch {} }}
+              aria-label="Copy response">Copy</button>
+            <button className="branch-close" type="button" onClick={onClose} aria-label="Close">✕</button>
+          </span>
         </div>
         <div className="branch-goal">&gt; {result.goal}</div>
         <div className="branch-body">{result.text}</div>
@@ -1332,6 +1338,7 @@ export default function SplashScreen({
             <CodeReviewDock />
             <BuildsDock />
             <ProactiveDock />
+            <HistoryDock />
           </div>
           <ActiveTaskBar />
           <SoundGate />

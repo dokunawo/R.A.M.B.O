@@ -492,6 +492,50 @@
   max-width: 120px;
 }
 
+/* ── History dock rows ── */
+.hud-hist-row {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.08);
+}
+.hud-hist-q {
+  font-size: 12px;
+  color: #00d4aa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud-hist-a {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.4;
+  margin: 2px 0 4px;
+}
+.hud-hist-copy {
+  background: transparent;
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  color: var(--accent, #e8b15a);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hud-hist-copy:hover { background: rgba(232, 177, 90, 0.15); }
+
+/* Copy button on the live response panel */
+.branch-copy {
+  background: transparent;
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  color: var(--accent, #e8b15a);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 8px;
+  margin-right: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.branch-copy:hover { background: rgba(232, 177, 90, 0.15); }
+
 /* ── Cmd+K command palette ── */
 .hud-cmdk-overlay {
   position: fixed;

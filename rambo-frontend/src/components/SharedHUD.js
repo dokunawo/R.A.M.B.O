@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { audioRunning, isMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
 import { startShare, stopShare, isSharing, onShareChange, frameForGoal, armAutoStart } from "./screenVision";
 import "./SharedHUD.css";
@@ -1038,6 +1039,56 @@ export function ProactiveDock() {
               onKeyDown={e => e.key === "Enter" && addDeadline()} />
             <button className="hud-factory-approve" onClick={addDeadline}>ADD</button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── History dock: recent Q&A you can copy; "view all" → the History page ──
+export function HistoryDock() {
+  const { items } = usePolledQueue("/transcript", 8000);
+  const [open, toggle] = useDockOpen("history");
+  const nav = useNavigate();
+  const [copied, setCopied] = useState(null);
+  // NOTE: items starts as [] (an array), and arrays have a built-in `.entries`
+  // METHOD — so guard with Array.isArray, not a truthy check, or we'd spread a
+  // function and crash with "entries is not iterable".
+  const entries = Array.isArray(items?.entries) ? items.entries : [];
+  const recent = [...entries].slice(-10).reverse();   // newest first, last 10
+
+  const copy = (e) => {
+    try {
+      navigator.clipboard.writeText(`Q: ${e.question}\n\nA: ${e.answer}`);
+      setCopied(e.id);
+      setTimeout(() => setCopied(c => (c === e.id ? null : c)), 1500);
+    } catch {}
+  };
+
+  return (
+    <div className="hud-builds-wrap">
+      <div className="hud-factory-face" onClick={toggle}>
+        <span className="hud-builds-tag">HISTORY</span>
+        <span className={`hud-factory-count ${entries.length ? "hud-count-hot" : ""}`}>{entries.length}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header hud-dock-header">
+            <span>◆ RECENT Q&amp;A</span>
+            <button className="hud-dock-clear" title="Open the full History page"
+              onClick={(e) => { e.stopPropagation(); nav("/history"); }}>VIEW ALL →</button>
+          </div>
+          {recent.length === 0
+            ? <div className="hud-factory-empty">{"// nothing saved yet"}</div>
+            : recent.map(e => (
+                <div key={e.id} className="hud-hist-row">
+                  <div className="hud-hist-q">&gt; {e.question}</div>
+                  <div className="hud-hist-a">{(e.answer || "").slice(0, 160)}{(e.answer || "").length > 160 ? "…" : ""}</div>
+                  <button className="hud-hist-copy" onClick={() => copy(e)}>
+                    {copied === e.id ? "✓" : "Copy"}
+                  </button>
+                </div>
+              ))}
         </div>
       )}
     </div>

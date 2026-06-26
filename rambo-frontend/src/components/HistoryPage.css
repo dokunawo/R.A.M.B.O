@@ -1,0 +1,107 @@
+/* History page — scrollable Q&A transcript with copy. Layers over the .ll-* shell. */
+.hist-wrap {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(820px, 92vw);
+  bottom: 120px;
+  display: flex;
+  flex-direction: column;
+  z-index: 6;
+}
+
+.hist-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.18);
+  margin-bottom: 12px;
+}
+
+.hist-toolbar-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent, #e8b15a);
+}
+
+.hist-toolbar-actions { display: inline-flex; gap: 8px; }
+
+.hist-btn {
+  background: transparent;
+  border: 1px solid rgba(232, 177, 90, 0.35);
+  color: var(--accent, #e8b15a);
+  border-radius: 5px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+.hist-btn:hover:not(:disabled) { background: rgba(232, 177, 90, 0.15); }
+.hist-btn:disabled { opacity: 0.4; cursor: default; }
+.hist-btn-danger { border-color: rgba(220, 90, 90, 0.4); color: #dc6a6a; }
+.hist-btn-danger:hover:not(:disabled) { background: rgba(220, 90, 90, 0.15); }
+
+.hist-entry-count { font-size: 11px; color: rgba(255, 255, 255, 0.55); letter-spacing: 1px; }
+
+.hist-list {
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hist-item {
+  background: rgba(18, 16, 12, 0.72);
+  border: 1px solid rgba(232, 177, 90, 0.16);
+  border-radius: 9px;
+  padding: 12px 14px;
+}
+
+.hist-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.hist-time { font-size: 10px; color: rgba(255, 255, 255, 0.4); letter-spacing: 1px; }
+
+.hist-copy {
+  background: transparent;
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  color: var(--accent, #e8b15a);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 3px 9px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hist-copy:hover { background: rgba(232, 177, 90, 0.15); }
+
+.hist-q {
+  color: #00d4aa;
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.hist-a {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hist-empty {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  text-align: center;
+  margin-top: 40px;
+}

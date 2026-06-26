@@ -5,7 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, HistoryDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import SpotifyWidget from "./SpotifyWidget";
 import CommandPalette from "./CommandPalette";
 import "./LearningLog.css";
@@ -222,6 +222,7 @@ function LearningLog() {
         <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
         <ConfirmationDock />
         <HandoffDock />
+        <HistoryDock />
       </div>
       <SoundGate />
       <SettingsPanel />

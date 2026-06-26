@@ -54,6 +54,7 @@ class Orchestrator:
         # is routing-facing memory — separate from the verbose conversation history
         # used for voicing.
         self._recent_turns = deque(maxlen=6)
+        self.transcript_repo = None   # durable Q&A transcript, set by main.py
         self.personality_text = load_personality()
         self.llm = (
             anthropic.AsyncAnthropic(
@@ -313,10 +314,21 @@ class Orchestrator:
         """Give the Keeper agent a durable memory store."""
         self.keeper_repo = repo
 
+    def set_transcript_repo(self, repo):
+        """Durable clean Q&A transcript (best-effort), surfaced via /transcript."""
+        self.transcript_repo = repo
+
     def _remember_turn(self, user_text: str, assistant_text: str) -> None:
-        """Record a clean turn for the router's follow-up context (bounded deque)."""
+        """Record a clean turn: into the router's follow-up deque AND the durable
+        transcript (fire-and-forget) the operator can scroll back through + copy."""
         self._recent_turns.append({"role": "user", "content": (user_text or "")[:300]})
         self._recent_turns.append({"role": "assistant", "content": (assistant_text or "")[:300]})
+        repo = getattr(self, "transcript_repo", None)
+        if repo:
+            try:
+                asyncio.get_running_loop().create_task(repo.add(user_text, assistant_text))
+            except RuntimeError:
+                pass  # no running loop (e.g. unit test on the sync path) — skip
 
     async def set_conversation_repo(self, repo):
         """Back the in-memory conversation with a durable store and hydrate the

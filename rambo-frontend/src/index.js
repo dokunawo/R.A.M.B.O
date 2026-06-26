@@ -5,6 +5,7 @@ import SplashScreen from "./components/SplashScreen";
 import AgentPage from "./components/AgentPage";
 import LearningLog from "./components/LearningLog";
 import RoundTable from "./components/RoundTable";
+import HistoryPage from "./components/HistoryPage";
 import { armAutoStart } from "./components/screenVision";
 import "./App.css";
 
@@ -33,6 +34,7 @@ root.render(
         <Route path="/agent/:agentKey" element={<AgentPage />} />
         <Route path="/learning" element={<LearningLog />} />
         <Route path="/council" element={<RoundTable />} />
+        <Route path="/history" element={<HistoryPage />} />
       </Routes>
     </div>
   </BrowserRouter>

@@ -22,6 +22,7 @@ from tts_usage_repo import TTSUsageRepo
 from tts_dashboard import get_tts_dashboard
 from keeper_repo import KeeperRepo
 from conversation_repo import ConversationRepo
+from transcript_repo import TranscriptRepo
 from morning_brief import brief_scheduler, run_brief
 from reflection import reflection_scheduler, run_reflection
 from calendar_watch import calendar_watch_scheduler, check_once as calendar_check_once
@@ -62,6 +63,7 @@ _dispatch_repo = DispatchRepo()
 _tts_usage_repo = TTSUsageRepo()
 _keeper_repo = KeeperRepo()
 _conversation_repo = ConversationRepo()
+_transcript_repo = TranscriptRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -118,6 +120,12 @@ async def _init_keeper():
 async def _init_conversation():
     await _conversation_repo.init_db()
     await rambo.set_conversation_repo(_conversation_repo)
+
+
+@app.on_event("startup")
+async def _init_transcript():
+    await _transcript_repo.init_db()
+    rambo.set_transcript_repo(_transcript_repo)
 
 
 _brief_task = None
@@ -525,6 +533,19 @@ async def get_history(limit: int = 50):
 async def clear_history():
     await _conversation_repo.clear()
     rambo.conversation.clear()
+    return {"cleared": True}
+
+
+# ── Q&A transcript (clean, copy-pasteable history) ───────────────
+@app.get("/transcript")
+async def get_transcript(limit: int = 100):
+    """Recent question→answer pairs (oldest first). Persisted across restarts."""
+    return {"entries": await _transcript_repo.recent(limit)}
+
+
+@app.delete("/transcript")
+async def clear_transcript():
+    await _transcript_repo.clear()
     return {"cleared": True}
 
 

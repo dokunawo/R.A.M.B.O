@@ -6,7 +6,7 @@ import CosmicOrb from "./CosmicOrb";
 import CosmicBackground from "./CosmicBackground";
 import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
-import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
+import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, HistoryDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import SpotifyWidget from "./SpotifyWidget";
 import CommandPalette from "./CommandPalette";
 import "./RoundTable.css";
@@ -196,6 +196,7 @@ function RoundTable() {
         <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
         <ConfirmationDock />
         <HandoffDock />
+        <HistoryDock />
       </div>
       <SoundGate />
       <SettingsPanel />

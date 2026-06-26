@@ -14,6 +14,7 @@ const NAV_ACTIONS = [
   { label: "Open Researcher", to: "/agent/researcher" },
   { label: "Open Keeper", to: "/agent/keeper" },
   { label: "Open Learning Log", to: "/learning" },
+  { label: "Open History (saved Q&A)", to: "/history" },
   { label: "Open Round Table", to: "/council" },
 ];
 
