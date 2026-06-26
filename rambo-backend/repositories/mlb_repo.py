@@ -94,6 +94,37 @@ class MlbRepo:
         q += " ORDER BY p.market, p.player_name_raw"
         return _dicts(self.conn.execute(q, params))
 
+    # -- ev brain lookups ----------------------------------------------------
+
+    def player_game_context(self, mlb_id: int, date: str) -> Optional[dict]:
+        row = self.conn.execute(
+            """SELECT g.game_pk, g.home_team_id, g.away_team_id,
+                      g.home_team_abbr, g.away_team_abbr,
+                      g.home_probable_pitcher_id, g.away_probable_pitcher_id,
+                      p.current_team_id
+               FROM games g JOIN players p ON p.mlb_id=?
+               WHERE g.official_date=?
+                 AND (g.home_team_id=p.current_team_id OR g.away_team_id=p.current_team_id)
+               LIMIT 1""",
+            (mlb_id, date)).fetchone()
+        if row is None:
+            return None
+        is_home = row["home_team_id"] == row["current_team_id"]
+        return {
+            "game_pk": row["game_pk"],
+            "is_home": is_home,
+            "team_abbr": row["home_team_abbr"] if is_home else row["away_team_abbr"],
+            "opponent_abbr": row["away_team_abbr"] if is_home else row["home_team_abbr"],
+            "home_abbr": row["home_team_abbr"],
+            "opp_pitcher_id": (row["away_probable_pitcher_id"] if is_home
+                               else row["home_probable_pitcher_id"]),
+        }
+
+    def pitcher_throws(self, mlb_id: int) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT throws FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
+        return row["throws"] if row else None
+
     # -- health / ops --------------------------------------------------------
 
     def unresolved_prop_count(self) -> int:
