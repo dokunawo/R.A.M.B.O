@@ -76,6 +76,22 @@ _spotify_repo = SpotifyRepo()
 _spotify = SpotifyClient(_spotify_repo)
 _spotify_states: set[str] = set()
 
+# MLB betting data-ingestion endpoints (POST /ingest/run, GET /ingest/health).
+# Data-only by construction — imports no bet-placement capability. Mounted
+# defensively: if the optional ingestion deps (apify-client, rapidfuzz) aren't in
+# this image yet, the app still boots without these routes (rebuild to enable).
+try:
+    from api.ingest import router as _ingest_router
+    app.include_router(_ingest_router)
+except Exception as _ingest_err:  # pragma: no cover
+    print(f"[rambo] ingest router not mounted: {_ingest_err}")
+
+try:
+    from api.betting import router as _betting_router
+    app.include_router(_betting_router)
+except Exception as _betting_err:  # pragma: no cover
+    print(f"[rambo] betting router not mounted: {_betting_err}")
+
 # Frontend readiness handshake for the AHK boot gesture: the UI POSTs /ui/ready
 # once it has loaded (screen-share auto-start listener armed), and the helper
 # polls /ui/ready and only clicks to start screen share then — never on a blank,

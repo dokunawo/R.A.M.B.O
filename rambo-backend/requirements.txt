@@ -14,3 +14,6 @@ google-api-python-client
 # suite). The agent runs pytest inside an isolated worktree to close the TDD loop.
 pytest
 pytest-asyncio
+# MLB betting ingestion layer
+apify-client
+rapidfuzz
