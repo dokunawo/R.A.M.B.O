@@ -1296,11 +1296,13 @@ export default function SplashScreen({
             <VoiceCostIndicator data={voiceUsage} />
             <EmbedCostIndicator data={embedUsage} />
           </div>
-          <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
-          <ConfirmationDock />
-          <HandoffDock />
-          <CodeReviewDock />
-          <BuildsDock />
+          <div className="hud-dock-rail">
+            <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
+            <ConfirmationDock />
+            <HandoffDock />
+            <CodeReviewDock />
+            <BuildsDock />
+          </div>
           <ActiveTaskBar />
           <SoundGate />
           <SettingsPanel />

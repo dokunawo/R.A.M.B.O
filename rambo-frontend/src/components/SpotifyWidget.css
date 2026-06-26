@@ -65,6 +65,27 @@
 .sp-bar-fill { height: 100%; border-radius: 2px; background: var(--accent, #e8b15a); box-shadow: 0 0 6px var(--accent-glow, #ffd98a); }
 
 .sp-row { display: flex; align-items: center; justify-content: space-between; }
+
+/* Spotify-only volume control (mute + slider) */
+.sp-vol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+.sp-vol-slider {
+  flex: 1;
+  height: 4px;
+  cursor: pointer;
+  accent-color: var(--accent, #e8b15a);
+  background: transparent;
+}
+.sp-vol-val {
+  font-size: 9px;
+  color: var(--text-dim, #9a8a6a);
+  width: 30px;
+  text-align: right;
+}
 .sp-controls { display: flex; align-items: center; gap: 12px; }
 .sp-btn {
   background: none; border: none; cursor: pointer; padding: 0;

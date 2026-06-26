@@ -181,9 +181,9 @@ export async function setVoiceDuck(on) {
   } catch { /* ignore */ }
 }
 
-// Set the Spotify music volume from a 0-100 percentage (the Settings slider).
-// Persists, and if the player is currently ducked (RAMBO speaking/listening)
-// updates the level it will restore to rather than fighting the duck.
+// Set the Spotify music volume from a 0-100 percentage (the Spotify widget's
+// slider). Persists, and if the player is currently ducked (RAMBO speaking/
+// listening) updates the level it will restore to rather than fighting the duck.
 export async function setMusicVolume(pct) {
   const v01 = Math.max(0, Math.min(1, (pct || 0) / 100));
   musicVol = v01;
@@ -192,6 +192,22 @@ export async function setMusicVolume(pct) {
   if (player && !ducked) {
     try { await player.setVolume(v01); } catch { /* ignore */ }
   }
+}
+
+export function getMusicVolume() { return Math.round(musicVol * 100); }
+export function isMusicMuted() { return musicVol <= 0; }
+
+// Quick mute/unmute for the music. Remembers the level so unmute restores it.
+let preMuteMusic = 0.6;
+export async function toggleMusicMute() {
+  if (musicVol > 0) {
+    preMuteMusic = musicVol;
+    await setMusicVolume(0);
+    return 0;
+  }
+  const restore = Math.round((preMuteMusic > 0 ? preMuteMusic : 0.6) * 100);
+  await setMusicVolume(restore);
+  return restore;
 }
 
 // Open the OAuth popup, poll until connected, then bring the player up.
