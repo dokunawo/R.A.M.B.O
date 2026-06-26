@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 132 commits:
+Last 14 days — 133 commits:
 
-- `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (5 hours ago)`
-- `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (5 hours ago)`
-- `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (8 hours ago)`
-- `7214c2c Fix backend healthcheck: use Python urllib instead of missing curl (9 hours ago)`
-- `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (9 hours ago)`
-- `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (17 hours ago)`
+- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (33 minutes ago)`
+- `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (6 hours ago)`
+- `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (6 hours ago)`
+- `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (9 hours ago)`
+- `7214c2c Fix backend healthcheck: use Python urllib instead of missing curl (10 hours ago)`
+- `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (10 hours ago)`
+- `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (18 hours ago)`
 - `752260e UI: stack left docks in a rail (no overlap) + split volume controls (18 hours ago)`
 - `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (18 hours ago)`
-- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (18 hours ago)`
+- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (19 hours ago)`
 - `1ff262d Engineer builds: standalone build lane, desktop-open, progress bar, volume (25 hours ago)`
 - `1a7c41e Gate screen-share boot click on a frontend-ready handshake (26 hours ago)`
-- `f3b2045 Front-load the media-key helper in startup so keys work from login (26 hours ago)`
+- `f3b2045 Front-load the media-key helper in startup so keys work from login (27 hours ago)`
 - `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (27 hours ago)`
-- `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (27 hours ago)`
-- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (27 hours ago)`
+- `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (28 hours ago)`
+- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (28 hours ago)`
 - `1ea1d61 Self-coding lane: closed-loop TDD, playbooks, container git access (35 hours ago)`
-- `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (35 hours ago)`
+- `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (2 days ago)`
 - `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (2 days ago)`
 - `f6da9f6 docs: reflect consolidated agent roster in README (2 days ago)`
-- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (2 days ago)`
-- … and 112 more
+- … and 113 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
