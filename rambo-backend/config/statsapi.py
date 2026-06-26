@@ -30,6 +30,7 @@ ENDPOINTS: dict[str, str] = {
     "schedule": "/schedule",
     "teams": "/teams",
     "team_roster": "/teams/{team_id}/roster",
+    "sport_players": "/sports/{sport_id}/players",   # all active players + bio, one call
     "people": "/people/{person_id}",
     "people_stats": "/people/{person_id}/stats",
 }
@@ -42,10 +43,9 @@ DEFAULT_PARAMS: dict[str, dict] = {
     },
     "teams": {"sportId": SPORT_ID, "activeStatus": "Y"},
     "team_roster": {"rosterType": "active"},
-    # Season hitting plus vs-RHP / vs-LHP splits in one call (sitCodes vr/vl).
+    "sport_players": {"sportId": SPORT_ID},   # season added at call time
+    # Season totals + vs-RHP/LHP splits + game log in one call (sitCodes vr/vl).
     # VERIFY these stat/split keys against a real /people/{id}/stats response.
-    "people_stats_season": {"stats": "season", "group": "hitting"},
-    "people_stats_splits": {"stats": "statSplits", "group": "hitting",
-                            "sitCodes": "vr,vl"},
-    "people_stats_gamelog": {"stats": "gameLog", "group": "hitting"},
+    "people_stats": {"stats": "season,statSplits,gameLog", "group": "hitting",
+                     "sitCodes": "vr,vl"},
 }

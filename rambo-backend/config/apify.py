@@ -29,7 +29,7 @@ from ingestion.apify_client_wrapper import ActorConfig
 ODDS = ActorConfig(
     actor_id="seemuapps/sports-odds-scraper",
     max_items=300,            # game lines across the slate + books
-    price_per_1k=7.50,        # VERIFY on the Store page
+    price_per_1k=3.00,        # verified 2026-06-26: $3.00 / 1k odds rows (pay-per-event)
     max_cost_usd=2.50,
     run_timeout_secs=180,
 )
@@ -37,7 +37,7 @@ ODDS = ActorConfig(
 PROPS = ActorConfig(
     actor_id="zen-studio/draftkings-pick6-player-props",
     max_items=500,            # props fan out fast — the biggest pull
-    price_per_1k=7.50,        # VERIFY on the Store page
+    price_per_1k=0.03,        # verified 2026-06-26: ~$0.03 / 1k props (pay-per-event)
     max_cost_usd=4.00,
     run_timeout_secs=240,
 )
@@ -52,6 +52,14 @@ ACTORS: dict[str, ActorConfig] = {
 # by the wrapper regardless. VERIFY these keys on each actor's Input tab.
 
 DEFAULT_INPUTS: dict[str, dict] = {
-    "odds": {"league": "mlb", "markets": ["moneyline", "spread", "total"]},
-    "props": {"league": "mlb"},
+    # Verified 2026-06-26 against the actor's input schema: `leagues` is a required
+    # array (`["mlb"]`); `dates` is YYYYMMDD or a YYYYMMDD-YYYYMMDD range (empty =
+    # today); `oddsFormat` defaults to american (both american+decimal always
+    # returned). It returns all markets — h2h/spreads/totals — via each row's
+    # marketKey. Add `"dates": "YYYYMMDD"` at call time to pull a specific day.
+    "odds": {"leagues": ["mlb"]},
+    # The actor scrapes all sports (free tier caps at 50 props/run); a per-sport
+    # input filter wasn't honored by `league`. TODO: confirm the MLB filter key on
+    # the Input tab. For now normalize filters to league == "MLB".
+    "props": {},
 }
