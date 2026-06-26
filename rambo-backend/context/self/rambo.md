@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 128 commits:
+Last 14 days — 129 commits:
 
-- `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (9 minutes ago)`
-- `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (8 hours ago)`
-- `752260e UI: stack left docks in a rail (no overlap) + split volume controls (8 hours ago)`
-- `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (9 hours ago)`
-- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (9 hours ago)`
-- `1ff262d Engineer builds: standalone build lane, desktop-open, progress bar, volume (16 hours ago)`
-- `1a7c41e Gate screen-share boot click on a frontend-ready handshake (17 hours ago)`
-- `f3b2045 Front-load the media-key helper in startup so keys work from login (17 hours ago)`
-- `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (17 hours ago)`
-- `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (18 hours ago)`
-- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (18 hours ago)`
-- `1ea1d61 Self-coding lane: closed-loop TDD, playbooks, container git access (26 hours ago)`
-- `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (26 hours ago)`
-- `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (27 hours ago)`
-- `f6da9f6 docs: reflect consolidated agent roster in README (27 hours ago)`
-- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (28 hours ago)`
-- `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (30 hours ago)`
-- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (31 hours ago)`
-- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (32 hours ago)`
-- `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (32 hours ago)`
-- … and 108 more
+- `7214c2c Fix backend healthcheck: use Python urllib instead of missing curl (71 minutes ago)`
+- `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (79 minutes ago)`
+- `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (9 hours ago)`
+- `752260e UI: stack left docks in a rail (no overlap) + split volume controls (10 hours ago)`
+- `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (10 hours ago)`
+- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (10 hours ago)`
+- `1ff262d Engineer builds: standalone build lane, desktop-open, progress bar, volume (17 hours ago)`
+- `1a7c41e Gate screen-share boot click on a frontend-ready handshake (18 hours ago)`
+- `f3b2045 Front-load the media-key helper in startup so keys work from login (18 hours ago)`
+- `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (19 hours ago)`
+- `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (19 hours ago)`
+- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (19 hours ago)`
+- `1ea1d61 Self-coding lane: closed-loop TDD, playbooks, container git access (27 hours ago)`
+- `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (28 hours ago)`
+- `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (28 hours ago)`
+- `f6da9f6 docs: reflect consolidated agent roster in README (29 hours ago)`
+- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (29 hours ago)`
+- `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (32 hours ago)`
+- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (32 hours ago)`
+- `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (33 hours ago)`
+- … and 109 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

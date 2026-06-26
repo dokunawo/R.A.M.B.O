@@ -162,6 +162,11 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const stateRef = useRef(CONV_STATES.IDLE);
   const suppressUntilRef = useRef(0);
   const ECHO_COOLDOWN_MS = 1200;
+  // After a reply, in follow-up mode we keep listening WITHOUT the wake word. If
+  // no speech arrives within this window, drop back to wake-gated so the mic
+  // doesn't sit open capturing ambient audio.
+  const FOLLOWUP_TIMEOUT_MS = 15000;
+  const followUpTimerRef = useRef(null);
   const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -208,6 +213,18 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const activeBaseTurnRef = useRef(null);
   const followUpRef = useRef(false);
 
+  // Drop an open follow-up window back to wake-gated after silence.
+  const armFollowUpTimeout = useCallback(() => {
+    if (followUpTimerRef.current) clearTimeout(followUpTimerRef.current);
+    followUpTimerRef.current = setTimeout(() => {
+      // Only sleep if we're still just waiting (no command in flight).
+      if (stateRef.current === CONV_STATES.LISTENING) {
+        wakeDetectedRef.current = false;
+        setState(CONV_STATES.IDLE);
+      }
+    }, FOLLOWUP_TIMEOUT_MS);
+  }, []);
+
   const finishTurn = useCallback(() => {
     onSpeakEndRef.current?.();
     // Keep ignoring the mic for a moment so the speaker echo tail of the last
@@ -216,14 +233,16 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     commandBufferRef.current = "";
     setTranscript("");
     activeBaseTurnRef.current = null;
+    if (followUpTimerRef.current) clearTimeout(followUpTimerRef.current);
     if (followUpRef.current) {
       wakeDetectedRef.current = true;
       setState(CONV_STATES.LISTENING);
+      armFollowUpTimeout();   // keep listening, but not forever
     } else {
       wakeDetectedRef.current = false;
       setState(CONV_STATES.IDLE);
     }
-  }, []);
+  }, [armFollowUpTimeout]);
 
   const pumpQueue = useCallback(async () => {
     if (playingSegmentRef.current || segmentQueueRef.current.length === 0) return;
@@ -271,12 +290,13 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
       if (followUp) {
         wakeDetectedRef.current = true;
         setState(CONV_STATES.LISTENING);
+        armFollowUpTimeout();
       } else {
         wakeDetectedRef.current = false;
         setState(CONV_STATES.IDLE);
       }
     });
-  }, []);
+  }, [armFollowUpTimeout]);
 
   const setupRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -313,6 +333,10 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
       }
 
       const combined = (finalText || interim).toLowerCase().trim();
+
+      // Any real speech cancels the follow-up sleep timer — an active back-and-
+      // forth should never time out mid-thought.
+      if (followUpTimerRef.current) { clearTimeout(followUpTimerRef.current); followUpTimerRef.current = null; }
 
       if (!wakeDetectedRef.current) {
         if (matchesWake(combined)) {
@@ -449,6 +473,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     playingSegmentRef.current = false;
     activeBaseTurnRef.current = null;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (followUpTimerRef.current) { clearTimeout(followUpTimerRef.current); followUpTimerRef.current = null; }
     if (recogWatchdogRef.current) { clearInterval(recogWatchdogRef.current); recogWatchdogRef.current = null; }
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     // Force-stop the recognizer unconditionally. After a remount the global

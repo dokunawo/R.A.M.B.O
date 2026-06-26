@@ -1032,6 +1032,7 @@ export default function SplashScreen({
   const stopListeningRef = useRef(null);
   const clearAllRef = useRef(null);
   const commandCenterRef = useRef(null);
+  const setFollowUpRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
     const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
@@ -1053,6 +1054,16 @@ export default function SplashScreen({
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }
+    // End the conversation: stop the hands-free follow-up loop and go wake-gated.
+    if (/^(no thanks?|no that'?s all|that'?s all|that'?s it|that'?ll be all|i'?m done|we'?re done|never ?mind|nothing else|stop)$/.test(t)) {
+      if (setFollowUpRef.current) setFollowUpRef.current(false);
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
+    }
+    // Normal command → keep listening after RAMBO replies so the operator can
+    // continue the conversation WITHOUT re-saying the wake word (until an end
+    // phrase or the follow-up silence timeout).
+    if (setFollowUpRef.current) setFollowUpRef.current(true);
     setTimeout(() => {
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.PROCESSING);
     }, 800);
@@ -1060,6 +1071,7 @@ export default function SplashScreen({
   const {
     levelRef: audioLevelRef, state: convState, setState: voiceSetState,
     micActive, toggleMic, startMic, speakResponse, handleSpeakSegment, pauseListening,
+    setFollowUp,
   } = useVoiceReactivity({
     onTranscript: setVoiceText,
     onFinalTranscript: handleFinalTranscript,
@@ -1067,6 +1079,7 @@ export default function SplashScreen({
   voiceSetStateRef.current = voiceSetState;
   speakRef.current = speakResponse;
   stopListeningRef.current = pauseListening;
+  setFollowUpRef.current = setFollowUp;
 
   // Route streamed speak_segment messages (which carry ElevenLabs audio) to the
   // voice player, exactly like the sub-pages do via usePageVoice. Without this,

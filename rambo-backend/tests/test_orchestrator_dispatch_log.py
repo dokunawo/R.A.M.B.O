@@ -18,7 +18,7 @@ async def orch(tmp_path):
 async def test_dispatch_turn_logs_completed_row(orch, monkeypatch):
     o, repo = orch
 
-    async def fake_route(goal, roster_lines, valid_targets):
+    async def fake_route(goal, roster_lines, valid_targets, history=None):
         return RoutingDecision(mode="dispatch", steps=[RouteStep(target="seeker", task="look up X")])
     monkeypatch.setattr(o.router, "route", fake_route)
 
@@ -42,7 +42,7 @@ async def test_dispatch_turn_logs_completed_row(orch, monkeypatch):
 async def test_no_repo_is_noop(monkeypatch):
     o = Orchestrator()  # dispatch_repo defaults to None
 
-    async def fake_route(goal, roster_lines, valid_targets):
+    async def fake_route(goal, roster_lines, valid_targets, history=None):
         return RoutingDecision(mode="dispatch", steps=[RouteStep(target="seeker", task="t")])
     monkeypatch.setattr(o.router, "route", fake_route)
 

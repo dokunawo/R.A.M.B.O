@@ -4,6 +4,7 @@ import os
 import re
 import time
 import uuid
+from collections import deque
 
 try:
     import anthropic
@@ -45,6 +46,14 @@ class Orchestrator:
         self.keeper_repo = None   # set by main.py once the DB exists
         self.ws = ConnectionManager()
         self.conversation = ConversationManager()
+        # When RAMBO asks a clarifying question, remember it so the NEXT turn's
+        # answer is routed in context. Consumed once, on the following turn.
+        self._pending_clarify = None
+        # Clean recent turns ({role, content}) fed to the ROUTER so follow-ups and
+        # affirmations ("yes", "do it") route against what was just discussed. This
+        # is routing-facing memory — separate from the verbose conversation history
+        # used for voicing.
+        self._recent_turns = deque(maxlen=6)
         self.personality_text = load_personality()
         self.llm = (
             anthropic.AsyncAnthropic(
@@ -303,6 +312,11 @@ class Orchestrator:
     def set_keeper_repo(self, repo):
         """Give the Keeper agent a durable memory store."""
         self.keeper_repo = repo
+
+    def _remember_turn(self, user_text: str, assistant_text: str) -> None:
+        """Record a clean turn for the router's follow-up context (bounded deque)."""
+        self._recent_turns.append({"role": "user", "content": (user_text or "")[:300]})
+        self._recent_turns.append({"role": "assistant", "content": (assistant_text or "")[:300]})
 
     async def set_conversation_repo(self, repo):
         """Back the in-memory conversation with a durable store and hydrate the
@@ -616,6 +630,7 @@ class Orchestrator:
         if self._is_watchlist_command(goal):
             res = await self._run_watchlist(goal)
             summary = await self._speak(goal, [f"watchlist: {goal}"], [res])
+            self._remember_turn(goal, summary)
             return {"response": summary, "agent": "rambo"}
 
         roster_lines, valid_targets = await self._build_roster()
@@ -623,7 +638,6 @@ class Orchestrator:
         # FULL valid_targets set so the router may still name a non-shortlisted
         # target without sanitize() rewriting it. No-op without embeddings.
         shortlisted = await self.roster_index.shortlist(goal, roster_lines)
-        dispatch_ctx = await self._dispatch_context()
 
         # Resolve relative date phrases ("yesterday", "this week") to explicit
         # ranges. Stash them on ctx so skills (e.g. calendar) can reuse the same
@@ -634,18 +648,42 @@ class Orchestrator:
             ctx["temporal"] = temporal
         temporal_ctx = format_temporal_context(temporal)
 
-        prefix = "\n\n".join(p for p in (temporal_ctx, dispatch_ctx) if p)
+        # If we just asked a clarifying question, fold it into the routing context
+        # (consume-once) so this turn's answer resolves the original request.
+        clarify_ctx = ""
+        if self._pending_clarify:
+            pc = self._pending_clarify
+            self._pending_clarify = None
+            clarify_ctx = (
+                f"CONTEXT: You earlier asked the operator: \"{pc['question']}\" about "
+                f"their request \"{pc['goal']}\". This message is their answer — route "
+                "the resolved, combined request (carry the original subject into the task)."
+            )
+
+        # Dispatch history is deliberately NOT fed to the router — it lists recently
+        # FINISHED tasks (e.g. an old build) and was hijacking short follow-ups like
+        # "yes". Recent conversation (below) is what gives follow-ups their context.
+        prefix = "\n\n".join(p for p in (clarify_ctx, temporal_ctx) if p)
         routed_goal = f"{prefix}\n\n{goal}" if prefix else goal
-        decision = await self.router.route(routed_goal, shortlisted, valid_targets)
+        history = list(self._recent_turns)
+        decision = await self.router.route(routed_goal, shortlisted, valid_targets,
+                                           history=history)
 
         # Router unavailable or punted → keyword fallback (failure isolation).
         if decision is None:
-            return await self._legacy_handle(goal, ctx)
+            resp = await self._legacy_handle(goal, ctx)
+            self._remember_turn(goal, resp.get("response", ""))
+            return resp
 
         if decision.mode == "clarify":
             q = decision.question.strip()
             await self.broadcast(f"[R.A.M.B.O] {q}")
             await self._voice_text(q)
+            # Remember the question + the request it was about, so the operator's
+            # next utterance is routed as the answer (not in isolation).
+            self.conversation.add_assistant_message(q)
+            self._pending_clarify = {"question": q, "goal": goal}
+            self._remember_turn(goal, q)
             return {"response": q, "agent": "rambo", "clarify": True}
 
         # dispatch: run each ordered step through the right target.
@@ -661,6 +699,7 @@ class Orchestrator:
                 results.append(res)
             summary = await self._speak(goal, plan, results)
             await self._close_dispatch(dispatch_id, "completed", summary)
+            self._remember_turn(goal, summary)
             return {"response": summary, "agent": "rambo"}
         except Exception as e:
             await self._close_dispatch(dispatch_id, "failed", str(e))

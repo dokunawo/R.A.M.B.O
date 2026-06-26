@@ -136,6 +136,18 @@ on X", "watch/track/monitor X", "stop watching X", "what am I watching" (watch \
 topics); and "remind me X is due <date>", "add a deadline …", "what are my \
 deadlines" (deadlines). These ADD/manage watch items — route to "watchlist", NOT \
 "keeper" (keeper is for general remember/recall), and NOT "calendar".
+15. FOLLOW-UPS & AFFIRMATIONS: the messages above are the recent conversation. If \
+the latest message is a short confirmation or continuation ("yes", "yeah", \
+"sure", "ok", "go ahead", "do it", "please", "that one", "the first one") or only \
+makes sense as a reply to the previous turn, USE the conversation to recover the \
+ACTUAL intent and route THAT (e.g. you offered a web search for today's games and \
+they said "yes" → route web_search for today's games). Never route the literal \
+"yes", and NEVER attach a follow-up to an unrelated finished task from earlier.
+16. FACTUAL LOOKUPS: questions seeking current facts you can't answer from memory \
+— sports schedules/scores, "what teams are playing", "who's playing", standings, \
+general knowledge, "look up X" — route to "web_search" (or "news"/"finance" when \
+the subject squarely fits). A plain question is NEVER "build" and NEVER \
+"orchestrate".
 
 ROSTER:
 {roster}
@@ -157,10 +169,17 @@ class SmartRouter:
         goal: str,
         roster_lines: list[str],
         valid_targets: set[str],
+        history: list[dict] | None = None,
     ) -> RoutingDecision | None:
-        """Return a validated RoutingDecision, or None to signal fallback."""
+        """Return a validated RoutingDecision, or None to signal fallback.
+
+        `history` is the recent conversation (clean {role, content} turns) so the
+        router can interpret follow-ups and affirmations ("yes", "do it") against
+        what was just discussed instead of routing them in isolation."""
         if not self._llm:
             return None
+        messages = [*(history or []),
+                    {"role": "user", "content": f"Route this request: {goal}"}]
         try:
             response = await self._llm.messages.create(
                 model=self._model,
@@ -170,7 +189,7 @@ class SmartRouter:
                     "text": build_policy(roster_lines),
                     "cache_control": cache_config.cache_control(),
                 }],
-                messages=[{"role": "user", "content": f"Route this request: {goal}"}],
+                messages=messages,
                 tools=[_EMIT_TOOL],
                 tool_choice={"type": "tool", "name": "emit_routing_decision"},
             )
@@ -196,10 +215,12 @@ class SmartRouter:
             if not decision.question.strip():
                 return None
             return decision
-        # dispatch: keep only steps with known targets; unknown → orchestrate
+        # dispatch: keep only steps with known targets. Unknown → "converse"
+        # (just answer) rather than "orchestrate", whose simulated build pipeline
+        # turns stray routes into a misleading fake-build.
         cleaned: list[RouteStep] = []
         for step in decision.steps:
-            target = step.target if step.target in valid_targets else "orchestrate"
+            target = step.target if step.target in valid_targets else "converse"
             cleaned.append(RouteStep(target=target, task=step.task or ""))
         if not cleaned:
             return None

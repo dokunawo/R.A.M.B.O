@@ -57,11 +57,13 @@ async def test_dispatch_multi_step_ordered():
 
 
 @pytest.mark.asyncio
-async def test_unknown_target_becomes_orchestrate():
+async def test_unknown_target_becomes_converse():
+    # Unknown targets fall back to "converse" (answer directly), NOT "orchestrate"
+    # whose simulated build pipeline turns stray routes into a misleading fake-build.
     client = _client({"mode": "dispatch", "steps": [{"target": "nonexistent", "task": "do it"}]})
     router = SmartRouter(client)
     d = await router.route("x", ROSTER, TARGETS)
-    assert d.steps[0].target == "orchestrate"
+    assert d.steps[0].target == "converse"
 
 
 @pytest.mark.asyncio
