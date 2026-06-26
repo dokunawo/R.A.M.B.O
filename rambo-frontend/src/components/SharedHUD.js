@@ -6,6 +6,25 @@ import "./SharedHUD.css";
 const API = "http://localhost:8000";
 const WS_URL = "ws://localhost:8000/ws/activity";
 
+// Accordion store for the left-rail docks: only one panel open at a time, shared
+// across every page with no prop drilling. A dock calls useDockOpen(id) to get
+// [isOpen, toggle]; toggling one closes whichever other was open.
+let _openDock = null;
+const _openDockListeners = new Set();
+function useDockOpen(id) {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const fn = () => force(n => n + 1);
+    _openDockListeners.add(fn);
+    return () => { _openDockListeners.delete(fn); };
+  }, []);
+  const toggle = useCallback(() => {
+    _openDock = _openDock === id ? null : id;
+    _openDockListeners.forEach(fn => fn());
+  }, [id]);
+  return [_openDock === id, toggle];
+}
+
 function applyLiveStatus(prev, name, state) {
   if (!prev) return prev;
   if (name === "rambo" || name === "overseer") {
@@ -543,12 +562,12 @@ function FactoryCard({ task, onResolved }) {
 }
 
 export function FactoryDock({ pending, onRefresh }) {
-  const [open, setOpen] = useState(false);
+  const [open, toggle] = useDockOpen("factory");
   if (!pending) return null;
 
   return (
     <div className="hud-factory-wrap">
-      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+      <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-factory-tag">FACTORY</span>
         <span className="hud-factory-count">{pending.length}</span>
       </div>
@@ -605,11 +624,11 @@ async function openOnDesktop(hostPath) {
 
 export function ConfirmationDock() {
   const { items, refresh } = usePolledQueue("/confirmations");
-  const [open, setOpen] = useState(false);
+  const [open, toggle] = useDockOpen("confirm");
 
   return (
     <div className="hud-confirm-wrap">
-      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+      <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-confirm-tag">CONFIRM</span>
         <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
       </div>
@@ -641,14 +660,14 @@ export function ConfirmationDock() {
 
 export function HandoffDock() {
   const { items, refresh } = usePolledQueue("/handoffs");
-  const [open, setOpen] = useState(false);
+  const [open, toggle] = useDockOpen("handoff");
 
   const confidenceLabel = (c) =>
     c >= 0.75 ? "high" : c >= 0.4 ? "medium" : "low";
 
   return (
     <div className="hud-handoff-wrap">
-      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+      <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-handoff-tag">HANDOFF</span>
         <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
       </div>
@@ -762,11 +781,11 @@ function DevReviewCard({ change, onResolved }) {
 
 export function CodeReviewDock() {
   const { items, refresh } = usePolledQueue("/dev/pending");
-  const [open, setOpen] = useState(false);
+  const [open, toggle] = useDockOpen("codereview");
 
   return (
     <div className="hud-dev-wrap">
-      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+      <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-dev-tag">CODE REVIEW</span>
         <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
       </div>
@@ -843,12 +862,12 @@ function BuildCard({ build: b }) {
 
 export function BuildsDock() {
   const { items } = usePolledQueue("/builds");
-  const [open, setOpen] = useState(false);
+  const [open, toggle] = useDockOpen("builds");
   const ready = items.filter(b => b.status === "ready");
 
   return (
     <div className="hud-builds-wrap">
-      <div className="hud-factory-face" onClick={() => setOpen(o => !o)}>
+      <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-builds-tag">BUILDS</span>
         <span className={`hud-factory-count ${ready.length ? "hud-count-hot" : ""}`}>{items.length}</span>
       </div>
