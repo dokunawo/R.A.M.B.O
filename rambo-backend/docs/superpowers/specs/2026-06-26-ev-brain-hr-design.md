@@ -12,10 +12,10 @@ prop, compares it to the Pick6 multiplier, and outputs the **ranked +EV plays** 
 market. v1 covers **Home Runs**. It is output-only — it suggests, never places (any
 future bet-placement routes through the existing Sentinel gate).
 
-The operator wants **four separate markets, each its own ranked list → its own CMC
-card**: Home Runs, H+R+RBI, Stolen Bases, Moneyline. The engine is built
-**market-pluggable** so the other three drop in later with no pipeline change; v1
-implements the HR market fully.
+The operator wants **five separate markets, each its own ranked list → its own CMC
+card**: Home Runs, H+R+RBI, Stolen Bases, Strikeouts (a *pitcher* prop), and Moneyline.
+The engine is built **market-pluggable** so the others drop in later with no pipeline
+change; v1 implements the HR market fully.
 
 ## Core idea — Pick6 EV is multiplier-based
 For a "1+ HR" prop at multiplier `m`, with model probability `P` that the player homers:
@@ -89,6 +89,8 @@ No new paid pulls.
 ## Scope
 **v1 IN:** HR market end-to-end (model + features + engine), rank-only (no stakes),
 per-slate Haiku explainer, the `/betting/daily-edge` endpoint, migration 003 + normalize tweak.
-**OUT (later):** H+R+RBI / SB / moneyline `MarketModel`s (framework-ready); the CMC card
-frontend rebuild (design already locked); pitcher-HR-allowed / weather / Statcast sharpeners;
-calibration tracking (predicted vs actual); bet placement (Sentinel-gated).
+**OUT (later):** H+R+RBI / SB / Strikeouts / moneyline `MarketModel`s (framework-ready).
+Strikeouts is a **pitcher** prop, so it needs pitcher season stats — a small ingestion add
+(`statsapi` stats with `group="pitching"`) plus a pitcher-K probability model. Also out:
+the CMC card frontend rebuild (design already locked); pitcher-HR-allowed / weather /
+Statcast sharpeners; calibration tracking (predicted vs actual); bet placement (Sentinel-gated).
