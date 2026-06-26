@@ -7,6 +7,23 @@ from __future__ import annotations
 PYTHAG_EXP = 1.83  # standard MLB Pythagorean exponent
 LG_ERA = 4.20      # league-average ERA (run-suppression baseline)
 
+# Market-anchoring: the de-vigged closing line is the sharpest estimate available,
+# so we treat it as the prior and let our (unvalidated) model only nudge it. We also
+# clamp the model to realistic single-game MLB bounds — no real MLB game is a 90%
+# favorite — so a miscalibrated model can't produce absurd "edges".
+W_BOOK = 0.80       # weight on the market vs our model
+GAME_P_LO = 0.35    # realistic single-game win-prob floor
+GAME_P_HI = 0.67    # ...and ceiling
+
+
+def market_anchored_prob(model_p: float, book_p: float, *, w_book: float = W_BOOK,
+                         lo: float = GAME_P_LO, hi: float = GAME_P_HI) -> float:
+    """Blend our model toward the de-vigged market price (book = prior), after
+    clamping the model to a plausible single-game range. Returns a win prob that
+    sits near the market and only leans where the model has real, bounded signal."""
+    clamped = max(lo, min(hi, model_p))
+    return w_book * book_p + (1.0 - w_book) * clamped
+
 
 def expected_runs(team_runs_per_game: float, opp_starter_era: float,
                   lg_era: float = LG_ERA) -> float:

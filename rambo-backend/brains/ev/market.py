@@ -4,7 +4,8 @@ from brains.ev.features import build_hr_features, build_count_features
 from brains.ev.hr_model import hr_probability, edge, breakeven
 from brains.ev.count_model import poisson_prob_over
 from brains.ev.moneyline_model import (pythag_winpct, matchup_winprob, devig_two_way,
-                                       expected_runs, winprob_from_runs)
+                                       expected_runs, winprob_from_runs,
+                                       market_anchored_prob)
 from brains.ev.types import Pick, CountFeatures
 
 _HEADSHOT = ("https://img.mlbstatic.com/mlb-photos/image/upload/"
@@ -112,10 +113,11 @@ class KMarket:
 
 
 class MoneylineMarket:
-    """Team moneyline. Pythagorean win expectation (runs scored/allowed) blended via
-    log5, compared to the de-vigged sportsbook line. One +EV side per game.
+    """Team moneyline. Pitcher-adjusted run model, then MARKET-ANCHORED to the
+    de-vigged book (the book is the sharp prior; the model only nudges it within
+    realistic bounds). Output is an honest 'lean', not a claimed +EV play.
     Team-based: `mlb_id` carries the team id, headshot is the team logo, `breakeven`
-    holds the no-vig book win%, `multiplier` holds the American price."""
+    holds the no-vig book win%, `model_p` the anchored win%, `edge` the lean."""
     market_key = "ml"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
@@ -142,19 +144,21 @@ class MoneylineMarket:
                     pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
                 home_support = away_support = "Pythag (no SP)"
             book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
-            if model_home - book_home >= (1.0 - model_home) - book_away:
+            # anchor the model to the market; the lean is the bounded disagreement
+            anchored_home = market_anchored_prob(model_home, book_home)
+            if anchored_home - book_home >= 0:
                 tid, abbr, opp = g["home_team_id"], g["home_team_abbr"], g["away_team_abbr"]
-                mp, bp, price, support = model_home, book_home, g["home_price"], home_support
+                mp, bp, price, support = anchored_home, book_home, g["home_price"], home_support
             else:
                 tid, abbr, opp = g["away_team_id"], g["away_team_abbr"], g["home_team_abbr"]
-                mp, bp, price, support = 1.0 - model_home, book_away, g["away_price"], away_support
+                mp, bp, price, support = 1.0 - anchored_home, book_away, g["away_price"], away_support
             abbr = abbr or ""
             picks.append(Pick(
                 market="ml", mlb_id=tid, name=abbr.upper(), initials=abbr.upper(),
                 team=abbr, opponent=opp or "", hand="",
-                pick=f"MONEYLINE ({price:+d})", line=0.0, multiplier=float(price),
+                pick=f"MONEYLINE LEAN ({price:+d})", line=0.0, multiplier=float(price),
                 breakeven=round(bp, 4), model_p=round(mp, 4), edge=round(mp - bp, 4),
-                support=support, tags=["EDGE"], glow="gold",
+                support=support, tags=["LEAN"], glow="gold",
                 headshot_url=_TEAM_LOGO.format(team_id=tid), rationale="",
             ))
         return picks

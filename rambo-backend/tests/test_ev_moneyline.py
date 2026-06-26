@@ -7,7 +7,8 @@ from repositories.mlb_repo import MlbRepo
 import json
 from brains.ev.moneyline_model import (pythag_winpct, matchup_winprob,
                                        american_to_implied, devig_two_way,
-                                       expected_runs, winprob_from_runs)
+                                       expected_runs, winprob_from_runs,
+                                       market_anchored_prob)
 from brains.ev.market import MoneylineMarket, REGISTRY
 
 
@@ -89,6 +90,14 @@ def test_moneyline_pitcher_adjusted_flips_favorite(tmp_path):
     pk = MoneylineMarket().raw_picks(MlbRepo(conn), "2026-06-26")[0]
     assert pk.team == "BOS"                 # the ace flips the value to the away team
     assert "ERA SP" in pk.support           # pitcher-adjusted path used (not Pythag fallback)
+    assert pk.tags == ["LEAN"] and abs(pk.edge) < 0.12   # market-anchored -> bounded lean
+
+
+def test_market_anchored_prob_bounds():
+    # an absurd model prob is clamped + pulled toward the book -> small, sane lean
+    anchored = market_anchored_prob(0.91, 0.62)
+    assert 0.62 < anchored < 0.70           # near the book, never near 0.91
+    assert math.isclose(market_anchored_prob(0.50, 0.50), 0.50, rel_tol=1e-9)  # agree -> no lean
 
 
 def test_registry_has_moneyline():

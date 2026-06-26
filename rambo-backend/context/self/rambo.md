@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 151 commits:
+Last 14 days — 152 commits:
 
-- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (12 minutes ago)`
-- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (21 minutes ago)`
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (23 minutes ago)`
-- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (41 minutes ago)`
-- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (48 minutes ago)`
-- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (50 minutes ago)`
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (53 minutes ago)`
-- `6421de7 feat(ev): HR market builds ranked Pick candidates (55 minutes ago)`
-- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (58 minutes ago)`
-- `588171f feat(ev): repo lookups for game context + pitcher hand (61 minutes ago)`
-- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (64 minutes ago)`
-- `487e92c feat(ev): Pick + HRFeatures types (card contract) (68 minutes ago)`
-- `be6fcce feat(ev): HR probability + Pick6 edge math (70 minutes ago)`
-- `433bdbb feat(ev): HR park-factor table (72 minutes ago)`
-- `b6ba289 docs: EV Brain (home runs) implementation plan (83 minutes ago)`
+- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (4 minutes ago)`
+- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (16 minutes ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (25 minutes ago)`
+- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (27 minutes ago)`
+- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (45 minutes ago)`
+- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (52 minutes ago)`
+- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (55 minutes ago)`
+- `5252270 feat(ev): per-slate LLM explainer with templated fallback (57 minutes ago)`
+- `6421de7 feat(ev): HR market builds ranked Pick candidates (59 minutes ago)`
+- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (63 minutes ago)`
+- `588171f feat(ev): repo lookups for game context + pitcher hand (65 minutes ago)`
+- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (68 minutes ago)`
+- `487e92c feat(ev): Pick + HRFeatures types (card contract) (72 minutes ago)`
+- `be6fcce feat(ev): HR probability + Pick6 edge math (74 minutes ago)`
+- `433bdbb feat(ev): HR park-factor table (76 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (87 minutes ago)`
 - `917c2fc docs: lock Pick output shape + card styling to the CMC card (2 hours ago)`
 - `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (2 hours ago)`
 - `e02da85 docs: EV Brain (home runs) design spec (2 hours ago)`
 - `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (2 hours ago)`
-- `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (7 hours ago)`
-- … and 131 more
+- … and 132 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
