@@ -128,16 +128,34 @@ class MlbRepo:
 
     def team_runs(self, team_id: int, season: int) -> Optional[dict]:
         row = self.conn.execute(
-            "SELECT runs_scored, runs_allowed FROM team_season_stats "
+            "SELECT runs_scored, runs_allowed, games_played FROM team_season_stats "
             "WHERE team_id=? AND season=?", (team_id, season)).fetchone()
         return dict(row) if row else None
 
+    def pitcher_era(self, mlb_id: Optional[int], season: int) -> Optional[float]:
+        """Starter's season ERA from pitching stats; None if unavailable."""
+        if mlb_id is None:
+            return None
+        row = self.conn.execute(
+            "SELECT stats FROM player_season_stats "
+            "WHERE mlb_id=? AND season=? AND stat_group='pitching'",
+            (mlb_id, season)).fetchone()
+        if row is None:
+            return None
+        import json
+        season_stat = (json.loads(row["stats"]).get("season") or {})
+        try:
+            return float(season_stat.get("era"))
+        except (TypeError, ValueError):
+            return None
+
     def moneyline_slate(self, date: str) -> list[dict]:
         """Games on `date` with a two-sided moneyline (latest snapshot), incl. team
-        ids/abbrs + home/away American prices."""
+        ids/abbrs, probable-pitcher ids, and home/away American prices."""
         rows = self.conn.execute(
             """SELECT g.game_pk, g.home_team_id, g.away_team_id,
                       g.home_team_abbr, g.away_team_abbr,
+                      g.home_probable_pitcher_id, g.away_probable_pitcher_id,
                       MAX(CASE WHEN o.side='home' THEN o.price END) AS home_price,
                       MAX(CASE WHEN o.side='away' THEN o.price END) AS away_price
                FROM games g

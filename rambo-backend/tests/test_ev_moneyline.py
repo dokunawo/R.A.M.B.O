@@ -4,8 +4,10 @@ from ingestion.raw_store import land_raw
 from ingestion.normalize import normalize_pending
 from ingestion.apify_client_wrapper import RunResult
 from repositories.mlb_repo import MlbRepo
+import json
 from brains.ev.moneyline_model import (pythag_winpct, matchup_winprob,
-                                       american_to_implied, devig_two_way)
+                                       american_to_implied, devig_two_way,
+                                       expected_runs, winprob_from_runs)
 from brains.ev.market import MoneylineMarket, REGISTRY
 
 
@@ -50,6 +52,43 @@ def test_moneyline_market_picks_value_side(tmp_path):
     assert pk.edge > 0 and pk.model_p > pk.breakeven
     assert "team-logos/147" in pk.headshot_url
     assert pk.pick.startswith("MONEYLINE")
+
+
+def test_expected_runs_and_winprob():
+    assert math.isclose(expected_runs(4.5, 4.20), 4.5, rel_tol=1e-9)   # avg starter, no change
+    assert expected_runs(4.5, 2.10) < 2.5                              # ace ~halves output
+    assert math.isclose(winprob_from_runs(4.5, 4.5), 0.5, rel_tol=1e-9)
+    assert winprob_from_runs(5.0, 3.0) > 0.5
+
+
+def _seed_pitcher(conn, mlb_id, era, now):
+    conn.execute("INSERT INTO players (mlb_id, full_name, throws, current_team_id, updated_at) "
+                 "VALUES (?,?,'R',147,?)", (mlb_id, f"SP{mlb_id}", now))
+    conn.execute("INSERT INTO player_season_stats (mlb_id, season, stat_group, stats, source, "
+                 "as_of_date, scraped_at) VALUES (?,2026,'pitching',?,'mlb','2026-06-26',?)",
+                 (mlb_id, json.dumps({"season": {"era": era}}), now))
+
+
+def test_moneyline_pitcher_adjusted_flips_favorite(tmp_path):
+    """A strong home team (Pythag favorite) facing an ace while starting a bad arm
+    should be modeled an underdog — proof the starter dominates the season Pythag."""
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    now = "2026-06-26T00:00:00Z"
+    conn.execute("INSERT INTO team_season_stats VALUES (147,2026,800,600,162,'mlb',?)", (now,))
+    conn.execute("INSERT INTO team_season_stats VALUES (111,2026,600,800,162,'mlb',?)", (now,))
+    _seed_pitcher(conn, 10, "5.50", now)   # home starts a bad arm
+    _seed_pitcher(conn, 20, "2.00", now)   # away starts an ace
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_abbr, away_team_abbr, home_probable_pitcher_id, "
+                 "away_probable_pitcher_id, scraped_at) "
+                 "VALUES (999,'2026-06-26',147,111,'NYY','BOS',10,20,?)", (now,))
+    conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, captured_at) "
+                 "VALUES (999,'DK','moneyline','home',-110,'2026-06-26T18:00Z')")
+    conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, captured_at) "
+                 "VALUES (999,'DK','moneyline','away',-110,'2026-06-26T18:00Z')")
+    pk = MoneylineMarket().raw_picks(MlbRepo(conn), "2026-06-26")[0]
+    assert pk.team == "BOS"                 # the ace flips the value to the away team
+    assert "ERA SP" in pk.support           # pitcher-adjusted path used (not Pythag fallback)
 
 
 def test_registry_has_moneyline():

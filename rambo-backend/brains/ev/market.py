@@ -3,7 +3,8 @@ import math
 from brains.ev.features import build_hr_features, build_count_features
 from brains.ev.hr_model import hr_probability, edge, breakeven
 from brains.ev.count_model import poisson_prob_over
-from brains.ev.moneyline_model import pythag_winpct, matchup_winprob, devig_two_way
+from brains.ev.moneyline_model import (pythag_winpct, matchup_winprob, devig_two_way,
+                                       expected_runs, winprob_from_runs)
 from brains.ev.types import Pick, CountFeatures
 
 _HEADSHOT = ("https://img.mlbstatic.com/mlb-photos/image/upload/"
@@ -124,23 +125,36 @@ class MoneylineMarket:
             hr, ar = repo.team_runs(g["home_team_id"], season), repo.team_runs(g["away_team_id"], season)
             if not hr or not ar:
                 continue
-            home_pyth = pythag_winpct(hr["runs_scored"], hr["runs_allowed"])
-            away_pyth = pythag_winpct(ar["runs_scored"], ar["runs_allowed"])
-            model_home = matchup_winprob(home_pyth, away_pyth)
+            home_era = repo.pitcher_era(g["home_probable_pitcher_id"], season)
+            away_era = repo.pitcher_era(g["away_probable_pitcher_id"], season)
+            hg, ag = hr["games_played"], ar["games_played"]
+            if home_era and away_era and hg and ag:
+                # pitcher-adjusted: each offense vs the OPPOSING starter
+                exp_home = expected_runs(hr["runs_scored"] / hg, away_era)
+                exp_away = expected_runs(ar["runs_scored"] / ag, home_era)
+                model_home = winprob_from_runs(exp_home, exp_away)
+                home_support = f"vs {away_era:.2f} ERA SP"
+                away_support = f"vs {home_era:.2f} ERA SP"
+            else:
+                # fallback: pure season Pythagorean (no starter info)
+                model_home = matchup_winprob(
+                    pythag_winpct(hr["runs_scored"], hr["runs_allowed"]),
+                    pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
+                home_support = away_support = "Pythag (no SP)"
             book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
             if model_home - book_home >= (1.0 - model_home) - book_away:
                 tid, abbr, opp = g["home_team_id"], g["home_team_abbr"], g["away_team_abbr"]
-                mp, bp, price, pyth = model_home, book_home, g["home_price"], home_pyth
+                mp, bp, price, support = model_home, book_home, g["home_price"], home_support
             else:
                 tid, abbr, opp = g["away_team_id"], g["away_team_abbr"], g["home_team_abbr"]
-                mp, bp, price, pyth = 1.0 - model_home, book_away, g["away_price"], away_pyth
+                mp, bp, price, support = 1.0 - model_home, book_away, g["away_price"], away_support
             abbr = abbr or ""
             picks.append(Pick(
                 market="ml", mlb_id=tid, name=abbr.upper(), initials=abbr.upper(),
                 team=abbr, opponent=opp or "", hand="",
                 pick=f"MONEYLINE ({price:+d})", line=0.0, multiplier=float(price),
                 breakeven=round(bp, 4), model_p=round(mp, 4), edge=round(mp - bp, 4),
-                support=f"Pythag {pyth:.0%}", tags=["EDGE"], glow="gold",
+                support=support, tags=["EDGE"], glow="gold",
                 headshot_url=_TEAM_LOGO.format(team_id=tid), rationale="",
             ))
         return picks
