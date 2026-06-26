@@ -34,3 +34,17 @@ class HRFeatures:
     line: float
     multiplier: float
     season_hr: int
+
+@dataclass
+class CountFeatures:
+    """Per-game counting-prop features (H+R+RBI, SB, K). `per_game_mean` is the
+    chosen Poisson mean (vs-hand split or overall)."""
+    mlb_id: int
+    name: str
+    team_abbr: str
+    opponent_abbr: str
+    pitcher_hand: str
+    per_game_mean: float
+    line: float
+    multiplier: float
+    support: str
