@@ -15,7 +15,7 @@ class HRMarket:
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
         props = [p for p in repo.latest_props(market="HR", resolved_only=True)
-                 if p["line"] == 0.5]
+                 if p["line"] == 0.5 and p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:
             feat = build_hr_features(repo, date, prop)

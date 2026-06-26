@@ -105,6 +105,7 @@ class MlbRepo:
                FROM games g JOIN players p ON p.mlb_id=?
                WHERE g.official_date=?
                  AND (g.home_team_id=p.current_team_id OR g.away_team_id=p.current_team_id)
+               ORDER BY g.game_pk
                LIMIT 1""",
             (mlb_id, date)).fetchone()
         if row is None:

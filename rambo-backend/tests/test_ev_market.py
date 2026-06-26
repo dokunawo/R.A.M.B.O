@@ -34,3 +34,18 @@ def test_hrmarket_builds_pick(tmp_path):
 
 def test_registry_has_hr():
     assert "hr" in REGISTRY and REGISTRY["hr"].market_key == "hr"
+
+def test_null_multiplier_prop_skipped(tmp_path):
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    now = "2026-06-26T00:00:00Z"
+    conn.execute("INSERT INTO players (mlb_id, full_name, throws, current_team_id, updated_at) "
+                 "VALUES (592450,'Aaron Judge','R',147,?)", (now,))
+    stats = {"season": {"homeRuns": 50, "plateAppearances": 600}, "splits": {}}
+    conn.execute("INSERT INTO player_season_stats (mlb_id, season, stat_group, stats, source, "
+                 "as_of_date, scraped_at) VALUES (592450,2026,'hitting',?,'mlb','2026-06-26',?)",
+                 (json.dumps(stats), now))
+    # HR prop with NULL multiplier (e.g. a non-Pick6 book) must be skipped, not crash
+    conn.execute("INSERT INTO prop_lines (game_pk, mlb_id, book, market, line, multiplier, "
+                 "player_name_raw, captured_at) VALUES (NULL,592450,'somebook','HR',0.5,NULL,"
+                 "'Aaron Judge','2026-06-26T18:00Z')")
+    assert HRMarket().raw_picks(MlbRepo(conn), "2026-06-26") == []
