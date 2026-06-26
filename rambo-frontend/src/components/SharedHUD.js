@@ -783,14 +783,69 @@ export function CodeReviewDock() {
   );
 }
 
-// ── Builds dock: standalone apps RAMBO built (open them on the desktop) ──
+// ── Builds dock: standalone apps RAMBO built — open, run, or test them ──
+function BuildCard({ build: b }) {
+  const [busy, setBusy] = useState("");
+  const [out, setOut] = useState(null);
+
+  const statusLabel =
+    b.status === "building" ? "BUILDING…" : b.status === "failed" ? "FAILED" : "READY";
+
+  const act = async (verb) => {
+    if (busy) return;
+    setBusy(verb); setOut(null);
+    try {
+      const r = await fetch(`${API}/builds/${b.slug}/${verb}`, { method: "POST" });
+      setOut(await r.json());
+    } catch { setOut({ error: "request failed" }); }
+    finally { setBusy(""); }
+  };
+
+  const renderOut = (o) => {
+    if (o.error) return `error: ${o.error}`;
+    const head = o.timed_out ? "⏱ stopped (still running)"
+      : o.ok ? "✓ ok" : "✗ failed";
+    return `${head}${o.entry ? ` — ${o.entry}` : ""}\n\n${o.output || ""}`;
+  };
+
+  return (
+    <div className="hud-factory-card">
+      <div className="hud-factory-card-head">
+        <span className="hud-factory-name">{b.name || b.slug}</span>
+        <span className={`hud-dev-rec hud-dev-rec-${b.status === "ready" ? "merge" : b.status === "failed" ? "hold" : "escalate"}`}>
+          {statusLabel}
+        </span>
+      </div>
+      {b.summary && <div className="hud-factory-specialty">{b.summary}</div>}
+      {b.host_path && <div className="hud-builds-path">{b.host_path}</div>}
+      {b.files && b.files.length > 0 && (
+        <div className="hud-factory-iter">{b.files.length} file{b.files.length === 1 ? "" : "s"}</div>
+      )}
+      {b.status === "ready" && (
+        <div className="hud-factory-actions">
+          {b.host_path && (
+            <button className="hud-factory-approve" onClick={() => openOnDesktop(b.host_path)}>OPEN</button>
+          )}
+          <button className="hud-factory-cancel" onClick={() => act("test")} disabled={!!busy}>
+            {busy === "test" ? "…" : "RUN TESTS"}
+          </button>
+          <button className="hud-factory-cancel" onClick={() => act("run")} disabled={!!busy}>
+            {busy === "run" ? "…" : "RUN"}
+          </button>
+        </div>
+      )}
+      {out && <pre className="hud-dev-diff">{renderOut(out)}</pre>}
+      {b.status === "failed" && b.error && (
+        <div className="hud-factory-iter">error: {b.error}</div>
+      )}
+    </div>
+  );
+}
+
 export function BuildsDock() {
   const { items } = usePolledQueue("/builds");
   const [open, setOpen] = useState(false);
   const ready = items.filter(b => b.status === "ready");
-
-  const statusLabel = (b) =>
-    b.status === "building" ? "BUILDING…" : b.status === "failed" ? "FAILED" : "READY";
 
   return (
     <div className="hud-builds-wrap">
@@ -803,31 +858,7 @@ export function BuildsDock() {
           <div className="hud-factory-panel-header">◆ BUILT PROJECTS</div>
           {items.length === 0
             ? <div className="hud-factory-empty">{"// nothing built yet"}</div>
-            : items.map(b => (
-                <div key={b.id || b.slug} className="hud-factory-card">
-                  <div className="hud-factory-card-head">
-                    <span className="hud-factory-name">{b.name || b.slug}</span>
-                    <span className={`hud-dev-rec hud-dev-rec-${b.status === "ready" ? "merge" : b.status === "failed" ? "hold" : "escalate"}`}>
-                      {statusLabel(b)}
-                    </span>
-                  </div>
-                  {b.summary && <div className="hud-factory-specialty">{b.summary}</div>}
-                  {b.host_path && <div className="hud-builds-path">{b.host_path}</div>}
-                  {b.files && b.files.length > 0 && (
-                    <div className="hud-factory-iter">{b.files.length} file{b.files.length === 1 ? "" : "s"}</div>
-                  )}
-                  {b.status === "ready" && b.host_path && (
-                    <div className="hud-factory-actions">
-                      <button className="hud-factory-approve" onClick={() => openOnDesktop(b.host_path)}>
-                        OPEN
-                      </button>
-                    </div>
-                  )}
-                  {b.status === "failed" && b.error && (
-                    <div className="hud-factory-iter">error: {b.error}</div>
-                  )}
-                </div>
-              ))}
+            : items.map(b => <BuildCard key={b.id || b.slug} build={b} />)}
         </div>
       )}
     </div>
