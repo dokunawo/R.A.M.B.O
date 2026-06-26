@@ -66,7 +66,8 @@ def pull_source(conn: sqlite3.Connection, source: str,
         pid = params.get("player_id")
         if pid is None:
             raise ValueError("stats source requires player_id")
-        run = sapi.fetch_player_stats(int(pid), _season(params))
+        group = params.get("group", "hitting")   # "hitting" | "pitching"
+        run = sapi.fetch_player_stats(int(pid), _season(params), group=group)
     else:
         raise KeyError(f"unknown source {source!r} (valid: {SOURCES})")
 

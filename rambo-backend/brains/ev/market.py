@@ -88,4 +88,26 @@ class SBMarket:
         return picks
 
 
-REGISTRY: dict[str, object] = {"hr": HRMarket(), "hrr": HRRMarket(), "sb": SBMarket()}
+class KMarket:
+    """Pitcher Strikeouts. Poisson on per-start K (strikeOuts / gamesStarted).
+    Uses pitching stats; no batter hand-split. (DK Pick6 market code 'K'.)"""
+    market_key = "k"
+
+    def raw_picks(self, repo, date: str) -> list[Pick]:
+        props = [p for p in repo.latest_props(market="K", resolved_only=True)
+                 if p["multiplier"]]
+        picks: list[Pick] = []
+        for prop in props:
+            feat = build_count_features(repo, date, prop, stat_keys=["strikeOuts"],
+                                        label="K", group="pitching",
+                                        games_key="gamesStarted", use_splits=False)
+            if feat is None:
+                continue
+            p = poisson_prob_over(feat.per_game_mean, feat.line)
+            picks.append(_count_pick("k", feat, p, word="STRIKEOUTS", glow="gold"))
+        return picks
+
+
+REGISTRY: dict[str, object] = {
+    "hr": HRMarket(), "hrr": HRRMarket(), "sb": SBMarket(), "k": KMarket(),
+}

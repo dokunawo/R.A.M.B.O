@@ -3,7 +3,7 @@ import math
 from db.migrate import get_connection, apply_migrations
 from repositories.mlb_repo import MlbRepo
 from brains.ev.count_model import poisson_prob_over
-from brains.ev.market import HRRMarket, SBMarket, REGISTRY
+from brains.ev.market import HRRMarket, SBMarket, KMarket, REGISTRY
 
 
 def test_poisson_prob_over():
@@ -55,6 +55,24 @@ def test_sb_market_builds_pick(tmp_path):
     assert 0.10 < pk.model_p < 0.25               # mean 0.2 -> P(>=1) ~0.18
 
 
+def test_k_market_builds_pitcher_pick(tmp_path):
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    now = "2026-06-26T00:00:00Z"
+    conn.execute("INSERT INTO players (mlb_id, full_name, throws, current_team_id, updated_at) "
+                 "VALUES (50,'Ace Pitcher','R',147,?)", (now,))
+    stats = {"season": {"strikeOuts": 180, "gamesStarted": 20}, "splits": {}}
+    conn.execute("INSERT INTO player_season_stats (mlb_id, season, stat_group, stats, source, "
+                 "as_of_date, scraped_at) VALUES (50,2026,'pitching',?,'mlb','2026-06-26',?)",
+                 (json.dumps(stats), now))
+    _prop(conn, 50, "Ace Pitcher", "K", 6.5, 1.8)
+    picks = KMarket().raw_picks(MlbRepo(conn), "2026-06-26")
+    assert len(picks) == 1
+    pk = picks[0]
+    assert pk.market == "k" and pk.pick == "7+ STRIKEOUTS — OVER"
+    assert 0.70 < pk.model_p < 0.85               # 9 K/start -> P(>=7) ~0.79
+
+
 def test_registry_has_new_markets():
     assert REGISTRY["hrr"].market_key == "hrr"
     assert REGISTRY["sb"].market_key == "sb"
+    assert REGISTRY["k"].market_key == "k"

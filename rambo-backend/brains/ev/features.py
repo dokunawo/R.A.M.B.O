@@ -67,10 +67,12 @@ def _per_game_sum(stat: Optional[dict], keys: list[str],
 
 def build_count_features(repo, date: str, prop: dict, *, stat_keys: list[str],
                          label: str, group: str = "hitting",
-                         games_key: str = "gamesPlayed") -> Optional[CountFeatures]:
-    """Per-game counting-prop features (H+R+RBI, SB, K). Picks the vs-hand split
-    mean when the opposing pitcher's hand is known, else the overall mean. No park
-    factor (HR park index doesn't apply to these stats)."""
+                         games_key: str = "gamesPlayed",
+                         use_splits: bool = True) -> Optional[CountFeatures]:
+    """Per-game counting-prop features (H+R+RBI, SB, K). For batter props
+    (`use_splits=True`) it picks the vs-hand split mean when the opposing pitcher's
+    hand is known. For pitcher props (K, `use_splits=False`) the opposing-pitcher
+    hand is irrelevant, so it uses the overall per-start mean. No park factor."""
     mlb_id = prop["mlb_id"]
     season = int(date[:4])
     rows = repo.player_season(mlb_id, season, group)
@@ -88,13 +90,13 @@ def build_count_features(repo, date: str, prop: dict, *, stat_keys: list[str],
     if ctx:
         team_abbr = ctx["team_abbr"] or ""
         opp_abbr = ctx["opponent_abbr"] or ""
-        if ctx["opp_pitcher_id"]:
+        if use_splits and ctx["opp_pitcher_id"]:
             hand = repo.pitcher_throws(ctx["opp_pitcher_id"]) or ""
-        splits = stats.get("splits") or {}
-        if hand == "L":
-            mean = _per_game_sum(splits.get("vl"), stat_keys, games_key) or overall
-        elif hand == "R":
-            mean = _per_game_sum(splits.get("vr"), stat_keys, games_key) or overall
+            splits = stats.get("splits") or {}
+            if hand == "L":
+                mean = _per_game_sum(splits.get("vl"), stat_keys, games_key) or overall
+            elif hand == "R":
+                mean = _per_game_sum(splits.get("vr"), stat_keys, games_key) or overall
 
     return CountFeatures(
         mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
