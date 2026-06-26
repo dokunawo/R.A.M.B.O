@@ -53,6 +53,39 @@ async def repo(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_run_tests_and_run_app(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
+    monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
+    proj = tmp_path / "builds" / "proj"
+    proj.mkdir(parents=True)
+    (proj / "main.py").write_text("print('hello from build')\n", encoding="utf-8")
+    (proj / "test_main.py").write_text("def test_x():\n    assert 2 + 2 == 4\n", encoding="utf-8")
+
+    tres = await builds.run_tests("proj")
+    assert tres["ok"] is True
+
+    rres = await builds.run_app("proj")
+    assert rres["ok"] is True
+    assert rres["entry"] == "main.py"
+    assert "hello from build" in rres["output"]
+
+
+@pytest.mark.asyncio
+async def test_run_safety_and_missing(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
+    monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
+    (tmp_path / "builds").mkdir(parents=True)
+    # escaping slug refused
+    assert builds._safe_build_dir("../../etc") is None
+    # nonexistent build
+    assert (await builds.run_tests("nope")).get("error") == "build not found"
+    # build with no entry point
+    empty = tmp_path / "builds" / "empty"
+    empty.mkdir()
+    assert (await builds.run_app("empty")).get("error") == "no runnable .py entry point found"
+
+
+@pytest.mark.asyncio
 async def test_build_app_plumbing(tmp_path, monkeypatch, repo):
     monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
     monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))

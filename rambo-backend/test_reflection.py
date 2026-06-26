@@ -14,7 +14,10 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-NOW = datetime(2026, 6, 25, 22, 0, tzinfo=timezone.utc)
+# Use the real current day so the test's just-written entries (stamped at the
+# actual now) fall inside reflection's "today" window. A hardcoded date made the
+# test break the moment the real clock crossed into a different UTC day.
+NOW = datetime.now(timezone.utc)
 
 
 @pytest.fixture

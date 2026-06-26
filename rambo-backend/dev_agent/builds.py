@@ -9,6 +9,7 @@ but the operator's desktop sees a Windows path) used by the /desktop/open bridge
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from pathlib import Path, PureWindowsPath
@@ -19,6 +20,10 @@ from dev_agent.coding_agent import CodingAgent
 logger = logging.getLogger(__name__)
 
 import os
+
+_RUN_TIMEOUT = 30          # seconds to run a built app before killing it
+_TEST_TIMEOUT = 180        # seconds for a build's test run
+_MAX_OUT = 8_000           # chars of captured output returned to the UI
 
 # Where builds land (container path). Default: <repo>/builds. The container sets
 # RAMBO_BUILDS_DIR=/repo/builds; on the host it resolves to the real repo's builds/.
@@ -119,6 +124,64 @@ def _under_repo(p: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _safe_build_dir(slug: str) -> Path | None:
+    """Resolve builds/<slug>, refusing anything that escapes the builds root."""
+    root = builds_dir().resolve()
+    p = (root / slug).resolve()
+    if p != root and root not in p.parents:
+        return None
+    return p if p.is_dir() else None
+
+
+async def _run_in_build(slug: str, cmd: list[str], timeout: int) -> dict:
+    bd = _safe_build_dir(slug)
+    if bd is None:
+        return {"error": "build not found"}
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, cwd=str(bd),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
+        )
+        try:
+            out, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.communicate()
+            return {"ok": False, "timed_out": True,
+                    "output": f"(stopped after {timeout}s — still running)"}
+    except FileNotFoundError:
+        return {"error": f"command not found: {cmd[0]}"}
+    text = out.decode("utf-8", errors="replace")
+    return {"ok": proc.returncode == 0, "returncode": proc.returncode,
+            "output": text[-_MAX_OUT:]}
+
+
+async def run_tests(slug: str) -> dict:
+    """Run pytest in a built project's folder."""
+    return await _run_in_build(slug, ["python", "-m", "pytest", "-q"], _TEST_TIMEOUT)
+
+
+def _entry_point(build_dir: Path) -> str | None:
+    for name in ("main.py", "app.py", "__main__.py", "run.py"):
+        if (build_dir / name).exists():
+            return name
+    cands = sorted(p.name for p in build_dir.glob("*.py") if not p.name.startswith("test_"))
+    return cands[0] if cands else None
+
+
+async def run_app(slug: str) -> dict:
+    """Run a built project's entry point (best-guess .py) and capture its output."""
+    bd = _safe_build_dir(slug)
+    if bd is None:
+        return {"error": "build not found"}
+    entry = _entry_point(bd)
+    if not entry:
+        return {"error": "no runnable .py entry point found"}
+    res = await _run_in_build(slug, ["python", entry], _RUN_TIMEOUT)
+    res["entry"] = entry
+    return res
 
 
 async def _git_init_commit(build_dir: Path, message: str) -> None:

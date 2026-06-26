@@ -704,6 +704,18 @@ async def builds_get(slug: str):
     return row
 
 
+@app.post("/builds/{slug}/test")
+async def builds_test(slug: str):
+    """Run the built project's tests (pytest) and return pass/fail + output."""
+    return await builds_mod.run_tests(slug)
+
+
+@app.post("/builds/{slug}/run")
+async def builds_run(slug: str):
+    """Run the built project's entry point and return its output."""
+    return await builds_mod.run_app(slug)
+
+
 # ── Desktop-open bridge (host AHK helper polls and opens in VS Code/Explorer) ──
 
 
