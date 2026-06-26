@@ -217,9 +217,11 @@ function LearningLog() {
         <EmbedCostIndicator data={embedUsage} />
       </div>
       <SpotifyWidget compact />
-      <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
-      <ConfirmationDock />
-      <HandoffDock />
+      <div className="hud-dock-rail">
+        <FactoryDock pending={factoryPending} onRefresh={refreshFactory} />
+        <ConfirmationDock />
+        <HandoffDock />
+      </div>
       <SoundGate />
       <SettingsPanel />
       <CommandInput connected={connected} />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { audioRunning, isMuted, resumeAudio, getVolume, setVolume } from "./audioEngine";
-import { setMusicVolume } from "./spotifyEngine";
 import { startShare, stopShare, isSharing, onShareChange, frameForGoal, armAutoStart } from "./screenVision";
 import "./SharedHUD.css";
 
@@ -910,11 +909,10 @@ export function SettingsPanel() {
 
   const toggleSound = () => {
     const next = !soundOn;
-    // ON → full volume (100%); OFF → 0% (silent). The slider follows, and both
-    // RAMBO audio and the Spotify music move together. setVolume manages the mute
-    // flag (0 → muted, >0 → unmuted), keeping the toggle and slider consistent.
+    // RAMBO's OWN audio only (voice + chimes) — Spotify has its own volume/mute
+    // on the player widget. ON → 100%, OFF → 0%; the slider follows. setVolume
+    // manages the mute flag (0 → muted, >0 → unmuted).
     const v = setVolume(next ? 100 : 0);
-    setMusicVolume(v);
     setVol(v);
     setSoundOn(next);
     if (next) resumeAudio();
@@ -922,8 +920,7 @@ export function SettingsPanel() {
 
   const onVol = (e) => {
     resumeAudio();
-    const v = setVolume(parseInt(e.target.value, 10));  // RAMBO audio (voice/chimes)
-    setMusicVolume(v);                                  // Spotify music player too
+    const v = setVolume(parseInt(e.target.value, 10));  // RAMBO audio only (voice/chimes)
     setVol(v);
     setSoundOn(v > 0);
   };
@@ -935,14 +932,14 @@ export function SettingsPanel() {
         <div className="hud-settings-panel">
           <div className="hud-cost-panel-header">◆ SETTINGS</div>
           <div className="hud-settings-row">
-            <span>Sound</span>
+            <span>RAMBO Voice</span>
             <button className={`hud-toggle ${soundOn ? "hud-toggle-on" : "hud-toggle-off"}`}
               type="button" onClick={toggleSound}>
               {soundOn ? "ON" : "OFF"}
             </button>
           </div>
           <div className="hud-settings-row hud-vol-row">
-            <span>Volume</span>
+            <span>Voice volume</span>
             <span className="hud-vol-val">{vol}%</span>
           </div>
           <input

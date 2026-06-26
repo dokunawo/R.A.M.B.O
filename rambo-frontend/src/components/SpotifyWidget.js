@@ -65,6 +65,42 @@ function Wave({ active }) {
   );
 }
 
+function SpVolIcon({ muted }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none" />
+      {muted
+        ? (<><line x1="17" y1="9" x2="23" y2="15" /><line x1="23" y1="9" x2="17" y2="15" /></>)
+        : (<><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" /><path d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" /></>)}
+    </svg>
+  );
+}
+
+// Spotify-only volume: a mute toggle + a horizontal slider. Independent of the
+// RAMBO voice volume in the Settings gear.
+function SpVolume() {
+  const [vol, setVol] = useState(spotify.getMusicVolume());
+  const onChange = (e) => {
+    const v = parseInt(e.target.value, 10);
+    spotify.setMusicVolume(v);
+    setVol(v);
+  };
+  const onMute = async () => { setVol(await spotify.toggleMusicMute()); };
+  const muted = vol <= 0;
+  return (
+    <div className="sp-vol-row">
+      <button className="sp-btn sp-mini" onClick={onMute}
+        title={muted ? "Unmute music" : "Mute music"} aria-label="Mute Spotify">
+        <SpVolIcon muted={muted} />
+      </button>
+      <input className="sp-vol-slider" type="range" min="0" max="100" step="5"
+        value={vol} onChange={onChange} aria-label="Spotify volume" />
+      <span className="sp-vol-val">{vol}%</span>
+    </div>
+  );
+}
+
 export default function SpotifyWidget({ compact = false }) {
   const state = useSpotifyState();
   const pos = useProgress(state);
@@ -215,6 +251,7 @@ export default function SpotifyWidget({ compact = false }) {
             </div>
             <span className="sp-time">{fmt(state.duration)}</span>
           </div>
+          <SpVolume />
           <div className="sp-row">
             {Controls}
             <button className={`sp-toggle ${open ? "on" : ""}`} onClick={() => setOpen((o) => !o)}>

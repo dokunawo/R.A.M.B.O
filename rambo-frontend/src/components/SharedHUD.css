@@ -298,6 +298,30 @@
   bottom: 62px;
 }
 
+/* ── Left dock rail: stacks the docks in one column so an expanded panel
+   pushes the ones below it down instead of overlapping them. ─────────── */
+.hud-dock-rail {
+  position: fixed;
+  top: 132px;
+  left: 20px;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: calc(100vh - 152px);
+  overflow-y: auto;
+  padding-right: 2px;
+  pointer-events: auto;
+}
+/* Inside the rail, each dock flows normally instead of being individually
+   pinned, so heights add up and nothing overlaps. */
+.hud-dock-rail > div {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 auto;
+}
+
 /* ── Factory dock ──────────────────────────────────────────── */
 .hud-factory-wrap {
   position: fixed;

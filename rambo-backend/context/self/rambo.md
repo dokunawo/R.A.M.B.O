@@ -81,15 +81,16 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 124 commits:
+Last 14 days — 125 commits:
 
-- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (13 minutes ago)`
+- `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (13 minutes ago)`
+- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (26 minutes ago)`
 - `1ff262d Engineer builds: standalone build lane, desktop-open, progress bar, volume (7 hours ago)`
 - `1a7c41e Gate screen-share boot click on a frontend-ready handshake (8 hours ago)`
-- `f3b2045 Front-load the media-key helper in startup so keys work from login (8 hours ago)`
+- `f3b2045 Front-load the media-key helper in startup so keys work from login (9 hours ago)`
 - `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (9 hours ago)`
 - `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (9 hours ago)`
-- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (9 hours ago)`
+- `e3c9403 Spotify control, screen-vision UX, startup + dev/prod fixes (10 hours ago)`
 - `1ea1d61 Self-coding lane: closed-loop TDD, playbooks, container git access (17 hours ago)`
 - `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (18 hours ago)`
 - `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (18 hours ago)`
@@ -98,12 +99,11 @@ Last 14 days — 124 commits:
 - `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (22 hours ago)`
 - `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (22 hours ago)`
 - `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (23 hours ago)`
-- `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (23 hours ago)`
+- `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (24 hours ago)`
 - `34a640e Consolidate agent fleet into 3 routable modes + services (24 hours ago)`
-- `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (33 hours ago)`
-- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (33 hours ago)`
-- `99a5b7b feat: recurring morning brief (on-screen card + email) (33 hours ago)`
-- … and 104 more
+- `a515392 chore: add self-coding-agent plan + phase1 harness, update HANDOFF (34 hours ago)`
+- `78e8835 docs: 06-24 roadmap + README update (voice, agent backends, morning brief) (34 hours ago)`
+- … and 105 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
