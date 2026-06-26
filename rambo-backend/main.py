@@ -21,8 +21,12 @@ from tts import ElevenLabsTTS
 from tts_usage_repo import TTSUsageRepo
 from tts_dashboard import get_tts_dashboard
 from keeper_repo import KeeperRepo
+from conversation_repo import ConversationRepo
 from morning_brief import brief_scheduler, run_brief
 from reflection import reflection_scheduler, run_reflection
+from calendar_watch import calendar_watch_scheduler, check_once as calendar_check_once
+import seeker_watch
+import proactive_nudges
 from usage_capture import set_usage_repo
 from usage_dashboard import get_dashboard
 from embed_dashboard import get_embed_dashboard
@@ -57,6 +61,7 @@ _usage_repo = UsageRepo()
 _dispatch_repo = DispatchRepo()
 _tts_usage_repo = TTSUsageRepo()
 _keeper_repo = KeeperRepo()
+_conversation_repo = ConversationRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -109,8 +114,15 @@ async def _init_keeper():
     rambo.set_keeper_repo(_keeper_repo)
 
 
+@app.on_event("startup")
+async def _init_conversation():
+    await _conversation_repo.init_db()
+    await rambo.set_conversation_repo(_conversation_repo)
+
+
 _brief_task = None
 _reflection_task = None
+_calendar_watch_task = None
 
 
 @app.on_event("startup")
@@ -123,6 +135,28 @@ async def _start_morning_brief():
 async def _start_reflection():
     global _reflection_task
     _reflection_task = asyncio.create_task(reflection_scheduler(rambo))
+
+
+@app.on_event("startup")
+async def _start_calendar_watch():
+    global _calendar_watch_task
+    _calendar_watch_task = asyncio.create_task(calendar_watch_scheduler(rambo))
+
+
+_seeker_watch_task = None
+_proactive_task = None
+
+
+@app.on_event("startup")
+async def _start_seeker_watch():
+    global _seeker_watch_task
+    _seeker_watch_task = asyncio.create_task(seeker_watch.seeker_watch_scheduler(rambo))
+
+
+@app.on_event("startup")
+async def _start_proactive_nudges():
+    global _proactive_task
+    _proactive_task = asyncio.create_task(proactive_nudges.proactive_scheduler(rambo))
 
 
 @app.on_event("startup")
@@ -213,8 +247,32 @@ async def system_stats():
 
 @app.post("/rambo/execute")
 async def execute_command(cmd: Command):
+    proactive_nudges.mark_active()   # operator is active → resets idle nudges
     ctx = {"lat": cmd.lat, "lon": cmd.lon, "image": cmd.image}
     return await rambo.handle(cmd.goal, ctx)
+
+
+@app.get("/greeting")
+async def operator_greeting():
+    """A Jarvis-style boot greeting (name + time + what needs you). The frontend
+    fetches this when the console loads and speaks it in the ElevenLabs voice."""
+    from greeting import generate_greeting
+    proactive_nudges.mark_active()
+    return {"greeting": await generate_greeting(rambo)}
+
+
+class TtsSay(BaseModel):
+    text: str
+
+
+@app.post("/tts/say")
+async def tts_say(req: TtsSay):
+    """Synthesize an arbitrary short string to ElevenLabs audio (base64 MP3) so
+    the frontend's local voice acks use the ElevenLabs voice too, never the
+    robotic browser voice. Returns {"audio": null} if synthesis is unavailable —
+    the caller then stays silent rather than falling back to the browser voice."""
+    audio = await rambo._segment_audio(req.text)
+    return {"audio": audio}
 
 
 @app.get("/sentinel/approvals")
@@ -433,6 +491,16 @@ async def spotify_shuffle(s: SpotifyShuffle):
     return await _spotify.shuffle(s.state, device_id=s.device_id)
 
 
+class SpotifyVolume(BaseModel):
+    percent: int
+    device_id: str | None = None
+
+
+@app.post("/spotify/volume")
+async def spotify_volume(v: SpotifyVolume):
+    return await _spotify.volume(v.percent, device_id=v.device_id)
+
+
 # ── Keeper memory store ──────────────────────────────────────────────
 class KeeperWrite(BaseModel):
     key: str
@@ -446,9 +514,41 @@ async def keeper_write(entry: KeeperWrite):
     return {"id": rid, "key": entry.key, "stored": True}
 
 
+# ── Conversation history ─────────────────────────────────────────
+@app.get("/history")
+async def get_history(limit: int = 50):
+    """Recent conversation turns (oldest first). Persisted, so survives restarts."""
+    return {"turns": await _conversation_repo.recent(limit)}
+
+
+@app.delete("/history")
+async def clear_history():
+    await _conversation_repo.clear()
+    rambo.conversation.clear()
+    return {"cleared": True}
+
+
+# ── Operator profile (living memory) ─────────────────────────────
+@app.post("/profile/refresh")
+async def profile_refresh():
+    """Rebuild the synthesized operator profile from accumulated reflection
+    insights. This is what _build_operator_context injects into every reply."""
+    from reflection import refresh_operator_profile
+    profile = await refresh_operator_profile(rambo)
+    if profile is None:
+        return {"refreshed": False, "reason": "no insights yet or LLM/keeper unavailable"}
+    return {"refreshed": True, "profile": profile}
+
+
 @app.get("/keeper/confirm")
 async def keeper_confirm():
     return await _keeper_repo.confirm()
+
+
+@app.delete("/keeper/{key}")
+async def keeper_delete(key: str):
+    deleted = await _keeper_repo.delete(key)
+    return {"key": key, "deleted": deleted}
 
 
 @app.get("/keeper")
@@ -460,6 +560,65 @@ async def keeper_query(search: str = "", limit: int = 50):
 async def keeper_read(key: str):
     entry = await _keeper_repo.read(key)
     return entry or {"error": "not found", "key": key}
+
+
+# ── Proactive calendar watch (Phase 2) ───────────────────────────
+@app.post("/calendar/watch/check")
+async def calendar_watch_check():
+    """Run one proactive calendar check now (nudges approaching events). Useful
+    for testing without waiting for the poll interval."""
+    fired = await calendar_check_once(rambo)
+    return {"nudged": [{"summary": e.get("summary"),
+                        "minutes_until": e.get("minutes_until")} for e in fired]}
+
+
+# ── Seeker watch topics (Phase 2) ────────────────────────────────
+class WatchTopic(BaseModel):
+    topic: str
+
+
+@app.get("/watch")
+async def watch_list():
+    return {"topics": await seeker_watch.list_topics(_keeper_repo)}
+
+
+@app.post("/watch")
+async def watch_add(t: WatchTopic):
+    slug = await seeker_watch.add_topic(_keeper_repo, t.topic)
+    return {"slug": slug, "topic": t.topic.strip()}
+
+
+@app.delete("/watch/{slug}")
+async def watch_remove(slug: str):
+    return {"slug": slug, "removed": await seeker_watch.remove_topic(_keeper_repo, slug)}
+
+
+@app.post("/seeker/crawl")
+async def seeker_crawl_now():
+    """Crawl all watch topics now and surface anything new."""
+    surfaced = await seeker_watch.crawl_once(rambo)
+    return {"surfaced": [s["topic"] for s in surfaced]}
+
+
+# ── Deadlines (Phase 2) ──────────────────────────────────────────
+class DeadlineIn(BaseModel):
+    text: str
+    when: str   # natural ("next Friday") or ISO ("2026-07-01")
+
+
+@app.get("/deadline")
+async def deadline_list():
+    return {"deadlines": await proactive_nudges.list_deadlines(_keeper_repo)}
+
+
+@app.post("/deadline")
+async def deadline_add(d: DeadlineIn):
+    return await proactive_nudges.add_deadline(_keeper_repo, d.text, d.when)
+
+
+@app.delete("/deadline/{slug}")
+async def deadline_remove(slug: str):
+    return {"slug": slug, "removed": await proactive_nudges.remove_deadline(_keeper_repo, slug)}
 
 
 # ── Agent / integration health ───────────────────────────────────────
@@ -812,3 +971,165 @@ async def reject_handoff(handoff_id: str):
     if rec is None:
         return {"error": "not found or already resolved"}
     return {"status": "rejected", "id": handoff_id}
+
+
+# ── Dock clear / dismiss actions ─────────────────────────────────
+# Two operations per left-rail dock:
+#   • clear   → NON-destructive. Records a summary to Keeper (so it's recallable
+#               via "what was recently done") but leaves the pending items alone.
+#               The UI hides them locally; they remain in the backend queue.
+#   • dismiss → destructive. Rejects/removes the pending items AND records the
+#               same Keeper summary.
+
+async def _remember_cleared(dock: str, title: str, lines: list[str]) -> None:
+    """Best-effort: store a dock summary in Keeper so it's recallable."""
+    if not lines:
+        return
+    stamp = time.strftime("%Y-%m-%d %H:%M")
+    key = f"cleared-{dock}-{time.strftime('%Y%m%d-%H%M%S')}"
+    value = f"Cleared the {title} panel on {stamp}:\n" + "\n".join(f"- {ln}" for ln in lines)
+    try:
+        await _keeper_repo.write(key, value, tags=f"activity,dock,{dock}")
+    except Exception:
+        pass
+
+
+# Each gather returns (items, summary_lines) for a dock's current pending set.
+async def _factory_gather():
+    items = await _factory_repo.list_by_status(State.AWAITING_APPROVAL)
+    lines = []
+    for t in items:
+        m = t.get("proposed_manifest") or {}
+        name = m.get("name") or t.get("name_hint") or "agent"
+        spec = m.get("specialty") or t.get("role_description") or ""
+        lines.append(f"{name}: {spec}".strip(": ").strip())
+    return items, lines
+
+
+def _confirm_gather():
+    items = _confirmations.list_pending()
+    lines = [f"{c.get('tool_name')} ({c.get('agent_slug') or 'rambo'})" for c in items]
+    return items, lines
+
+
+def _handoff_gather():
+    items = _handoff.list_pending()
+    lines = [f"→ {h.get('target_agent')}: {h.get('task') or h.get('reason') or ''}".strip()
+             for h in items]
+    return items, lines
+
+
+async def _builds_gather():
+    items = await _builds_repo.list_all()
+    lines = [f"{b.get('name') or b.get('slug')} ({b.get('status')})" for b in items]
+    return items, lines
+
+
+async def _dev_gather():
+    items = await _dev_repo.list_pending()
+    lines = []
+    for c in items:
+        impact = c.get("impact") or {}
+        goal = (c.get("goal") or "").strip()
+        summary = impact.get("summary") or ""
+        lines.append(f"{goal} — {summary}".strip(" —"))
+    return items, lines
+
+
+# ── Factory ──
+@app.post("/factory/clear")
+async def factory_clear():
+    items, lines = await _factory_gather()
+    await _remember_cleared("factory", "Factory (pending agents)", lines)
+    return {"remembered": len(items)}
+
+
+@app.post("/factory/dismiss")
+async def factory_dismiss():
+    items, lines = await _factory_gather()
+    for t in items:
+        try:
+            await handle_reject(task_id=t["id"], repo=_factory_repo,
+                                feedback=None, pipeline=_pipeline)
+        except Exception:
+            pass
+    await _remember_cleared("factory", "Factory (pending agents)", lines)
+    return {"dismissed": len(items)}
+
+
+# ── Confirmations ──
+@app.post("/confirmations/clear")
+async def confirmations_clear():
+    items, lines = _confirm_gather()
+    await _remember_cleared("confirm", "Confirm (actions awaiting approval)", lines)
+    return {"remembered": len(items)}
+
+
+@app.post("/confirmations/dismiss")
+async def confirmations_dismiss():
+    items, lines = _confirm_gather()
+    for c in items:
+        try:
+            _confirmations.resolve(c["id"], "rejected")
+        except Exception:
+            pass
+    await _remember_cleared("confirm", "Confirm (actions awaiting approval)", lines)
+    return {"dismissed": len(items)}
+
+
+# ── Handoffs ──
+@app.post("/handoffs/clear")
+async def handoffs_clear():
+    items, lines = _handoff_gather()
+    await _remember_cleared("handoff", "Handoff (proposed handoffs)", lines)
+    return {"remembered": len(items)}
+
+
+@app.post("/handoffs/dismiss")
+async def handoffs_dismiss():
+    items, lines = _handoff_gather()
+    for h in items:
+        try:
+            _handoff.resolve(h["id"], "rejected")
+        except Exception:
+            pass
+    await _remember_cleared("handoff", "Handoff (proposed handoffs)", lines)
+    return {"dismissed": len(items)}
+
+
+# ── Code Review (dev self-changes) ──
+@app.post("/dev/clear")
+async def dev_clear():
+    items, lines = await _dev_gather()
+    await _remember_cleared("codereview", "Code Review (proposed self-changes)", lines)
+    return {"remembered": len(items)}
+
+
+@app.post("/dev/dismiss")
+async def dev_dismiss():
+    items, lines = await _dev_gather()
+    for c in items:
+        try:
+            await dev_session.reject_change(_dev_repo, c["id"])
+        except Exception:
+            pass
+    await _remember_cleared("codereview", "Code Review (proposed self-changes)", lines)
+    return {"dismissed": len(items)}
+
+
+# ── Builds (built projects) ──
+@app.post("/builds/clear")
+async def builds_clear():
+    items, lines = await _builds_gather()
+    await _remember_cleared("builds", "Builds (built projects)", lines)
+    return {"remembered": len(items)}
+
+
+@app.post("/builds/dismiss")
+async def builds_dismiss():
+    """Remove build dock entries (DB records) — the project folders on disk are
+    kept. Non-destructive to the actual built files."""
+    items, lines = await _builds_gather()
+    n = await _builds_repo.delete_all()
+    await _remember_cleared("builds", "Builds (built projects)", lines)
+    return {"dismissed": n}

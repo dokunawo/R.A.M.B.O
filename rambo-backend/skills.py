@@ -27,6 +27,14 @@ except ImportError:
 from chief_of_staff import chief_of_staff_skill as _cos_skill
 from codebase_skill import codebase_skill as _codebase_skill
 
+try:
+    from gmail_skill import gmail_skill as _gmail_skill
+    _HAS_GMAIL = True
+except ImportError:
+    _HAS_GMAIL = False
+
+from homeassistant_skill import homeassistant_skill as _hass_skill
+
 
 WEATHER_CODES = {
     0: "clear sky", 1: "mainly clear", 2: "partly cloudy", 3: "overcast",
@@ -154,6 +162,40 @@ async def notify_skill(goal: str, ctx: dict) -> str:
     return f"[Echo] {result['detail']}"
 
 
+async def news_skill(goal: str, ctx: dict) -> str:
+    """Current news — The Guardian when GUARDIAN_API_KEY is set, otherwise the
+    web-search backend. Falls back on any error so news never goes dark."""
+    try:
+        from news_guardian import news_lookup
+        structured = await news_lookup(goal)
+        if structured:
+            return structured
+    except Exception:
+        pass
+    return await web_search_skill(
+        f"Current news for: {goal}\n"
+        "List 3-5 recent headlines, each with a one-line summary and its source. "
+        "Prioritize the last 48 hours.", ctx)
+
+
+async def finance_skill(goal: str, ctx: dict) -> str:
+    """Stock lookup — Finnhub live quotes when FINNHUB_API_KEY is set, otherwise
+    the web-search backend (also used for market-wide questions Finnhub can't
+    resolve to a single symbol)."""
+    try:
+        from finance_finnhub import finance_lookup
+        structured = await finance_lookup(goal)
+        if structured:
+            return structured
+    except Exception:
+        pass
+    return await web_search_skill(
+        f"Financial lookup: {goal}\n"
+        "Give the current price, today's change (absolute and %), and a one-line "
+        "take. If it's a market-wide question, summarize the major indexes. Be concise.",
+        ctx)
+
+
 # The registry. Add new real-world skills here.
 SKILLS = [
     {
@@ -230,6 +272,50 @@ SKILLS.append({
         "what do i do today", "where should i focus",
     )),
     "run": _cos_skill,
+})
+
+# ── Phase 3: domain expansion ────────────────────────────────────
+SKILLS.append({
+    "name": "news",
+    "agent": "seeker",
+    "match": lambda g: any(w in g.lower() for w in (
+        "news", "headline", "headlines", "what's happening", "whats happening",
+        "what's going on with", "current events", "any news on",
+    )),
+    "run": news_skill,
+})
+
+SKILLS.append({
+    "name": "finance",
+    "agent": "seeker",
+    "match": lambda g: any(w in g.lower() for w in (
+        "stock", "stocks", "share price", "stock price", "market", "ticker",
+        "how's the market", "hows the market", "how is the market", "nasdaq",
+        "s&p", "dow", "crypto", "bitcoin", "how's nvda", "trading at",
+    )),
+    "run": finance_skill,
+})
+
+if _HAS_GMAIL:
+    SKILLS.append({
+        "name": "gmail",
+        "agent": "echo",
+        "match": lambda g: any(w in g.lower() for w in (
+            "email", "emails", "inbox", "gmail", "unread", "any mail",
+            "new mail", "check my mail", "important emails",
+        )),
+        "run": _gmail_skill,
+    })
+
+SKILLS.append({
+    "name": "smart-home",
+    "agent": "link",
+    "match": lambda g: any(w in g.lower() for w in (
+        "turn on", "turn off", "switch on", "switch off", "the lights",
+        "lights on", "lights off", "thermostat", "smart home", "home assistant",
+        "lock the", "unlock the",
+    )),
+    "run": _hass_skill,
 })
 
 

@@ -18,6 +18,53 @@ def _get_service():
     return build("calendar", "v3", credentials=creds)
 
 
+async def upcoming_events(window_minutes: int = 60) -> list[dict]:
+    """Structured upcoming TIMED events starting within the next `window_minutes`.
+    Returns [] if the calendar is unavailable/unauthenticated (proactive watch
+    degrades silently). All-day events (date-only) are skipped. Each item:
+    {id, summary, location, start (tz-aware UTC datetime), minutes_until}."""
+    if build is None:
+        return []
+    service = _get_service()
+    if not service:
+        return []
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
+    try:
+        result = service.events().list(
+            calendarId="primary",
+            timeMin=now.isoformat(),
+            timeMax=(now + timedelta(minutes=window_minutes)).isoformat(),
+            maxResults=20,
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute()
+    except Exception:
+        return []
+    out = []
+    for ev in result.get("items", []):
+        start_raw = ev["start"].get("dateTime")  # None for all-day events
+        if not start_raw:
+            continue
+        try:
+            dt = datetime.fromisoformat(start_raw.replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        mins = (dt - now).total_seconds() / 60.0
+        if mins < 0:
+            continue
+        out.append({
+            "id": ev.get("id"),
+            "summary": ev.get("summary", "(no title)"),
+            "location": ev.get("location", ""),
+            "start": dt,
+            "minutes_until": int(round(mins)),
+        })
+    return out
+
+
 async def calendar_skill(goal: str, ctx: dict) -> str:
     if build is None:
         return "Google API client not installed. Add google-api-python-client to requirements."

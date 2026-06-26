@@ -52,17 +52,31 @@ class ElevenLabsTTS:
             model=(os.environ.get("ELEVENLABS_MODEL") or DEFAULT_MODEL),
         )
 
+    # Retry transient failures (429 rate-limit, 5xx, network blips) before giving
+    # up, so the ElevenLabs voice is used as close to 100% of the time as possible
+    # rather than dropping to silence. 4xx auth/quota (401/403) won't recover, so
+    # we don't burn retries on those.
+    _MAX_ATTEMPTS = 3
+    _RETRY_BACKOFF = (0.4, 1.0)  # seconds before attempts 2 and 3
+
     async def synthesize(self, text: str) -> bytes | None:
         if not self.api_key or not self.voice_id:
             return None
+        import asyncio
         url = _API_URL.format(voice_id=self.voice_id)
         headers = {"xi-api-key": self.api_key, "accept": "audio/mpeg"}
         body = {"text": text, "model_id": self.model}
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                resp = await client.post(url, headers=headers, json=body)
-            if resp.status_code != 200:
-                return None
-            return resp.content
-        except Exception:
-            return None
+        for attempt in range(self._MAX_ATTEMPTS):
+            try:
+                async with httpx.AsyncClient(timeout=30) as client:
+                    resp = await client.post(url, headers=headers, json=body)
+                if resp.status_code == 200 and resp.content:
+                    return resp.content
+                # Permanent auth/quota errors won't recover — stop retrying.
+                if resp.status_code in (401, 403):
+                    return None
+            except Exception:
+                pass  # network blip — fall through to retry
+            if attempt < self._MAX_ATTEMPTS - 1:
+                await asyncio.sleep(self._RETRY_BACKOFF[attempt])
+        return None

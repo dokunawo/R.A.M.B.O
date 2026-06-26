@@ -8,6 +8,7 @@ import AgentConstellation from "./AgentConstellation";
 import { usePageVoice, VoiceControls, CommandLog } from "./VoiceControls";
 import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import SpotifyWidget from "./SpotifyWidget";
+import CommandPalette from "./CommandPalette";
 import "./RoundTable.css";
 
 const API = "http://localhost:8000";
@@ -198,6 +199,7 @@ function RoundTable() {
       </div>
       <SoundGate />
       <SettingsPanel />
+      <CommandPalette />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 

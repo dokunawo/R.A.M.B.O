@@ -192,6 +192,15 @@ export async function setMusicVolume(pct) {
   if (player && !ducked) {
     try { await player.setVolume(v01); } catch { /* ignore */ }
   }
+  // The SDK setVolume above only touches the in-page web player. Also hit the
+  // backend Web API so the slider works when audio is on the phone/desktop app.
+  if (!ducked) {
+    fetch(`${API}/spotify/volume`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ percent: Math.round(v01 * 100), device_id: deviceId }),
+    }).catch(() => { /* best-effort */ });
+  }
 }
 
 export function getMusicVolume() { return Math.round(musicVol * 100); }

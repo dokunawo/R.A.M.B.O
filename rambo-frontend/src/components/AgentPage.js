@@ -7,6 +7,7 @@ import CosmicBackground from "./CosmicBackground";
 import { usePageVoice, VoiceControls } from "./VoiceControls";
 import { useSystemStats, useActivityFeed, StatBars, ActivityFeed, CommandInput, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, SoundGate, SettingsPanel } from "./SharedHUD";
 import SpotifyWidget from "./SpotifyWidget";
+import CommandPalette from "./CommandPalette";
 import "./AgentPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -414,6 +415,7 @@ function AgentPage() {
       </div>
       <SoundGate />
       <SettingsPanel />
+      <CommandPalette />
       <CommandInput connected={connected} />
       <ActivityFeed activity={activity} />
 

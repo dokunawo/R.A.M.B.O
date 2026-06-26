@@ -1,6 +1,7 @@
 // SplashScreen.js
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import CommandPalette from "./CommandPalette";
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import CosmicOrb from "./CosmicOrb";
@@ -10,7 +11,7 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, ProactiveDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
@@ -69,6 +70,10 @@ const STATUS_LABELS = {
 /* ------------------------------------------------------------------ */
 
 const API = "http://localhost:8000";
+
+// Greet ONCE per boot (page load), not on every navigation back to the console.
+// Module scope survives React route remounts; a real page reload resets it.
+let bootGreeted = false;
 const WS_URL = "ws://localhost:8000/ws/activity";
 
 // True when the user has asked the OS to reduce motion.
@@ -1102,6 +1107,19 @@ export default function SplashScreen({
     }
   }, [phase, startMic]);
 
+  // Operator greeting on boot — fetch the situational greeting and speak it once
+  // (ElevenLabs via speakResponse). Best-effort; silent if audio is still locked.
+  useEffect(() => {
+    if (phase !== "main" || bootGreeted) return;
+    bootGreeted = true;   // once per boot, across route remounts
+    setTimeout(() => {
+      fetch(`${API}/greeting`)
+        .then(r => r.json())
+        .then(j => { if (j && j.greeting && speakRef.current) speakRef.current(j.greeting, false); })
+        .catch(() => {});
+    }, 2000);
+  }, [phase]);
+
   const handleVoiceExecuted = useCallback((responseText) => {
     setVoiceText("");
     segmentArrivedRef.current = false;
@@ -1109,15 +1127,11 @@ export default function SplashScreen({
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
       return;
     }
-    // The reply is normally spoken by the streamed speak_segment audio
-    // (ElevenLabs voice). If no segment arrives shortly — e.g. a clarify
-    // response the backend doesn't stream — fall back to the browser voice so
-    // the reply is never silent. No "anything else?" follow-up suffix.
-    setTimeout(() => {
-      if (!segmentArrivedRef.current && speakRef.current) {
-        speakRef.current(responseText, false);
-      }
-    }, 2500);
+    // The reply is spoken by the streamed speak_segment audio (ElevenLabs).
+    // Clarify replies now stream through ElevenLabs too, so there's no browser-
+    // voice fallback here — we use the ElevenLabs voice 100% of the time. If
+    // synthesis genuinely fails, the reply is shown as text and stays silent
+    // rather than dropping to the robotic browser voice.
   }, []);
 
   // Result branch (response panel + connector) + clickable agents
@@ -1259,6 +1273,8 @@ export default function SplashScreen({
         <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
       )}
 
+      {phase === "main" && <CommandPalette />}
+
       {phase === "transmission" && (
         <TransmissionScreen onAdvance={goMain} />
       )}
@@ -1302,6 +1318,7 @@ export default function SplashScreen({
             <HandoffDock />
             <CodeReviewDock />
             <BuildsDock />
+            <ProactiveDock />
           </div>
           <ActiveTaskBar />
           <SoundGate />

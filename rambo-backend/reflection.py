@@ -176,7 +176,70 @@ async def run_reflection(orchestrator, now: datetime | None = None) -> list[dict
             )
         except Exception:
             pass
+
+    # Roll the accumulated insights up into a single durable operator profile,
+    # which is what _build_operator_context injects into every reply.
+    await refresh_operator_profile(orchestrator)
     return written
+
+
+PROFILE_KEY = "operator_profile"
+PROFILE_TAG = "profile"
+
+
+async def refresh_operator_profile(orchestrator) -> str | None:
+    """Synthesize a short, stable profile of the operator from accumulated
+    reflection insights and store it as the `operator_profile` Keeper entry. This
+    is the seed that compounds over time and personalizes every response. Returns
+    the profile text, or None if there's nothing to synthesize."""
+    keeper_repo = getattr(orchestrator, "keeper_repo", None)
+    llm = getattr(orchestrator, "llm", None)
+    if keeper_repo is None or llm is None:
+        return None
+    try:
+        insights = await keeper_repo.query(search=REFLECTION_TAG, limit=50)
+    except Exception:
+        return None
+    if not insights:
+        return None
+
+    bullets = "\n".join(
+        f"- {m.get('value', '')}" for m in insights if m.get("value")
+    )
+    prompt = (
+        "You maintain a living profile of the operator of a personal AI. "
+        "From the accumulated observations below, write a concise profile (4-6 "
+        "short lines) capturing stable traits, preferences, working style, and "
+        "recurring priorities. Present tense, second person ('You ...'). No "
+        "preamble, just the profile lines.\n\n"
+        f"{bullets}"
+    )
+    import model_config
+    from usage_capture import record_usage
+    try:
+        resp = await llm.messages.create(
+            model=model_config.fast_model(),
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        try:
+            await record_usage(model_config.fast_model(), resp.usage, source="reflection")
+        except Exception:
+            pass
+        profile = "".join(
+            b.text for b in resp.content if getattr(b, "type", None) == "text"
+        ).strip()
+    except Exception:
+        log.exception("profile synthesis failed")
+        return None
+    if not profile:
+        return None
+    try:
+        await keeper_repo.write(PROFILE_KEY, profile, tags=PROFILE_TAG, confidence="verified")
+    except Exception:
+        log.exception("failed to store operator profile")
+        return None
+    return profile
 
 
 def _reflection_time() -> tuple[int, int]:

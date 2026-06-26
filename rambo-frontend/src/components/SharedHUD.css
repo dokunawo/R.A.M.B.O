@@ -399,7 +399,155 @@
   border-bottom: 1px solid rgba(232, 177, 90, 0.15);
 }
 
+.hud-dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-dock-clear {
+  background: transparent;
+  border: 1px solid rgba(232, 177, 90, 0.3);
+  color: var(--accent, #e8b15a);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hud-dock-clear:hover:not(:disabled) {
+  background: rgba(232, 177, 90, 0.15);
+  border-color: rgba(232, 177, 90, 0.6);
+}
+
+.hud-dock-clear:disabled,
+.hud-dock-dismiss:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hud-dock-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.hud-dock-dismiss {
+  background: transparent;
+  border: 1px solid rgba(220, 90, 90, 0.35);
+  color: #dc6a6a;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hud-dock-dismiss:hover:not(:disabled) {
+  background: rgba(220, 90, 90, 0.18);
+  border-color: rgba(220, 90, 90, 0.7);
+}
+
 .hud-factory-empty {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.hud-proactive-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.08);
+}
+
+.hud-proactive-text {
+  flex: 1;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-proactive-due {
+  font-size: 10px;
+  color: var(--accent, #e8b15a);
+  letter-spacing: 0.5px;
+}
+
+.hud-proactive-add {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.hud-proactive-add .hud-factory-feedback {
+  flex: 1;
+}
+
+.hud-proactive-when {
+  max-width: 120px;
+}
+
+/* ── Cmd+K command palette ── */
+.hud-cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.hud-cmdk-panel {
+  width: min(620px, 92vw);
+  background: rgba(18, 16, 12, 0.97);
+  border: 1px solid rgba(232, 177, 90, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.hud-cmdk-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(232, 177, 90, 0.25);
+  color: #fff;
+  font-size: 16px;
+  padding: 16px 18px;
+  outline: none;
+  font-family: inherit;
+}
+
+.hud-cmdk-list {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.hud-cmdk-item {
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.hud-cmdk-sel {
+  background: rgba(232, 177, 90, 0.16);
+  color: var(--accent, #e8b15a);
+}
+
+.hud-cmdk-empty {
+  padding: 12px;
   color: rgba(255, 255, 255, 0.4);
   font-style: italic;
 }

@@ -561,22 +561,85 @@ function FactoryCard({ task, onResolved }) {
   );
 }
 
+// Per-dock "hidden" set, persisted in localStorage. Hiding is non-destructive:
+// the items stay in the backend queue, we just don't render them. New items
+// (ids not in the set) still show up normally.
+export function useHidden(dockKey) {
+  const storeKey = `rambo-hidden-${dockKey}`;
+  const [hidden, setHidden] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(storeKey) || "[]")); }
+    catch { return new Set(); }
+  });
+  const hideAll = useCallback((ids) => {
+    setHidden(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.add(id));
+      try { localStorage.setItem(storeKey, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, [storeKey]);
+  return { hidden, hideAll };
+}
+
+// Dock header with two actions on the right:
+//   ⟲ Clear   → hide the visible items (non-destructive) + save a summary to
+//               Keeper. They stay in the queue; RAMBO can recall what was here.
+//   ✕ Dismiss → reject/remove the items from the backend for good (also saved).
+// Both are hidden when the panel has nothing visible.
+function DockPanelHeader({ title, basePath, ids, onHide, onRefresh }) {
+  const [busy, setBusy] = useState(false);
+  const has = ids && ids.length > 0;
+
+  const run = async (verb, after) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fetch(`${API}${basePath}/${verb}`, { method: "POST" });
+      if (after) after();
+    } catch {} finally { setBusy(false); }
+  };
+
+  const clear = (e) => { e.stopPropagation(); run("clear", () => { onHide(ids); }); };
+  const dismiss = (e) => { e.stopPropagation(); run("dismiss", onRefresh); };
+
+  return (
+    <div className="hud-factory-panel-header hud-dock-header">
+      <span>{title}</span>
+      {has && (
+        <span className="hud-dock-actions">
+          <button className="hud-dock-clear" onClick={clear} disabled={busy}
+            title="Clear — hide these, but keep a summary in memory" aria-label="Clear panel">
+            {busy ? "…" : "⟲"}
+          </button>
+          <button className="hud-dock-dismiss" onClick={dismiss} disabled={busy}
+            title="Dismiss — reject and remove these for good" aria-label="Dismiss items">
+            ✕
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function FactoryDock({ pending, onRefresh }) {
   const [open, toggle] = useDockOpen("factory");
+  const { hidden, hideAll } = useHidden("factory");
   if (!pending) return null;
+  const visible = pending.filter(t => !hidden.has(t.id));
 
   return (
     <div className="hud-factory-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-factory-tag">FACTORY</span>
-        <span className="hud-factory-count">{pending.length}</span>
+        <span className="hud-factory-count">{visible.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
-          <div className="hud-factory-panel-header">◆ PENDING AGENTS</div>
-          {pending.length === 0
+          <DockPanelHeader title="◆ PENDING AGENTS" basePath="/factory"
+            ids={visible.map(t => t.id)} onHide={hideAll} onRefresh={onRefresh} />
+          {visible.length === 0
             ? <div className="hud-factory-empty">{"// no agents awaiting approval"}</div>
-            : pending.map(t => (
+            : visible.map(t => (
                 <FactoryCard key={t.id} task={t} onResolved={onRefresh} />
               ))}
         </div>
@@ -625,19 +688,22 @@ async function openOnDesktop(hostPath) {
 export function ConfirmationDock() {
   const { items, refresh } = usePolledQueue("/confirmations");
   const [open, toggle] = useDockOpen("confirm");
+  const { hidden, hideAll } = useHidden("confirm");
+  const visible = items.filter(c => !hidden.has(c.id));
 
   return (
     <div className="hud-confirm-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-confirm-tag">CONFIRM</span>
-        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+        <span className={`hud-factory-count ${visible.length ? "hud-count-hot" : ""}`}>{visible.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
-          <div className="hud-factory-panel-header">◆ ACTIONS AWAITING APPROVAL</div>
-          {items.length === 0
+          <DockPanelHeader title="◆ ACTIONS AWAITING APPROVAL" basePath="/confirmations"
+            ids={visible.map(c => c.id)} onHide={hideAll} onRefresh={refresh} />
+          {visible.length === 0
             ? <div className="hud-factory-empty">{"// no actions awaiting approval"}</div>
-            : items.map(c => (
+            : visible.map(c => (
                 <div key={c.id} className="hud-factory-card">
                   <div className="hud-factory-card-head">
                     <span className="hud-factory-name">{c.tool_name}</span>
@@ -661,6 +727,8 @@ export function ConfirmationDock() {
 export function HandoffDock() {
   const { items, refresh } = usePolledQueue("/handoffs");
   const [open, toggle] = useDockOpen("handoff");
+  const { hidden, hideAll } = useHidden("handoff");
+  const visible = items.filter(h => !hidden.has(h.id));
 
   const confidenceLabel = (c) =>
     c >= 0.75 ? "high" : c >= 0.4 ? "medium" : "low";
@@ -669,14 +737,15 @@ export function HandoffDock() {
     <div className="hud-handoff-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-handoff-tag">HANDOFF</span>
-        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+        <span className={`hud-factory-count ${visible.length ? "hud-count-hot" : ""}`}>{visible.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
-          <div className="hud-factory-panel-header">◆ PROPOSED HANDOFFS</div>
-          {items.length === 0
+          <DockPanelHeader title="◆ PROPOSED HANDOFFS" basePath="/handoffs"
+            ids={visible.map(h => h.id)} onHide={hideAll} onRefresh={refresh} />
+          {visible.length === 0
             ? <div className="hud-factory-empty">{"// no handoffs proposed"}</div>
-            : items.map(h => (
+            : visible.map(h => (
                 <div key={h.id} className="hud-factory-card">
                   <div className="hud-factory-card-head">
                     <span className="hud-factory-name">→ {h.target_agent}</span>
@@ -782,19 +851,22 @@ function DevReviewCard({ change, onResolved }) {
 export function CodeReviewDock() {
   const { items, refresh } = usePolledQueue("/dev/pending");
   const [open, toggle] = useDockOpen("codereview");
+  const { hidden, hideAll } = useHidden("codereview");
+  const visible = items.filter(c => !hidden.has(c.id));
 
   return (
     <div className="hud-dev-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-dev-tag">CODE REVIEW</span>
-        <span className={`hud-factory-count ${items.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+        <span className={`hud-factory-count ${visible.length ? "hud-count-hot" : ""}`}>{visible.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
-          <div className="hud-factory-panel-header">◆ PROPOSED SELF-CHANGES</div>
-          {items.length === 0
+          <DockPanelHeader title="◆ PROPOSED SELF-CHANGES" basePath="/dev"
+            ids={visible.map(c => c.id)} onHide={hideAll} onRefresh={refresh} />
+          {visible.length === 0
             ? <div className="hud-factory-empty">{"// no changes awaiting review"}</div>
-            : items.map(c => <DevReviewCard key={c.id} change={c} onResolved={refresh} />)}
+            : visible.map(c => <DevReviewCard key={c.id} change={c} onResolved={refresh} />)}
         </div>
       )}
     </div>
@@ -861,22 +933,111 @@ function BuildCard({ build: b }) {
 }
 
 export function BuildsDock() {
-  const { items } = usePolledQueue("/builds");
+  const { items, refresh } = usePolledQueue("/builds");
   const [open, toggle] = useDockOpen("builds");
-  const ready = items.filter(b => b.status === "ready");
+  const { hidden, hideAll } = useHidden("builds");
+  const idOf = (b) => b.id || b.slug;
+  const visible = items.filter(b => !hidden.has(idOf(b)));
+  const ready = visible.filter(b => b.status === "ready");
 
   return (
     <div className="hud-builds-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-builds-tag">BUILDS</span>
-        <span className={`hud-factory-count ${ready.length ? "hud-count-hot" : ""}`}>{items.length}</span>
+        <span className={`hud-factory-count ${ready.length ? "hud-count-hot" : ""}`}>{visible.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
-          <div className="hud-factory-panel-header">◆ BUILT PROJECTS</div>
-          {items.length === 0
+          <DockPanelHeader title="◆ BUILT PROJECTS" basePath="/builds"
+            ids={visible.map(idOf)} onHide={hideAll} onRefresh={refresh} />
+          {visible.length === 0
             ? <div className="hud-factory-empty">{"// nothing built yet"}</div>
-            : items.map(b => <BuildCard key={b.id || b.slug} build={b} />)}
+            : visible.map(b => <BuildCard key={idOf(b)} build={b} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Proactive dock: watch topics + deadlines RAMBO is tracking ──
+export function ProactiveDock() {
+  const { items: w, refresh: refreshW } = usePolledQueue("/watch", 20000);
+  const { items: d, refresh: refreshD } = usePolledQueue("/deadline", 20000);
+  const [open, toggle] = useDockOpen("proactive");
+  const topics = (w && w.topics) || [];
+  const deadlines = (d && d.deadlines) || [];
+  const [topic, setTopic] = useState("");
+  const [dText, setDText] = useState("");
+  const [dWhen, setDWhen] = useState("");
+
+  const post = (path, body, after) =>
+    fetch(`${API}${path}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(after).catch(() => {});
+  const del = (path, after) =>
+    fetch(`${API}${path}`, { method: "DELETE" }).then(after).catch(() => {});
+
+  const addTopic = () => {
+    if (!topic.trim()) return;
+    post("/watch", { topic: topic.trim() }, () => { setTopic(""); refreshW(); });
+  };
+  const addDeadline = () => {
+    if (!dText.trim() || !dWhen.trim()) return;
+    post("/deadline", { text: dText.trim(), when: dWhen.trim() },
+      () => { setDText(""); setDWhen(""); refreshD(); });
+  };
+  const total = topics.length + deadlines.length;
+
+  return (
+    <div className="hud-builds-wrap">
+      <div className="hud-factory-face" onClick={toggle}>
+        <span className="hud-builds-tag">WATCH</span>
+        <span className={`hud-factory-count ${total ? "hud-count-hot" : ""}`}>{total}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header">◆ PROACTIVE WATCH</div>
+
+          <div className="hud-factory-iter">SEEKER TOPICS</div>
+          {topics.length === 0
+            ? <div className="hud-factory-empty">{"// nothing being watched"}</div>
+            : topics.map(t => (
+                <div key={t.slug} className="hud-proactive-row">
+                  <span className="hud-proactive-text">{t.topic}</span>
+                  <button className="hud-dock-dismiss" title="Stop watching"
+                    onClick={() => del(`/watch/${t.slug}`, refreshW)}>✕</button>
+                </div>
+              ))}
+          <div className="hud-proactive-add">
+            <input className="hud-factory-feedback" type="text" value={topic}
+              placeholder="Watch a topic…" spellCheck={false}
+              onChange={e => setTopic(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && addTopic()} />
+            <button className="hud-factory-approve" onClick={addTopic}>ADD</button>
+          </div>
+
+          <div className="hud-factory-iter" style={{ marginTop: 10 }}>DEADLINES</div>
+          {deadlines.length === 0
+            ? <div className="hud-factory-empty">{"// no deadlines tracked"}</div>
+            : deadlines.map(dl => (
+                <div key={dl.key} className="hud-proactive-row">
+                  <span className="hud-proactive-text">{dl.text}</span>
+                  <span className="hud-proactive-due">{dl.due}</span>
+                  <button className="hud-dock-dismiss" title="Remove deadline"
+                    onClick={() => del(`/deadline/${dl.key.replace(/^deadline_/, "")}`, refreshD)}>✕</button>
+                </div>
+              ))}
+          <div className="hud-proactive-add">
+            <input className="hud-factory-feedback" type="text" value={dText}
+              placeholder="Deadline…" spellCheck={false}
+              onChange={e => setDText(e.target.value)} />
+            <input className="hud-factory-feedback hud-proactive-when" type="text" value={dWhen}
+              placeholder="when (tomorrow / 2026-07-01)" spellCheck={false}
+              onChange={e => setDWhen(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && addDeadline()} />
+            <button className="hud-factory-approve" onClick={addDeadline}>ADD</button>
+          </div>
         </div>
       )}
     </div>

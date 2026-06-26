@@ -118,6 +118,24 @@ repo to answer these.
 songs, play a playlist, control Spotify, or ask what's currently playing ALWAYS \
 routes to "spotify". "play Daft Punk", "next song", "pause", "what's playing", \
 "play my workout playlist" → spotify.
+12. BUILD: any request to build, create, make, write, or generate a NEW \
+standalone app, tool, script, game, website, or program ALWAYS routes to \
+"build" — never "orchestrate" and never "converse". "build me a typing speed \
+app", "create a calculator", "make a tool that…", "write me a script that…" → \
+build. The "build" target actually writes the files; "orchestrate" only plans \
+and must NOT be used to fulfill a concrete build request. Use "orchestrate" \
+ONLY for open-ended research/strategy goals that are not a single buildable \
+artifact.
+13. DOMAINS: route by subject — news/headlines/current events → "news"; stock, \
+market, ticker, or crypto prices → "finance"; reading/checking email or the \
+inbox → "gmail"; controlling lights/switches/thermostat/locks or any smart-home \
+device ("turn off the lights") → "smart-home". These are concrete actions, not \
+"converse".
+14. WATCHLIST: managing what RAMBO keeps an eye on → "watchlist". "keep an eye \
+on X", "watch/track/monitor X", "stop watching X", "what am I watching" (watch \
+topics); and "remind me X is due <date>", "add a deadline …", "what are my \
+deadlines" (deadlines). These ADD/manage watch items — route to "watchlist", NOT \
+"keeper" (keeper is for general remember/recall), and NOT "calendar".
 
 ROSTER:
 {roster}

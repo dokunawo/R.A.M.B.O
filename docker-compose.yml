@@ -23,6 +23,10 @@ services:
       # the host path below — used to open built projects in VS Code / Explorer.
       - RAMBO_BUILDS_DIR=/repo/builds
       - RAMBO_HOST_REPO_ROOT=C:\Users\dokun\PycharmProjects\R.A.M.B.O
+      # Operator is in Detroit (Eastern). Run the container clock on Detroit so
+      # logs + runtime times are local, not UTC. App-level schedulers default to
+      # America/Detroit too (PROACTIVE_TZ / MORNING_BRIEF_TZ / REFLECTION_TZ).
+      - TZ=America/Detroit
     # Dev convenience: auto-restart uvicorn on .py edits (source is volume-mounted
     # above). Overrides the Dockerfile CMD, which stays the clean prod default.
     # Needs watchfiles → requirements pins uvicorn[standard].

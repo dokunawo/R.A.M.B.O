@@ -285,6 +285,14 @@ class KeeperRepo:
             )
             return dict(rows[0]) if rows else None
 
+    async def delete(self, key: str) -> bool:
+        """Remove a memory by exact key. Returns True if a row was deleted.
+        Orphaned topics are left for the next write's GC pass."""
+        async with aiosqlite.connect(self._db_path) as db:
+            cur = await db.execute("DELETE FROM memories WHERE key=?", (key,))
+            await db.commit()
+            return cur.rowcount > 0
+
     async def query(self, search: str = "", limit: int = 50) -> list[dict]:
         """Substring search across key/value/tags (case-insensitive), newest first.
         Empty search returns the latest rows. The original, always-available recall."""

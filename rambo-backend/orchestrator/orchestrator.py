@@ -304,6 +304,50 @@ class Orchestrator:
         """Give the Keeper agent a durable memory store."""
         self.keeper_repo = repo
 
+    async def set_conversation_repo(self, repo):
+        """Back the in-memory conversation with a durable store and hydrate the
+        recent history so context survives a restart."""
+        self.conversation.set_repo(repo)
+        await self.conversation.hydrate()
+
+    async def _build_operator_context(self, goal: str) -> str:
+        """Assemble the 'living memory' block injected into the system prompt each
+        turn: the synthesized operator profile, recent reflection insights, and the
+        memories most relevant to THIS request. Returns '' when there's nothing to
+        add (or embeddings are off — recall degrades gracefully). This is what
+        makes RAMBO actually USE what it has learned, every reply."""
+        repo = getattr(self, "keeper_repo", None)
+        if not repo:
+            return ""
+        sections: list[str] = []
+        try:
+            profile = await repo.read("operator_profile")
+            if profile and profile.get("value"):
+                sections.append("## What you know about the operator\n"
+                                + profile["value"].strip())
+        except Exception:
+            pass
+        try:
+            relevant = await repo.recall(goal, limit=3)
+            lines = [f"- {h['key']}: {h['value']}" for h in relevant
+                     if h.get("key") and h.get("value")]
+            if lines:
+                sections.append("## Relevant memory (recalled for this request)\n"
+                                + "\n".join(lines))
+        except Exception:
+            pass
+        # Adaptive tone + how to address the operator. Always present, even with
+        # no memory yet, so RAMBO matches depth to the request and addresses the
+        # operator correctly ("sir" by default).
+        from operator_identity import address
+        sections.append(
+            f"## Address & tone\nAddress the operator as \"{address()}\". "
+            "Adapt depth: be terse and direct for quick or operational asks; "
+            "expand and explain when they're exploring or ask why/how. Honor any "
+            "communication preferences noted above.")
+        return ("\n\n# Operator memory — use this to personalize your reply; do "
+                "not recite it verbatim.\n" + "\n\n".join(sections))
+
     async def _run_keeper(self, text: str) -> str:
         """Persist or recall a memory via the Keeper store. Save intents
         ('remember X is Y') write; recall intents ('what is my X') read back."""
@@ -466,6 +510,50 @@ class Orchestrator:
                 return key
         return name
 
+    # Friendly, operator-facing names for routing targets, so RAMBO can announce
+    # a handoff in plain language instead of internal target keys.
+    _TARGET_LABELS = {
+        "planner": "the Planner",
+        "executor": "the Executor",
+        "researcher": "the Researcher",
+        "keeper": "the Keeper",
+        "orchestrate": "the full agent team",
+        "spotify": "the Spotify controller",
+        "dev": "the Engineer",
+        "build": "the Engineer",
+    }
+
+    def _target_label(self, target: str) -> str:
+        if target in self._TARGET_LABELS:
+            return self._TARGET_LABELS[target]
+        # Skills and spawned agents: humanize their slug (e.g. "weather-bot" →
+        # "Weather Bot").
+        return target.replace("-", " ").replace("_", " ").title()
+
+    async def _announce_handoff(self, target: str, task: str):
+        """Tell the operator which agent RAMBO is handing the task to. Skipped for
+        'converse', where RAMBO answers directly rather than handing off."""
+        if target == "converse":
+            return
+        label = self._target_label(target)
+        snippet = (task or "").strip()
+        if len(snippet) > 80:
+            snippet = snippet[:77].rstrip() + "…"
+        msg = f"Handing this to {label}"
+        if snippet:
+            msg += f" — {snippet}"
+        await self.broadcast(f"[R.A.M.B.O] {msg}.")
+        # Say it out loud (ElevenLabs) so the operator hears the handoff before the
+        # agent's work begins — e.g. "Building that now" right before the Engineer
+        # task bar comes up. Spoken phrasing is friendlier than the log line.
+        if target in ("build",):
+            spoken = "On it — building that now."
+        elif target in ("dev",):
+            spoken = "On it — drafting that change now."
+        else:
+            spoken = f"Handing this to {label} now."
+        await self._voice_text(spoken)
+
     async def _set_status(self, name: str, status: str):
         # Track per-shell (get_status aggregates), but broadcast the display key
         # so the live UI matches the consolidated lineup.
@@ -521,6 +609,15 @@ class Orchestrator:
         if image:
             return await self._vision_answer(goal, image)
 
+        # Deterministic fast-path: high-confidence watchlist commands ("keep an eye
+        # on X", "remind me … is due …") go straight to the watchlist handler so the
+        # LLM router can't mis-route them (e.g. "keep an eye on the AI chip market"
+        # drifting to news).
+        if self._is_watchlist_command(goal):
+            res = await self._run_watchlist(goal)
+            summary = await self._speak(goal, [f"watchlist: {goal}"], [res])
+            return {"response": summary, "agent": "rambo"}
+
         roster_lines, valid_targets = await self._build_roster()
         # Semantic pre-filter: route over the top-K relevant lines, but keep the
         # FULL valid_targets set so the router may still name a non-shortlisted
@@ -548,6 +645,7 @@ class Orchestrator:
         if decision.mode == "clarify":
             q = decision.question.strip()
             await self.broadcast(f"[R.A.M.B.O] {q}")
+            await self._voice_text(q)
             return {"response": q, "agent": "rambo", "clarify": True}
 
         # dispatch: run each ordered step through the right target.
@@ -558,6 +656,7 @@ class Orchestrator:
         dispatch_id = await self._register_dispatch(goal, plan)
         try:
             for step in decision.steps:
+                await self._announce_handoff(step.target, step.task)
                 res = await self._run_target(step.target, step.task, ctx)
                 results.append(res)
             summary = await self._speak(goal, plan, results)
@@ -611,6 +710,15 @@ class Orchestrator:
         )
         targets.add("build")
 
+        lines.append(
+            "- watchlist (proactive watch): add/remove/list the operator's WATCH "
+            "topics (things to keep an eye on) and DEADLINES. Use for 'keep an eye "
+            "on X', 'watch/track/monitor X', 'stop watching X', 'what am I "
+            "watching', 'remind me X is due Friday', 'add a deadline …', 'what are "
+            "my deadlines'."
+        )
+        targets.add("watchlist")
+
         for skill in SKILLS:
             lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
             targets.add(skill["name"])
@@ -625,6 +733,82 @@ class Orchestrator:
 
         return lines, targets
 
+    # High-confidence watchlist phrases — deterministic so they never mis-route.
+    _WATCHLIST_RE = re.compile(
+        r"\b(keep an eye on|keep tabs on|keep watching|stop watching|stop tracking|"
+        r"what am i watching|watch ?list|add (?:a )?deadline|set (?:a )?deadline|"
+        r"my deadlines|upcoming deadlines|what are my deadlines)\b|\bis due\b|\bare due\b",
+        re.IGNORECASE)
+
+    def _is_watchlist_command(self, goal: str) -> bool:
+        return bool(self._WATCHLIST_RE.search(goal or ""))
+
+    async def _run_watchlist(self, task: str) -> str:
+        """Add/remove/list WATCH topics + DEADLINES from natural language, so the
+        operator can say 'keep an eye on X' or 'remind me Y is due Friday' instead
+        of typing into the Watch tab. Reuses seeker_watch + proactive_nudges."""
+        repo = getattr(self, "keeper_repo", None)
+        if not repo:
+            return "Memory store isn't available right now."
+        import re as _re
+        import seeker_watch
+        import proactive_nudges as pn
+        t = task.strip()
+        low = t.lower()
+
+        # ── list ──
+        if _re.search(r"what am i watching|watch ?list|watch topics|what.*watching", low):
+            topics = await seeker_watch.list_topics(repo)
+            if not topics:
+                return "You're not watching anything yet, sir."
+            return "You're watching: " + ", ".join(x["topic"] for x in topics) + "."
+        if _re.search(r"deadlines?\b", low) and _re.search(r"what|list|my|upcoming|show", low) \
+                and not _re.search(r"\bdue\b|add|set|new", low):
+            dls = await pn.list_deadlines(repo)
+            if not dls:
+                return "No deadlines tracked, sir."
+            return "Deadlines: " + "; ".join(f"{d['text']} ({d['due']})" for d in dls) + "."
+
+        # ── remove a watch topic ──
+        m = _re.search(r"stop (?:watching|tracking|monitoring|following)\s+(.+)", t, _re.I)
+        if m:
+            name = m.group(1).strip(" .?!")
+            ok = await seeker_watch.remove_topic(repo, seeker_watch.slugify(name))
+            return f"Stopped watching \"{name}\", sir." if ok else f"I wasn't watching \"{name}\"."
+
+        # ── add a deadline (phrasing with 'due' or 'deadline') ──
+        if " due " in f" {low} " or "deadline" in low:
+            text_part, when_part = None, None
+            idx = low.rfind(" due ")
+            if idx != -1:
+                text_part, when_part = t[:idx], t[idx + 5:]
+            else:
+                dm = _re.search(r"deadline(?:\s+for)?\s+(.+?)\s+(?:on|by|for|at)\s+(.+)", t, _re.I)
+                if dm:
+                    text_part, when_part = dm.group(1), dm.group(2)
+            if text_part and when_part:
+                text_part = _re.sub(r"^(?:remind me(?: that)?|please|hey|can you|"
+                                    r"remember(?: that)?|set|add|a|new|the)\s+", "",
+                                    text_part.strip(), flags=_re.I).strip()
+                text_part = _re.sub(r"\b(is|are|'s)$", "", text_part).strip(" .?!")
+                res = await pn.add_deadline(repo, text_part, when_part.strip(" .?!"))
+                if res.get("error"):
+                    return (f"I couldn't pin a date from \"{when_part.strip()}\", sir — "
+                            "try 'tomorrow', 'next Friday', or a date like 2026-07-01.")
+                return f"Logged it — \"{res['text']}\" due {res['due']}, sir."
+
+        # ── add a watch topic ──
+        m = _re.search(r"(?:keep an eye on|keep tabs on|keep watching|watch|track|"
+                       r"monitor|follow)\s+(.+)", t, _re.I)
+        if m:
+            topic = _re.sub(r"\s+for me\b", "", m.group(1), flags=_re.I).strip(" .?!")
+            if topic:
+                await seeker_watch.add_topic(repo, topic)
+                return f"On it — I'll keep an eye on \"{topic}\" and flag anything new, sir."
+
+        return ("Tell me what to watch or track — e.g. \"keep an eye on NVDA\" or "
+                "\"remind me the report is due Friday,\" sir.")
+
     async def _run_target(self, target: str, task: str, ctx: dict) -> str:
         """Dispatch one routed step. Every branch is isolated so a single
         target failing never aborts the whole turn (Tier 3)."""
@@ -637,6 +821,9 @@ class Orchestrator:
             if target == "orchestrate":
                 plan, results = await self._orchestrate(task)
                 return "\n".join(str(r) for r in results) if results else "(no output)"
+
+            if target == "watchlist":
+                return await self._run_watchlist(task)
 
             if target == "spotify":
                 # Spotify is an external integration → light the Executor (link).
@@ -942,6 +1129,30 @@ class Orchestrator:
         print(f"[stream] speak_segment base={base_turn_id} seq={seq} "
               f"chars={len(text)} t_since_start={elapsed:.2f}s final={is_final}")
 
+    async def _voice_text(self, text: str) -> None:
+        """Speak an already-decided string (e.g. a clarify question) through the
+        ElevenLabs pipeline as speak_segment(s). No LLM call. Per-segment, if
+        ElevenLabs yields no audio, _emit_segment omits the audio field and the
+        frontend's browser-voice last resort takes over (unchanged behavior)."""
+        text = (text or "").strip()
+        if not text:
+            return
+        t0 = time.monotonic()
+        base_turn_id = uuid.uuid4().hex
+        # Split into sentences for natural cadence; reuse the existing splitter.
+        sentences, buf = [], text
+        while True:
+            s, buf = self._split_sentence(buf)
+            if s is None:
+                break
+            sentences.append(s)
+        if buf.strip():
+            sentences.append(buf.strip())
+        if not sentences:
+            sentences = [text]
+        for i, s in enumerate(sentences):
+            await self._emit_segment(s, base_turn_id, i, i == len(sentences) - 1, t0)
+
     @staticmethod
     def _cache_last_message(messages: list[dict]) -> None:
         """Place a rolling cache breakpoint on the last message so the growing
@@ -985,16 +1196,19 @@ class Orchestrator:
         messages = self.conversation.get_messages_for_api()
         append_voice_cue(messages)
         self._cache_last_message(messages)
-        return await self._stream_voice(messages, fallback_text=results_block)
+        operator_ctx = await self._build_operator_context(goal)
+        return await self._stream_voice(messages, fallback_text=results_block,
+                                        system_context=operator_ctx)
 
     async def _stream_voice(
         self, messages: list[dict], fallback_text: str = "", *, source: str = "conversation",
+        system_context: str = "",
     ) -> str:
         """Stream a voiced reply for already-prepared `messages`: split into
         sentences, emit speak_segments (+TTS) over WS, record usage, persist the
         assistant turn, and return the full text. Shared by _speak and
         _vision_answer so the voice/TTS pipeline lives in one place."""
-        system = build_system_prompt(self.personality_text)
+        system = build_system_prompt(self.personality_text, context=system_context)
 
         t0 = time.monotonic()
         base_turn_id = uuid.uuid4().hex
@@ -1086,7 +1300,9 @@ class Orchestrator:
         }
         append_voice_cue(messages)
         self._cache_last_message(messages)
+        operator_ctx = await self._build_operator_context(question)
         text = await self._stream_voice(
             messages, fallback_text="I couldn't make out the screen.", source="vision",
+            system_context=operator_ctx,
         )
         return {"response": text, "agent": "rambo"}

@@ -1,5 +1,7 @@
 """Tests for dev_agent.builds — slug, path translation, safety, build_app plumbing."""
 
+from pathlib import Path
+
 import pytest
 import pytest_asyncio
 
@@ -71,6 +73,22 @@ async def test_run_tests_and_run_app(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_run_app_finds_nested_entry(tmp_path, monkeypatch):
+    """Agent sometimes nests the project a folder deep; run_app should still find
+    and run the entry point, reporting its relative path."""
+    monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
+    monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
+    nested = tmp_path / "builds" / "calc" / "calculator"
+    nested.mkdir(parents=True)
+    (nested / "main.py").write_text("print('nested hello')\n", encoding="utf-8")
+
+    rres = await builds.run_app("calc")
+    assert rres["ok"] is True
+    assert rres["entry"] == str(Path("calculator") / "main.py")
+    assert "nested hello" in rres["output"]
+
+
+@pytest.mark.asyncio
 async def test_run_safety_and_missing(tmp_path, monkeypatch):
     monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
     monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
@@ -85,11 +103,23 @@ async def test_run_safety_and_missing(tmp_path, monkeypatch):
     assert (await builds.run_app("empty")).get("error") == "no runnable .py entry point found"
 
 
+# Stub coding agent that actually writes a file (a successful build).
+class _StubAgent:
+    def __init__(self, llm, build_dir, **kw):
+        self.build_dir = build_dir
+        self.touched = []
+    async def run(self, prompt):
+        (self.build_dir / "main.py").write_text("print('hi')\n", encoding="utf-8")
+        self.touched = ["main.py"]
+        return "built a hello script"
+
+
 @pytest.mark.asyncio
 async def test_build_app_plumbing(tmp_path, monkeypatch, repo):
     monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
     monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
     monkeypatch.setenv("RAMBO_HOST_REPO_ROOT", r"C:\X\R.A.M.B.O")
+    monkeypatch.setattr(builds, "CodingAgent", _StubAgent)
 
     await repo.create("b1", "hello", "Hello", "a hello script")
     res = await builds.build_app(llm=_FakeLLM(), repo=repo, slug="hello",
@@ -101,3 +131,18 @@ async def test_build_app_plumbing(tmp_path, monkeypatch, repo):
     assert row["status"] == "ready"
     assert row["host_path"] == r"C:\X\R.A.M.B.O\builds\hello"
     assert res["host_path"] == r"C:\X\R.A.M.B.O\builds\hello"
+
+
+@pytest.mark.asyncio
+async def test_build_app_no_files_marks_failed(tmp_path, monkeypatch, repo):
+    """A build that writes no files must be marked FAILED, not READY, so the dock
+    never shows a runnable card with nothing to run."""
+    monkeypatch.setenv("RAMBO_REPO_ROOT", str(tmp_path))
+    monkeypatch.setenv("RAMBO_BUILDS_DIR", str(tmp_path / "builds"))
+
+    await repo.create("b2", "empty", "Empty", "produces nothing")
+    res = await builds.build_app(llm=_FakeLLM(), repo=repo, slug="empty",
+                                 name="Empty", goal="produces nothing")
+    assert "error" in res
+    row = await repo.get_by_slug("empty")
+    assert row["status"] == "failed"

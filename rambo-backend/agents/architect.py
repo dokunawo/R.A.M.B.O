@@ -22,9 +22,9 @@ class Architect:
             ]
         else:
             steps += [
-                "Break goal into 3–5 concrete tasks",
-                "Assign each task to the most suitable brain",
-                "Define what 'done' looks like for each task",
+                "Break the goal into concrete tasks",
+                "Hand each task to the right agent (Engineer to build, Researcher to investigate)",
+                "Build the working result and report back",
             ]
 
         return steps

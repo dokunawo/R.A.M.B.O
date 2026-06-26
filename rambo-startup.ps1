@@ -8,10 +8,12 @@
 #   .\rambo-startup.ps1            # fast start, opens PROD frontend (:3000)
 #   .\rambo-startup.ps1 -Dev       # open the DEV frontend (:3001, hot reload)
 #   .\rambo-startup.ps1 -Rebuild   # rebuild changed layers (deps changed)
+#   .\rambo-startup.ps1 -Fresh     # bring the stack DOWN, then rebuild + up
 #   .\rambo-startup.ps1 -Clean     # full no-cache rebuild (rarely needed)
 
 param(
     [switch]$Rebuild,
+    [switch]$Fresh,     # docker compose down, then rebuild changed layers + up
     [switch]$Clean,
     [switch]$Dev,       # open the dev frontend (:3001) instead of prod (:3000)
     [switch]$DevTools,  # open Chrome with DevTools panel auto-open
@@ -79,8 +81,13 @@ Set-Location $projectRoot
 $profileArgs = if ($Dev) { @("--profile", "dev") } else { @() }
 if ($Clean) {
     Log "Full no-cache rebuild (this takes a few minutes)..."
+    docker compose @profileArgs down
     docker compose @profileArgs build --no-cache
     docker compose @profileArgs up -d
+} elseif ($Fresh) {
+    Log "Bringing the stack down, then rebuilding changed layers..."
+    docker compose @profileArgs down
+    docker compose @profileArgs up -d --build
 } elseif ($Rebuild) {
     Log "Rebuilding changed layers..."
     docker compose @profileArgs up -d --build

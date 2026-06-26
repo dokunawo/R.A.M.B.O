@@ -98,6 +98,23 @@ class BuildsRepo:
             rows = await cur.fetchall()
         return [_hydrate(r) for r in rows]
 
+    async def delete(self, slug: str) -> None:
+        """Remove a build's DB record. Does NOT touch files on disk — the project
+        folder under builds/<slug>/ stays put; only the dock entry goes away."""
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("DELETE FROM builds WHERE slug=?", (slug,))
+            await db.commit()
+
+    async def delete_all(self) -> int:
+        """Remove all build DB records (dock entries). Files on disk are kept.
+        Returns the number of records removed."""
+        async with aiosqlite.connect(self.db_path) as db:
+            cur = await db.execute("SELECT COUNT(*) FROM builds")
+            (n,) = await cur.fetchone()
+            await db.execute("DELETE FROM builds")
+            await db.commit()
+        return int(n)
+
 
 def _hydrate(row: aiosqlite.Row) -> dict:
     d: dict[str, Any] = dict(row)

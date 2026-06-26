@@ -1,6 +1,9 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { setVoiceDuck } from "./spotifyEngine";
 
+// Backend base — same origin the rest of the app talks to.
+const API = "http://localhost:8000";
+
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
 const WAKE_WORD   = "operator";
@@ -49,30 +52,21 @@ function stopGlobalRecognition() {
   }
 }
 
-function getPreferredVoice() {
-  const voices = window.speechSynthesis?.getVoices() || [];
-  return voices.find(v =>
-    /google uk english female|microsoft zira|samantha|karen|victoria|fiona/i.test(v.name)
-  ) || voices.find(v =>
-    /google us english/i.test(v.name)
-  ) || voices.find(v => v.lang.startsWith("en") && /female|natural|premium/i.test(v.name)
-  ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
-}
-
+// Speak via ElevenLabs ONLY — fetch synthesized audio from the backend and play
+// it through the TTS audio context (so the orb still reacts). We never fall back
+// to the robotic browser voice: if ElevenLabs is unavailable, stay silent and
+// just fire onEnd so state transitions still happen.
 function speak(text, onStart, onEnd) {
-  const synth = window.speechSynthesis;
-  if (!synth) { onEnd?.(); return; }
-  synth.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const preferred = getPreferredVoice();
-  if (preferred) utter.voice = preferred;
-  utter.rate  = 1.0;
-  utter.pitch = 1.05;
-  utter.volume = 1.0;
-  utter.onstart = () => onStart?.();
-  utter.onend   = () => onEnd?.();
-  utter.onerror = () => onEnd?.();
-  synth.speak(utter);
+  onStart?.();
+  fetch(`${API}/tts/say`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  })
+    .then((r) => r.json())
+    .then((j) => (j && j.audio ? playAudioSegment(j.audio) : null))
+    .catch(() => {})
+    .then(() => onEnd?.());
 }
 
 // Shared context for TTS playback so the orb can react to RAMBO's own voice.
@@ -137,32 +131,12 @@ function playAudioSegment(b64) {
   });
 }
 
-function speakViaSynth(text) {
-  return new Promise((resolve) => {
-    const synth = window.speechSynthesis;
-    if (!synth) { resolve(); return; }
-    const utter = new SpeechSynthesisUtterance(text);
-    const preferred = getPreferredVoice();
-    if (preferred) utter.voice = preferred;
-    utter.rate = 1.0;
-    utter.pitch = 1.05;
-    utter.volume = 1.0;
-    utter.onend = resolve;
-    utter.onerror = resolve;
-    synth.speak(utter);
-  });
-}
-
+// ElevenLabs-only playback. If a segment carries no audio (rare synth failure),
+// stay silent rather than dropping to the robotic browser voice.
 function speakSegment(seg) {
-  const text = typeof seg === "string" ? seg : seg.text;
   const audio = typeof seg === "string" ? null : seg.audio;
-  if (audio) {
-    return playAudioSegment(audio).then((ok) => {
-      if (ok) return;
-      return speakViaSynth(text); // fallback if decode/playback failed
-    });
-  }
-  return speakViaSynth(text);
+  if (audio) return playAudioSegment(audio).then(() => {});
+  return Promise.resolve();
 }
 
 if (typeof window !== "undefined" && window.speechSynthesis) {

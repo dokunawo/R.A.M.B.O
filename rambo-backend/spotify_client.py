@@ -208,6 +208,17 @@ class SpotifyClient:
                 return d["id"]
         return devs[0].get("id")
 
+    async def volume(self, percent: int, device_id: str | None = None) -> dict:
+        """Set playback volume (0-100) on the active device. The browser SDK's
+        setVolume only affects the in-page web player; this hits the Web API so
+        the slider also works when audio is playing on the phone/desktop app."""
+        dev = await self.resolve_device(device_id)
+        pct = max(0, min(100, int(percent)))
+        params = {"volume_percent": pct}
+        if dev:
+            params["device_id"] = dev
+        return await self._request("PUT", "/me/player/volume", params=params)
+
     async def shuffle(self, state: bool, device_id: str | None = None) -> dict:
         dev = await self.resolve_device(device_id)
         params = {"state": "true" if state else "false"}
@@ -307,12 +318,23 @@ class SpotifyClient:
         """Move playback onto the R.A.M.B.O browser device."""
         return await self._request("PUT", "/me/player", json={"device_ids": [device_id], "play": play})
 
-    async def play_liked(self, device_id: str | None = None) -> dict:
+    async def play_liked(self, device_id: str | None = None, randomize: bool = True) -> dict:
         """Play the user's Liked Songs. Spotify's play accepts up to 100 uris, so
-        queue the 100 most-recent saved tracks (next/prev advance through them)."""
+        queue the 100 most-recent saved tracks (next/prev advance through them).
+
+        By default the queue is RANDOMIZED, so pressing play with nothing loaded
+        starts on a random liked song instead of always the first one. Pass
+        randomize=False to keep the original (most-recent-first) order."""
         data = await self.liked(max_total=100)
+        # Surface a real error (not_connected / http_4xx) instead of masking it.
+        if isinstance(data, dict) and data.get("error"):
+            return data
         items = data.get("items", []) if isinstance(data, dict) else []
-        uris = [it["track"]["uri"] for it in items if it.get("track")]
+        uris = [it["track"]["uri"] for it in items
+                if isinstance(it.get("track"), dict) and it["track"].get("uri")]
         if not uris:
             return {"error": "no_liked_songs"}
+        if randomize:
+            import random
+            random.shuffle(uris)
         return await self.play(device_id=device_id, uris=uris)
