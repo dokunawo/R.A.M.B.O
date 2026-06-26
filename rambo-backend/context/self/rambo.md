@@ -85,8 +85,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 127 commits:
+Last 14 days — 128 commits:
 
+- `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (9 minutes ago)`
 - `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (8 hours ago)`
 - `752260e UI: stack left docks in a rail (no overlap) + split volume controls (8 hours ago)`
 - `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (9 hours ago)`
@@ -101,13 +102,12 @@ Last 14 days — 127 commits:
 - `5bebcad Spotify: paginate Liked Songs, fix next/prev pause, context-aware play (#6) (26 hours ago)`
 - `2b264b5 Add Spotify integration, screen vision, and HUD polish (#5) (27 hours ago)`
 - `f6da9f6 docs: reflect consolidated agent roster in README (27 hours ago)`
-- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (27 hours ago)`
+- `268dbf9 Add smarter-memory bundle: temporal resolution, confidence scoring, hybrid recall, nightly reflection (28 hours ago)`
 - `b8d3f1e Fix stale roster test: assert consolidated mode name, not old shell agent (#4) (30 hours ago)`
-- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (30 hours ago)`
+- `cd9fe40 Voyage embeddings layer: semantic routing, dispatch digestion, Keeper knowledge graph (#3) (31 hours ago)`
 - `55a3a2f Add codebase skill: R.A.M.B.O can read its own repo (32 hours ago)`
 - `ef7df1b Consolidate remaining UI surfaces to 3-mode lineup (32 hours ago)`
-- `34a640e Consolidate agent fleet into 3 routable modes + services (32 hours ago)`
-- … and 107 more
+- … and 108 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
