@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 145 commits:
+Last 14 days — 146 commits:
 
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (2 minutes ago)`
-- `6421de7 feat(ev): HR market builds ranked Pick candidates (5 minutes ago)`
-- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (8 minutes ago)`
-- `588171f feat(ev): repo lookups for game context + pitcher hand (11 minutes ago)`
-- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (14 minutes ago)`
-- `487e92c feat(ev): Pick + HRFeatures types (card contract) (17 minutes ago)`
-- `be6fcce feat(ev): HR probability + Pick6 edge math (20 minutes ago)`
-- `433bdbb feat(ev): HR park-factor table (22 minutes ago)`
-- `b6ba289 docs: EV Brain (home runs) implementation plan (32 minutes ago)`
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (41 minutes ago)`
-- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (45 minutes ago)`
-- `e02da85 docs: EV Brain (home runs) design spec (50 minutes ago)`
-- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (83 minutes ago)`
+- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (3 minutes ago)`
+- `5252270 feat(ev): per-slate LLM explainer with templated fallback (5 minutes ago)`
+- `6421de7 feat(ev): HR market builds ranked Pick candidates (7 minutes ago)`
+- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (11 minutes ago)`
+- `588171f feat(ev): repo lookups for game context + pitcher hand (13 minutes ago)`
+- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (16 minutes ago)`
+- `487e92c feat(ev): Pick + HRFeatures types (card contract) (20 minutes ago)`
+- `be6fcce feat(ev): HR probability + Pick6 edge math (22 minutes ago)`
+- `433bdbb feat(ev): HR park-factor table (24 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (35 minutes ago)`
+- `917c2fc docs: lock Pick output shape + card styling to the CMC card (43 minutes ago)`
+- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (47 minutes ago)`
+- `e02da85 docs: EV Brain (home runs) design spec (52 minutes ago)`
+- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (85 minutes ago)`
 - `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (6 hours ago)`
-- `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (6 hours ago)`
+- `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (7 hours ago)`
 - `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (9 hours ago)`
 - `7214c2c Fix backend healthcheck: use Python urllib instead of missing curl (11 hours ago)`
 - `b5f2d5c Jarvis roadmap (Phases 1-4) + proactive watch, domain skills, presence, Spotify fix (11 hours ago)`
 - `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (19 hours ago)`
-- `752260e UI: stack left docks in a rail (no overlap) + split volume controls (19 hours ago)`
-- … and 125 more
+- … and 126 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

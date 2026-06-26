@@ -86,6 +86,12 @@ try:
 except Exception as _ingest_err:  # pragma: no cover
     print(f"[rambo] ingest router not mounted: {_ingest_err}")
 
+try:
+    from api.betting import router as _betting_router
+    app.include_router(_betting_router)
+except Exception as _betting_err:  # pragma: no cover
+    print(f"[rambo] betting router not mounted: {_betting_err}")
+
 # Frontend readiness handshake for the AHK boot gesture: the UI POSTs /ui/ready
 # once it has loaded (screen-share auto-start listener armed), and the helper
 # polls /ui/ready and only clicks to start screen share then — never on a blank,
