@@ -85,14 +85,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 138 commits:
+Last 14 days — 139 commits:
 
-- `433bdbb feat(ev): HR park-factor table (2 minutes ago)`
-- `b6ba289 docs: EV Brain (home runs) implementation plan (13 minutes ago)`
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (21 minutes ago)`
-- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (25 minutes ago)`
-- `e02da85 docs: EV Brain (home runs) design spec (30 minutes ago)`
-- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (63 minutes ago)`
+- `be6fcce feat(ev): HR probability + Pick6 edge math (2 minutes ago)`
+- `433bdbb feat(ev): HR park-factor table (4 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (15 minutes ago)`
+- `917c2fc docs: lock Pick output shape + card styling to the CMC card (23 minutes ago)`
+- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (27 minutes ago)`
+- `e02da85 docs: EV Brain (home runs) design spec (32 minutes ago)`
+- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (65 minutes ago)`
 - `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (6 hours ago)`
 - `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (6 hours ago)`
 - `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (9 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 138 commits:
 - `1a7c41e Gate screen-share boot click on a frontend-ready handshake (27 hours ago)`
 - `f3b2045 Front-load the media-key helper in startup so keys work from login (27 hours ago)`
 - `ee769d3 Voice always-on, reliable screen-share auto-start, intro sound fix (28 hours ago)`
-- `24d4ffa Remove start-dev.ps1 — dev frontend retired from everyday use (28 hours ago)`
-- … and 118 more
+- … and 119 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
