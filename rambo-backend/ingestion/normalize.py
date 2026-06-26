@@ -109,14 +109,22 @@ def _upsert_game(conn: sqlite3.Connection, g: dict, scraped_at: str) -> None:
              (game_pk, official_date, season, game_type, status_detail,
               home_team_id, home_team_name, away_team_id, away_team_name,
               home_score, away_score, venue_id, venue_name, day_night,
-              double_header, scheduled_innings, url, scraped_at)
+              double_header, scheduled_innings, url,
+              home_probable_pitcher_id, away_probable_pitcher_id,
+              home_team_abbr, away_team_abbr, scraped_at)
            VALUES (:game_pk,:official_date,:season,:game_type,:status_detail,
               :home_team_id,:home_team_name,:away_team_id,:away_team_name,
               :home_score,:away_score,:venue_id,:venue_name,:day_night,
-              :double_header,:scheduled_innings,:url,:scraped_at)
+              :double_header,:scheduled_innings,:url,
+              :home_probable_pitcher_id,:away_probable_pitcher_id,
+              :home_team_abbr,:away_team_abbr,:scraped_at)
            ON CONFLICT(game_pk) DO UPDATE SET
               status_detail=excluded.status_detail,
               home_score=excluded.home_score, away_score=excluded.away_score,
+              home_probable_pitcher_id=excluded.home_probable_pitcher_id,
+              away_probable_pitcher_id=excluded.away_probable_pitcher_id,
+              home_team_abbr=excluded.home_team_abbr,
+              away_team_abbr=excluded.away_team_abbr,
               scraped_at=excluded.scraped_at;""",
         {**g, "scraped_at": scraped_at},
     )
@@ -230,6 +238,10 @@ def map_scoreboard(conn, item, scraped_at) -> bool:
         "double_header": _first(item, "doubleHeader"),
         "scheduled_innings": _as_int(_first(item, "scheduledInnings")),
         "url": _first(item, "link", "url"),
+        "home_probable_pitcher_id": _as_int(_dig(item, "teams", "home", "probablePitcher", "id")),
+        "away_probable_pitcher_id": _as_int(_dig(item, "teams", "away", "probablePitcher", "id")),
+        "home_team_abbr": _dig(item, "teams", "home", "team", "abbreviation"),
+        "away_team_abbr": _dig(item, "teams", "away", "team", "abbreviation"),
     }, scraped_at)
     return True
 
