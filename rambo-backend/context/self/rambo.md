@@ -85,19 +85,20 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 143 commits:
+Last 14 days — 144 commits:
 
-- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (3 minutes ago)`
-- `588171f feat(ev): repo lookups for game context + pitcher hand (6 minutes ago)`
-- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (9 minutes ago)`
-- `487e92c feat(ev): Pick + HRFeatures types (card contract) (13 minutes ago)`
-- `be6fcce feat(ev): HR probability + Pick6 edge math (15 minutes ago)`
-- `433bdbb feat(ev): HR park-factor table (17 minutes ago)`
-- `b6ba289 docs: EV Brain (home runs) implementation plan (28 minutes ago)`
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (36 minutes ago)`
-- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (40 minutes ago)`
-- `e02da85 docs: EV Brain (home runs) design spec (45 minutes ago)`
-- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (78 minutes ago)`
+- `6421de7 feat(ev): HR market builds ranked Pick candidates (2 minutes ago)`
+- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (6 minutes ago)`
+- `588171f feat(ev): repo lookups for game context + pitcher hand (8 minutes ago)`
+- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (11 minutes ago)`
+- `487e92c feat(ev): Pick + HRFeatures types (card contract) (15 minutes ago)`
+- `be6fcce feat(ev): HR probability + Pick6 edge math (17 minutes ago)`
+- `433bdbb feat(ev): HR park-factor table (19 minutes ago)`
+- `b6ba289 docs: EV Brain (home runs) implementation plan (30 minutes ago)`
+- `917c2fc docs: lock Pick output shape + card styling to the CMC card (38 minutes ago)`
+- `d1555ca docs: add Strikeouts (pitcher prop) to EV Brain market list (42 minutes ago)`
+- `e02da85 docs: EV Brain (home runs) design spec (47 minutes ago)`
+- `94be799 feat(ingestion): MLB betting data ingestion layer (steps 2-5) (80 minutes ago)`
 - `91d2802 MLB betting ingestion — Step 1: data-source config (Apify + MLB Stats API) (6 hours ago)`
 - `9dc8e98 Persistent Q&A history: transcript store + History page, dock, and copy buttons (6 hours ago)`
 - `53cd61a Conversational routing + hands-free voice + clarify/follow-up context (9 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 143 commits:
 - `b70019d UI: dock rail accordion (one open at a time) + tuned spacing (19 hours ago)`
 - `752260e UI: stack left docks in a rail (no overlap) + split volume controls (19 hours ago)`
 - `cdec321 Builds: Run / Run-tests buttons + fix brittle reflection test date (19 hours ago)`
-- `3d2bb53 Agent status for Spotify/spawned lanes + boot Chrome at 80% zoom (19 hours ago)`
-- … and 123 more
+- … and 124 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
