@@ -440,18 +440,32 @@ curl -X POST http://localhost:8000/rambo/execute \
 
 ## Roadmap
 
-See [`ROADMAP_R.A.M.B.O_06-24-2026_14-26.md`](ROADMAP_R.A.M.B.O_06-24-2026_14-26.md) for the current plan. Highlights:
+See [`ROADMAP.md`](ROADMAP.md) — the single consolidated roadmap (supersedes all the
+dated `ROADMAP_*` files). Highlights:
 
-- **Complete (06/24):** ElevenLabs neural voice, "Operator" wake word + reliable mic stop/pause + watchdog, persistent dispatch memory + fast/deep model split, ElevenLabs credit tracker, clear-all-responses, sound-on-launch + settings panel, command-center voice trigger. **Connected agent backends** — Seeker web search (LIVE), Keeper SQLite memory (CONNECTED), Link/Google (CONNECTED), Echo email (CONNECTED). Recurring morning brief (on-screen + email).
-- **Short term:** Echo push/SMS channels, Keeper recall-in-context, retire remaining stub agents.
-- **Mid term:** Self-coding agent (sandboxed branch→PR), Alembic migrations, morning-brief enrichment.
-- **Long term:** Cloud-hosted personal digital twin (north-star vision).
+- **Live now:** cosmic console (6-tier orb), ElevenLabs neural voice, LLM SmartRouter +
+  6-tier orchestration, connected agents (Seeker/Keeper/Link/Echo), cost dashboard + prompt
+  caching, Factory sub-agent spawner, the **self-coding lane** (RAMBO edits its own code on
+  isolated git worktrees, operator-merged), recurring morning brief, and the **MLB betting
+  edge engine** (data-only ingestion + 5-market EV brain + the Chances Make Champions card).
+- **Short term:** voice/self-review polish, full-suite dev-lane tests, operator greeting +
+  shutdown, Echo push/SMS, Keeper recall-in-context.
+- **Mid term:** Alembic migrations, persist HITL queues to SQLite, theme presets + modular
+  HUD, mobile layout, betting line-shopping/CLV.
+- **Long term:** secure login, CLI companion, native wake word + AEC, plugin system,
+  cloud-hosted personal digital twin (north-star vision).
 
 ---
 
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-26/27 — MLB betting edge engine + Chances Make Champions card
+- **[Ingestion]** Data-only MLB layer: free `statsapi.mlb.com` (roster/schedule/stats/team stats) + paid Apify (odds, DK Pick6 props) → spend-capped landing → normalize → typed tables → read-only `MlbRepo`. Sentinel boundary by construction (no bet-placement imports).
+- **[EV brain]** 5 markets in `brains/ev/` (`REGISTRY`): Home Runs, H+R+RBI, Stolen Bases, Strikeouts (DK Pick6, `P×mult−1`), and Moneyline (pitcher-adjusted run model **market-anchored** to the de-vigged book → honest *leans*, not fake +EV). Per-slate Haiku explainer; 37 tests. `GET /betting/daily-edge?market=&date=&threshold=`.
+- **[Honest finding]** Single Pick6 legs are structurally −EV and a heuristic can't beat a sharp moneyline — so the tool leads with −EV avoidance + honest leans rather than manufactured edges.
+- **[CMC card]** Web dashboard at `/edge` (moneyline leans lead, props as honest −EV skips) + **downloadable cinematic poster** at `/card/:market` — `html-to-image` PNG export with real MLB headshots, brush fonts (Road Rage / Permanent Marker), procedural smoke/gold/grunge textures (`public/cmc/`, `scripts/gen_cmc_textures.py`), and an auto-detected branded `plate.png` slot for ChatGPT-made art.
 
 ### 2026-06-25 — Self-coding lane (RAMBO edits its own code)
 - **Dev lane:** new git-isolated `dev_agent/` — RAMBO drafts self-code changes on a throwaway worktree branch (never the running process), produces a **diff + impact + recommendation (merge/escalate/hold)**, and merges locally only on operator approval. Routable `dev` target; `/dev/propose|pending|change|merge|reject|escalate` endpoints; **`CodeReviewDock`** review UI.
