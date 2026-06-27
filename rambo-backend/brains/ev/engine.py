@@ -21,7 +21,7 @@ def daily_edge(date: str, market: str = "hr", repo=None,
     try:
         picks = [pk for pk in model.raw_picks(repo, date) if pk.edge > threshold]
         if market == "ml":
-            picks.sort(key=lambda pk: (pk.game_datetime or "~", pk.team))
+            picks.sort(key=lambda pk: (pk.game_datetime or "~", pk.team))  # "~" sorts after any ISO datetime, so games with no start time go last
         else:
             picks.sort(key=lambda pk: pk.edge, reverse=True)
         explain(picks, market, complete=complete)

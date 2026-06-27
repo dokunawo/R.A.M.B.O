@@ -33,13 +33,13 @@ def _confidence_word(market: str) -> str:
 
 def build_slip(picks: list[Pick], market: str, count: int | None = None, *,
                as_of: str | None = None, book: str | None = None) -> dict:
-    """Rank `picks` for the slip (props by hit-probability, moneyline by lean),
+    """Rank `picks` for the slip (props by hit-probability, moneyline by game time),
     take the top N, and return the roster + a copy-paste ChatGPT prompt. `as_of`/
     `book` stamp the slip's provenance (product label + data-as-of)."""
     requested = count or SLIP_SIZE.get(market, 6)
     product = PRODUCT.get(market, market.upper())
     if market == "ml":
-        ordered = sorted(picks, key=lambda p: (p.game_datetime or "~", p.team))
+        ordered = sorted(picks, key=lambda p: (p.game_datetime or "~", p.team))  # "~" sorts after any ISO datetime, so games with no start time go last
     else:
         ordered = sorted(picks, key=lambda p: p.model_p, reverse=True)
     # One play per player: prop ladders repeat a player; keep each player's first
