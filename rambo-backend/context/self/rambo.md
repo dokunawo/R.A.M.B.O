@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 167 commits:
+Last 14 days — 168 commits:
 
-- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (14 seconds ago)`
-- `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (13 minutes ago)`
-- `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (20 minutes ago)`
-- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (29 minutes ago)`
-- `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (83 minutes ago)`
-- `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (2 hours ago)`
-- `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (2 hours ago)`
-- `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (8 hours ago)`
-- `a12a63f feat(cmc): poster texture system + branded-plate slot (15 hours ago)`
-- `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (16 hours ago)`
-- `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (16 hours ago)`
-- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (16 hours ago)`
-- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (16 hours ago)`
-- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (16 hours ago)`
-- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (16 hours ago)`
-- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (16 hours ago)`
-- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (17 hours ago)`
-- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (17 hours ago)`
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (17 hours ago)`
-- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (17 hours ago)`
-- … and 147 more
+- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (71 minutes ago)`
+- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (71 minutes ago)`
+- `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (84 minutes ago)`
+- `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (2 hours ago)`
+- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (2 hours ago)`
+- `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (3 hours ago)`
+- `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (3 hours ago)`
+- `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (3 hours ago)`
+- `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (10 hours ago)`
+- `a12a63f feat(cmc): poster texture system + branded-plate slot (16 hours ago)`
+- `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (17 hours ago)`
+- `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (17 hours ago)`
+- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (17 hours ago)`
+- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (17 hours ago)`
+- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (17 hours ago)`
+- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (18 hours ago)`
+- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (18 hours ago)`
+- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (18 hours ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (18 hours ago)`
+- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (18 hours ago)`
+- … and 148 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
