@@ -36,6 +36,24 @@ function Log($msg) {
 
 Log "=== R.A.M.B.O startup ==="
 
+# 0) Single-instance guard. The boot Task Scheduler job and the desktop shortcut
+# can both fire around login; without this they race and open TWO Chrome windows.
+# A global mutex lets only the first run proceed — a concurrent second run exits
+# HERE (before Docker/Chrome) so exactly one window ever opens. Released right
+# after Chrome launches (bottom of script) so a later manual relaunch still works
+# even though the desktop shortcut runs with -NoExit (its process stays alive).
+$singletonMutex = $null
+try {
+    $singletonMutex = New-Object System.Threading.Mutex($false, "Global\RamboStartupSingleton")
+    $acquired = $false
+    try { $acquired = $singletonMutex.WaitOne(0) }
+    catch [System.Threading.AbandonedMutexException] { $acquired = $true }  # prior run crashed; take it
+    if (-not $acquired) {
+        Log "Another R.A.M.B.O startup is already running — exiting to avoid a duplicate window."
+        exit 0
+    }
+} catch { Log "WARNING: could not create singleton mutex: $_" }
+
 # 1) Route the hardware media keys to the R.A.M.B.O player — FRONT-LOADED so the
 # keys are captured from login, NOT after the multi-minute Docker/frontend waits
 # below (that gap let the native keys / keyboard software mute audio). The Spotify
@@ -156,12 +174,15 @@ $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 # stray/blank extra window. We match ONLY processes using the dedicated RAMBO
 # profile (--user-data-dir=...\.chrome-profile) — your everyday Chrome is untouched.
 try {
-    $stale = Get-CimInstance Win32_Process -Filter "Name = 'chrome.exe'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -and $_.CommandLine -like "*--user-data-dir=$ramboProfile*" }
-    if ($stale) {
+    # Loop: kill, wait, re-check — a single Stop-Process can race Chrome's own
+    # child processes, leaving one alive that then becomes the stray 2nd window.
+    for ($i = 0; $i -lt 6; $i++) {
+        $stale = Get-CimInstance Win32_Process -Filter "Name = 'chrome.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -and $_.CommandLine -like "*--user-data-dir=$ramboProfile*" }
+        if (-not $stale) { break }
         $stale | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
         Log "Closed $($stale.Count) leftover RAMBO Chrome process(es) before relaunch."
-        Start-Sleep -Seconds 2   # let the profile lock release before reopening
+        Start-Sleep -Seconds 1   # let the profile lock release before re-checking
     }
 } catch { Log "WARNING: could not check for leftover RAMBO Chrome: $_" }
 # RAMBO gets its OWN dedicated Chrome profile (--user-data-dir): a separate,
@@ -202,3 +223,12 @@ if ((Test-Path $chrome) -and $DevTools) {
 }
 
 Log "=== startup complete ==="
+
+# Release the single-instance lock now that Chrome is up — the desktop shortcut
+# runs with -NoExit so this process lingers; holding the mutex would block the
+# next manual relaunch. Releasing here keeps "one window at a time" without
+# blocking deliberate restarts.
+if ($singletonMutex) {
+    try { $singletonMutex.ReleaseMutex() } catch {}
+    $singletonMutex.Dispose()
+}
