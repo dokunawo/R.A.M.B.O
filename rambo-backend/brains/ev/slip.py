@@ -38,12 +38,15 @@ def build_slip(picks: list[Pick], market: str, count: int | None = None, *,
     `book` stamp the slip's provenance (product label + data-as-of)."""
     requested = count or SLIP_SIZE.get(market, 6)
     product = PRODUCT.get(market, market.upper())
-    key = (lambda p: p.edge) if market == "ml" else (lambda p: p.model_p)
-    # One play per player: props list ladders (e.g. a pitcher's 2.5+…10.5+ K lines),
-    # so keep only each player's best-ranked line before taking the top N.
+    if market == "ml":
+        ordered = sorted(picks, key=lambda p: (p.game_datetime or "~", p.team))
+    else:
+        ordered = sorted(picks, key=lambda p: p.model_p, reverse=True)
+    # One play per player: prop ladders repeat a player; keep each player's first
+    # (best-ranked / earliest) row before taking the top N.
     seen: set[int] = set()
     ranked: list[Pick] = []
-    for p in sorted(picks, key=key, reverse=True):
+    for p in ordered:
         if p.mlb_id in seen:
             continue
         seen.add(p.mlb_id)

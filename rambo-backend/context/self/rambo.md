@@ -85,13 +85,14 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 173 commits:
+Last 14 days — 174 commits:
 
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (4 minutes ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (9 minutes ago)`
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (18 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (21 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (26 minutes ago)`
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (4 minutes ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (8 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (13 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (22 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (25 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (30 minutes ago)`
 - `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
 - `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (2 hours ago)`
@@ -104,10 +105,9 @@ Last 14 days — 173 commits:
 - `a12a63f feat(cmc): poster texture system + branded-plate slot (17 hours ago)`
 - `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (17 hours ago)`
 - `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (17 hours ago)`
-- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (17 hours ago)`
+- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (18 hours ago)`
 - `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (18 hours ago)`
-- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (18 hours ago)`
-- … and 153 more
+- … and 154 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
