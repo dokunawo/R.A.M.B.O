@@ -10,7 +10,7 @@ def _pick():
                 tags=["EDGE"], glow="gold", headshot_url="u", rationale="mash")
 
 def _client(monkeypatch):
-    monkeypatch.setattr(betting, "daily_edge", lambda date, market: [_pick()])
+    monkeypatch.setattr(betting, "daily_edge", lambda date, market, threshold=0.0: [_pick()])
     app = FastAPI(); app.include_router(betting.router)
     return TestClient(app)
 
