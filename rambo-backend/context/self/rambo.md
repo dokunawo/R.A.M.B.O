@@ -85,11 +85,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 166 commits:
+Last 14 days — 167 commits:
 
+- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (14 seconds ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (13 minutes ago)`
-- `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (19 minutes ago)`
-- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (28 minutes ago)`
+- `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (20 minutes ago)`
+- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (29 minutes ago)`
 - `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (83 minutes ago)`
 - `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (2 hours ago)`
 - `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (2 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 166 commits:
 - `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (17 hours ago)`
 - `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (17 hours ago)`
 - `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (17 hours ago)`
-- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (17 hours ago)`
-- … and 146 more
+- … and 147 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
