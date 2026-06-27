@@ -25,3 +25,35 @@ def test_daily_edge_endpoint(monkeypatch):
 def test_unknown_market_404(monkeypatch):
     c = _client(monkeypatch)
     assert c.get("/betting/daily-edge?market=nope").status_code == 404
+
+
+def test_player_watch_endpoint(monkeypatch):
+    monkeypatch.setattr(betting, "player_watch", lambda *a, **k: {
+        "title": "PLAYER WATCH", "product": "DK Pick6", "count": 0, "rows": [],
+        "prompt": "PLAYER WATCH ..."})
+    monkeypatch.setattr(betting, "_provenance", lambda *a, **k: (
+        {"generated_at": "x", "data_as_of": None, "book": "b", "product": "p", "stale": False},
+        None, "DraftKings"))
+    app = FastAPI(); app.include_router(betting.router)
+    c = TestClient(app)
+    r = c.get("/betting/player-watch")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["title"] == "PLAYER WATCH"
+    assert "prompt" in body and "provenance" in body
+
+
+def test_moneyline_board_endpoint(monkeypatch):
+    monkeypatch.setattr(betting, "moneyline_board", lambda *a, **k: {
+        "title": "MONEYLINE BOARD", "product": "Moneyline (de-vig book lean)", "count": 0,
+        "rows": [], "prompt": "MONEYLINE BOARD ..."})
+    monkeypatch.setattr(betting, "_provenance", lambda *a, **k: (
+        {"generated_at": "x", "data_as_of": None, "book": "b", "product": "p", "stale": False},
+        None, "DraftKings"))
+    app = FastAPI(); app.include_router(betting.router)
+    c = TestClient(app)
+    r = c.get("/betting/moneyline-board")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["title"] == "MONEYLINE BOARD"
+    assert "prompt" in body and "provenance" in body
