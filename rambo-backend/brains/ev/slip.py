@@ -30,10 +30,20 @@ def build_slip(picks: list[Pick], market: str, count: int | None = None) -> dict
     take the top N, and return the roster + a copy-paste ChatGPT prompt."""
     requested = count or SLIP_SIZE.get(market, 6)
     key = (lambda p: p.edge) if market == "ml" else (lambda p: p.model_p)
-    ranked = sorted(picks, key=key, reverse=True)[:requested]
+    # One play per player: props list ladders (e.g. a pitcher's 2.5+…10.5+ K lines),
+    # so keep only each player's best-ranked line before taking the top N.
+    seen: set[int] = set()
+    ranked: list[Pick] = []
+    for p in sorted(picks, key=key, reverse=True):
+        if p.mlb_id in seen:
+            continue
+        seen.add(p.mlb_id)
+        ranked.append(p)
+    ranked = ranked[:requested]
 
     players = [{
         "rank": i + 1,
+        "mlb_id": p.mlb_id,
         "name": p.name,
         "team": p.team,
         "opponent": p.opponent,

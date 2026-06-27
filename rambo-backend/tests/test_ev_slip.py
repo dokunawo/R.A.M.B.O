@@ -11,7 +11,8 @@ def _prop(name, model_p, edge, *, market="hr", pick="1+ HOME RUN — OVER",
 
 
 def _ml(team, model_p, edge, price):
-    return Pick(market="ml", mlb_id=1, name=team, initials=team, team=team, opponent="BAL",
+    return Pick(market="ml", mlb_id=abs(hash(team)) % 100000, name=team, initials=team,
+                team=team, opponent="BAL",
                 hand="", pick=f"MONEYLINE LEAN ({price:+d})", line=0.0, multiplier=float(price),
                 breakeven=0.31, model_p=model_p, edge=edge, support="vs 5.0 ERA SP",
                 tags=["LEAN"], glow="gold", headshot_url="logo")
@@ -42,6 +43,15 @@ def test_moneyline_ranked_by_lean():
 def test_shortfall_reported_when_thin():
     slip = build_slip([_prop("Solo", 0.3, -0.2)], "hr")
     assert slip["count"] == 1 and slip["requested"] == 6 and slip["shortfall"] == 5
+
+
+def test_dedupes_to_one_play_per_player():
+    # a pitcher's strikeout ladder — same player (same mlb_id), many lines
+    ladder = [_prop("Yamamoto", 0.9 - i * 0.1, -0.2, pick=f"{i}+ STRIKEOUTS — OVER")
+              for i in range(5)]
+    slip = build_slip(ladder, "k", count=6)
+    assert slip["count"] == 1                              # collapses to one play
+    assert slip["players"][0]["pick"] == "0+ STRIKEOUTS"   # kept the best-ranked line
 
 
 def test_count_override():

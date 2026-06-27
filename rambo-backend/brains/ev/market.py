@@ -94,11 +94,11 @@ class SBMarket:
 
 class KMarket:
     """Pitcher Strikeouts. Poisson on per-start K (strikeOuts / gamesStarted).
-    Uses pitching stats; no batter hand-split. (DK Pick6 market code 'K'.)"""
+    Uses pitching stats; no batter hand-split. (DK Pick6 labels this market 'SO'.)"""
     market_key = "k"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
-        props = [p for p in repo.latest_props(market="K", resolved_only=True)
+        props = [p for p in repo.latest_props(market="SO", resolved_only=True)
                  if p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:
