@@ -15,23 +15,20 @@ const prettyDate = (iso) => {
   catch { return iso; }
 };
 
-function Smoke() {
+// Uses the operator's ChatGPT logo (public/cmc/cmc-logo.png) when present; falls
+// back to the CSS gold-foil wordmark until that file is dropped in.
+function CmcMark() {
+  const [png, setPng] = useState(true);
+  if (png) {
+    return <img className="cmc-logo-img" crossOrigin="anonymous" src="/cmc/cmc-logo.png"
+                alt="Chances Make Champions" onError={() => setPng(false)} />;
+  }
   return (
-    <svg className="poster-fx" preserveAspectRatio="none" viewBox="0 0 1140 760" aria-hidden="true">
-      <defs>
-        <filter id="cmcsmoke" x="-20%" y="-20%" width="140%" height="140%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.016" numOctaves="5" seed="11" stitchTiles="stitch" result="n" />
-          <feColorMatrix in="n" type="matrix"
-            values="0 0 0 0 0.84  0 0 0 0 0.63  0 0 0 0 0.12  0 0 0 0.9 0" />
-        </filter>
-        <radialGradient id="cmcedge" cx="50%" cy="32%" r="72%">
-          <stop offset="32%" stopColor="#fff" stopOpacity="0" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="1" />
-        </radialGradient>
-        <mask id="cmcmask"><rect width="1140" height="760" fill="url(#cmcedge)" /></mask>
-      </defs>
-      <rect width="1140" height="760" filter="url(#cmcsmoke)" mask="url(#cmcmask)" opacity="0.5" />
-    </svg>
+    <>
+      <Crown w={50} />
+      <div className="mark gold-foil">CMC</div>
+      <div className="full">CHANCES MAKE <b>CHAMPIONS</b></div>
+    </>
   );
 }
 
@@ -139,6 +136,7 @@ export default function EdgeCardPoster() {
   const date = todayISO();
   const [picks, setPicks] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [plate, setPlate] = useState(false);   // true once public/cmc/plate.png exists
   const posterRef = useRef(null);
 
   useEffect(() => {
@@ -149,6 +147,15 @@ export default function EdgeCardPoster() {
       .catch(() => { if (live) setPicks([]); });
     return () => { live = false; };
   }, [market, date]);
+
+  // If the operator drops a ChatGPT-made branded plate at public/cmc/plate.png,
+  // use it as the full background (logo + smoke baked in) and hide the CSS logo.
+  useEffect(() => {
+    const im = new Image();
+    im.onload = () => setPlate(true);
+    im.onerror = () => setPlate(false);
+    im.src = `${process.env.PUBLIC_URL}/cmc/plate.png`;
+  }, []);
 
   const download = useCallback(async () => {
     if (!posterRef.current) return;
@@ -169,6 +176,16 @@ export default function EdgeCardPoster() {
   const title = TITLES[market] || market.toUpperCase();
   const footL = market === "ml" ? "MONEYLINE" : (CAPS[market] || "").toUpperCase();
 
+  // public/cmc/* are same-origin assets; reference via PUBLIC_URL so css-loader
+  // doesn't try to resolve them at build (and so the PNG export stays clean).
+  const tex = `${process.env.PUBLIC_URL}/cmc`;
+  const posterBg = plate
+    ? { backgroundImage: `url(${tex}/plate.png)`, backgroundSize: "100% auto",
+        backgroundPosition: "top center", backgroundRepeat: "no-repeat", backgroundColor: "#000" }
+    : { backgroundImage: `url(${tex}/grunge.png), url(${tex}/gold-dust.png), url(${tex}/smoke-bg.png)`,
+        backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat",
+        backgroundColor: "#000" };
+
   return (
     <div className="poster-page">
       <div className="poster-actions">
@@ -179,13 +196,8 @@ export default function EdgeCardPoster() {
       </div>
       <div className="poster-hint">High-res landscape card · live data · {prettyDate(date)}</div>
 
-      <div className="poster" ref={posterRef}>
-        <Smoke />
-        <div className="cmc-logo">
-          <Crown w={50} />
-          <div className="mark gold-foil">CMC</div>
-          <div className="full">CHANCES MAKE <b>CHAMPIONS</b></div>
-        </div>
+      <div className={`poster ${plate ? "has-plate" : ""}`} ref={posterRef} style={posterBg}>
+        {!plate && <div className="cmc-logo"><CmcMark /></div>}
 
         <div className="hero">
           <h1 className="hr-title gold-foil">{title}</h1>
