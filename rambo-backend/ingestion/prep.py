@@ -55,6 +55,10 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
             lineups += pull_source(conn, "lineups", {"game_pk": gp})["items"]
         except Exception as exc:                       # one bad boxscore shouldn't abort prep
             logger.warning("lineup pull failed for %s: %s", gp, exc)
+        try:
+            pull_source(conn, "weather", {"game_pk": gp})
+        except Exception as exc:
+            logger.warning("weather pull failed for %s: %s", gp, exc)
     normalize_pending(conn)
     summary["lineups"] = lineups
 

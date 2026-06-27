@@ -22,7 +22,8 @@ from ingestion import statsapi_client as sapi
 from ingestion.raw_store import land_raw, pull_and_land
 
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
-STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats", "lineups"}
+STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats",
+                    "lineups", "weather"}
 OTHER_SOURCES = {"odds_api", "statcast"}                 # The Odds API + Baseball Savant
 SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES | OTHER_SOURCES)
 
@@ -83,6 +84,11 @@ def pull_source(conn: sqlite3.Connection, source: str,
         if gp is None:
             raise ValueError("lineups source requires game_pk")
         run = sapi.fetch_boxscore(int(gp))
+    elif source == "weather":
+        gp = params.get("game_pk")
+        if gp is None:
+            raise ValueError("weather source requires game_pk")
+        run = sapi.fetch_live_feed(int(gp))
     elif source == "odds_api":
         from ingestion import the_odds_api_client as toa
         run = toa.fetch_moneyline(params.get("date"))

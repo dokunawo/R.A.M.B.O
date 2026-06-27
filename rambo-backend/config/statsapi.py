@@ -27,6 +27,7 @@ SOURCE_STATS = "mlb/statsapi:stats"
 SOURCE_TEAMS = "mlb/statsapi:teams"
 SOURCE_RECENT = "mlb/statsapi:recent"     # last-N-day date-range leaderboard
 SOURCE_LINEUPS = "mlb/statsapi:lineups"   # confirmed boxscore battingOrder
+SOURCE_WEATHER = "mlb/statsapi:weather"   # live-feed temp/condition/wind
 
 # Path suffixes under BASE. {placeholders} are filled by the Step 2 client.
 ENDPOINTS: dict[str, str] = {

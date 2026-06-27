@@ -85,11 +85,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 164 commits:
+Last 14 days — 165 commits:
 
-- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (9 minutes ago)`
-- `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (63 minutes ago)`
-- `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (84 minutes ago)`
+- `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (6 minutes ago)`
+- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (16 minutes ago)`
+- `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (70 minutes ago)`
+- `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (2 hours ago)`
 - `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (2 hours ago)`
 - `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (8 hours ago)`
 - `a12a63f feat(cmc): poster texture system + branded-plate slot (15 hours ago)`
@@ -101,13 +102,12 @@ Last 14 days — 164 commits:
 - `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (16 hours ago)`
 - `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (16 hours ago)`
 - `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (16 hours ago)`
-- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (16 hours ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (17 hours ago)`
 - `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (17 hours ago)`
 - `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (17 hours ago)`
 - `ffd106a feat(ev): /betting/daily-edge endpoint + mount (17 hours ago)`
 - `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (17 hours ago)`
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (17 hours ago)`
-- … and 144 more
+- … and 145 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
 from config.statsapi import (SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS,
-                             SOURCE_RECENT, SOURCE_LINEUPS)
+                             SOURCE_RECENT, SOURCE_LINEUPS, SOURCE_WEATHER)
 from config.the_odds_api import SOURCE_ID as ODDS_API_SOURCE
 from config.savant import SOURCE_ID as SAVANT_SOURCE
 
@@ -469,6 +469,25 @@ def map_lineups(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_weather(conn, item, scraped_at) -> bool:
+    """statsapi live-feed weather {game_pk, temp, condition, wind} -> game_weather.
+    Skips empty (unposted) weather so it doesn't blank an earlier good read."""
+    gp = _as_int(item.get("game_pk"))
+    if gp is None:
+        return False
+    if not (item.get("temp") or item.get("condition") or item.get("wind")):
+        return True  # not posted yet; handled, nothing to store
+    conn.execute(
+        """INSERT INTO game_weather (game_pk, temp, condition, wind, scraped_at)
+           VALUES (?,?,?,?,?)
+           ON CONFLICT(game_pk) DO UPDATE SET
+             temp=excluded.temp, condition=excluded.condition,
+             wind=excluded.wind, scraped_at=excluded.scraped_at;""",
+        (gp, _as_int(item.get("temp")), item.get("condition"), item.get("wind"), scraped_at),
+    )
+    return True
+
+
 def map_statcast(conn, item, scraped_at) -> bool:
     """Baseball Savant item {mlb_id, season, barrel_rate, hard_hit} -> player_statcast."""
     mid, season = _as_int(item.get("mlb_id")), _as_int(item.get("season"))
@@ -493,6 +512,7 @@ DISPATCH: dict[str, Callable] = {
     SOURCE_TEAMS: map_team_stats,
     SOURCE_RECENT: map_recent_stats,
     SOURCE_LINEUPS: map_lineups,
+    SOURCE_WEATHER: map_weather,
     ODDS_API_SOURCE: map_odds_api,
     SAVANT_SOURCE: map_statcast,
     "seemuapps/sports-odds-scraper": map_odds,

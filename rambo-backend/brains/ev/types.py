@@ -36,6 +36,7 @@ class HRFeatures:
     season_hr: int
     recent_hr: int = 0          # HR over the last-15 window (recency signal)
     support: str = ""           # display, e.g. "4 HR L15" (falls back to season)
+    temp_park: bool = False     # temp venue (A's/Rays) — park factor unverified
 
 @dataclass
 class CountFeatures:

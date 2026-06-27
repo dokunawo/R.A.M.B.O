@@ -182,6 +182,24 @@ def fetch_boxscore(game_pk: int, *, client: Optional[httpx.Client] = None) -> Ru
             client.close()
 
 
+def fetch_live_feed(game_pk: int, *, client: Optional[httpx.Client] = None) -> RunResult:
+    """Game weather (temp / condition / field-relative wind) from the live feed.
+    Empty {} until ~gametime — lands a single item (nulls when unposted)."""
+    own = client is None
+    client = _client(client)
+    try:
+        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+        resp = client.get(url, params={"fields": "gameData,weather,condition,temp,wind"})
+        resp.raise_for_status()
+        w = (resp.json().get("gameData") or {}).get("weather") or {}
+        item = {"game_pk": int(game_pk), "temp": w.get("temp"),
+                "condition": w.get("condition"), "wind": w.get("wind")}
+        return _run_result(cfg.SOURCE_WEATHER, "weather", [item])
+    finally:
+        if own:
+            client.close()
+
+
 def fetch_player_stats(mlb_id: int, season: int, *,
                        group: str = "hitting",
                        client: Optional[httpx.Client] = None) -> RunResult:

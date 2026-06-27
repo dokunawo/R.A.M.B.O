@@ -35,6 +35,30 @@ def _power_modifier(sc: Optional[dict]) -> float:
     return max(0.75, min(1.35, 0.65 * rb + 0.35 * rh))   # barrel weighted (HR proxy)
 
 
+# Temp venues with no multi-year HR park factor (A's at Sutter Health, Rays at
+# Steinbrenner) — park factor is unverified, so HR legs there get flagged, no boost.
+TEMP_PARKS = {"ATH", "OAK", "SAC", "TB"}
+
+
+def _weather_modifier(weather: Optional[dict]) -> float:
+    """temp + field-relative wind -> HR-rate multiplier (heat & wind-out boost,
+    wind-in fades). Neutral when weather isn't posted yet. Clamped."""
+    if not weather:
+        return 1.0
+    m = 1.0
+    try:
+        if weather.get("temp") is not None:
+            m *= 1.0 + max(-0.10, min(0.12, (float(weather["temp"]) - 70) * 0.004))
+    except (TypeError, ValueError):
+        pass
+    wind = (weather.get("wind") or "").lower()
+    if "out" in wind:
+        m *= 1.08
+    elif "in" in wind:
+        m *= 0.92
+    return max(0.85, min(1.20, m))
+
+
 def _hr_rate(stat: Optional[dict]) -> Optional[float]:
     if not stat:
         return None
@@ -62,11 +86,15 @@ def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
     park = 1.0
     hand = ""
     rate = overall
+    temp_park = False
+    weather_mod = 1.0
     ctx = repo.player_game_context(mlb_id, date)
     if ctx:
         team_abbr = ctx["team_abbr"] or ""
         opp_abbr = ctx["opponent_abbr"] or ""
-        park = hr_factor(ctx["home_abbr"])
+        home_abbr = ctx["home_abbr"] or ""
+        temp_park = home_abbr in TEMP_PARKS
+        park = 1.0 if temp_park else hr_factor(home_abbr)   # temp park = no verified boost
         if ctx["opp_pitcher_id"]:
             hand = repo.pitcher_throws(ctx["opp_pitcher_id"]) or ""
         splits = stats.get("splits") or {}
@@ -74,20 +102,23 @@ def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
             rate = _hr_rate(splits.get("vl")) or overall
         elif hand == "R":
             rate = _hr_rate(splits.get("vr")) or overall
+        weather_mod = _weather_modifier(repo.game_weather(ctx["game_pk"]))
 
     # Recency: blend the season/matchup rate with the last-15 HR rate.
     recent = repo.player_recent(mlb_id, "hitting")
     rate = _blend(_hr_rate(recent), rate)
-    # Statcast power quality nudges the rate (barrel% / hard-hit%).
-    rate = rate * _power_modifier(repo.player_statcast(mlb_id, season))
+    # Statcast power quality + weather nudge the rate.
+    rate = rate * _power_modifier(repo.player_statcast(mlb_id, season)) * weather_mod
     recent_hr = int((recent or {}).get("homeRuns") or 0)
     support = f"{recent_hr} HR L15" if recent is not None else f"{season_hr} HR"
+    if temp_park:
+        support += " · TEMP PARK"
 
     return HRFeatures(
         mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
         opponent_abbr=opp_abbr, pitcher_hand=hand, hr_rate=rate,
         park_factor=park, line=prop["line"], multiplier=prop["multiplier"],
-        season_hr=season_hr, recent_hr=recent_hr, support=support,
+        season_hr=season_hr, recent_hr=recent_hr, support=support, temp_park=temp_park,
     )
 
 
