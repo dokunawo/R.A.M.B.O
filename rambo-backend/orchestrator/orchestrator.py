@@ -771,7 +771,8 @@ class Orchestrator:
         targets.add("watchlist")
 
         for skill in SKILLS:
-            lines.append(f"- {skill['name']} (live skill): real-world '{skill['name']}' action")
+            desc = skill.get("desc") or f"real-world '{skill['name']}' action"
+            lines.append(f"- {skill['name']} (live skill): {desc}")
             targets.add(skill["name"])
 
         if self.factory_repo:

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+from datetime import datetime, timezone
 from typing import Optional
 
 # Load .env BEFORE importing anything that reads os.environ (the orchestrator
@@ -213,6 +214,12 @@ async def _init_builds():
     await _builds_repo.init_db()
     rambo.set_builds(_builds_repo)
 
+
+@app.on_event("startup")
+async def _init_system_briefing():
+    import system_briefing
+    system_briefing.set_orchestrator(rambo)
+
 manager = rambo.ws
 
 app.add_middleware(
@@ -283,6 +290,24 @@ async def operator_greeting():
     from greeting import generate_greeting
     proactive_nudges.mark_active()
     return {"greeting": await generate_greeting(rambo)}
+
+
+@app.get("/briefing/boot")
+async def briefing_boot():
+    """Boot briefing: a full on-screen card (recent changes, suggested targets,
+    weather, what's pending, system status) + a short spoken summary. The frontend
+    fetches this once per boot, after the greeting. Read-only; stamps last-boot
+    AFTER gathering so 'since last boot' reflects the previous session."""
+    from system_briefing import gather_briefing, render_full, render_concise, _write_last_boot
+    proactive_nudges.mark_active()
+    data = await gather_briefing(rambo)
+    card, spoken = render_full(data), render_concise(data)
+    try:
+        await rambo._response("architect", card)   # on-screen card (morning-brief channel)
+    except Exception:
+        pass
+    _write_last_boot(datetime.now(timezone.utc).isoformat())
+    return {"card": card, "spoken": spoken}
 
 
 class TtsSay(BaseModel):

@@ -27,6 +27,13 @@ except ImportError:
 from chief_of_staff import chief_of_staff_skill as _cos_skill
 from codebase_skill import codebase_skill as _codebase_skill
 
+
+async def system_update_skill(goal: str, ctx: dict) -> str:
+    """On-demand 'catch me up' — a concise spoken status (recent changes + next
+    targets + what's waiting). Backed by the shared system_briefing composer."""
+    from system_briefing import compose_briefing
+    return await compose_briefing(None, ctx, mode="concise")
+
 try:
     from gmail_skill import gmail_skill as _gmail_skill
     _HAS_GMAIL = True
@@ -213,6 +220,20 @@ SKILLS = [
             "whats the latest", "current news", "look it up", "find online",
         )),
         "run": web_search_skill,
+    },
+    {
+        "name": "system_update",
+        "agent": "seeker",
+        "desc": "system status / catch-up briefing — recent code changes, suggested next targets, and what's pending (\"give me an update\", \"catch me up\", \"where are we\", \"sitrep\")",
+        # Status/catch-up phrases → the briefing. File-specific "what changed in X"
+        # still falls through to the `codebase` skill below. Bare "update" is
+        # guarded ("an update") so it never steals "update my calendar".
+        "match": lambda g: any(w in g.lower() for w in (
+            "give me an update", "an update", "catch me up", "system status",
+            "status report", "what have we been working on", "where are we",
+            "bring me up to speed", "sitrep",
+        )),
+        "run": system_update_skill,
     },
     {
         "name": "codebase",

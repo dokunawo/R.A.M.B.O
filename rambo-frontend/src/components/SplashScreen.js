@@ -1128,6 +1128,9 @@ export default function SplashScreen({
 
   // Operator greeting on boot — fetch the situational greeting and speak it once
   // (ElevenLabs via speakResponse). Best-effort; silent if audio is still locked.
+  // Then fetch the system briefing: it renders an Architect card (via the backend
+  // _response broadcast) and we speak its short summary AFTER the greeting so the
+  // two don't overlap.
   useEffect(() => {
     if (phase !== "main" || bootGreeted) return;
     bootGreeted = true;   // once per boot, across route remounts
@@ -1137,6 +1140,13 @@ export default function SplashScreen({
         .then(j => { if (j && j.greeting && speakRef.current) speakRef.current(j.greeting, false); })
         .catch(() => {});
     }, 2000);
+    // Boot briefing — card appears automatically; speak the summary a beat later.
+    setTimeout(() => {
+      fetch(`${API}/briefing/boot`)
+        .then(r => r.json())
+        .then(j => { if (j && j.spoken && speakRef.current) speakRef.current(j.spoken, false); })
+        .catch(() => {});
+    }, 7000);
   }, [phase]);
 
   const handleVoiceExecuted = useCallback((responseText) => {

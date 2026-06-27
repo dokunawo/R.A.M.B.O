@@ -148,6 +148,13 @@ they said "yes" → route web_search for today's games). Never route the literal
 general knowledge, "look up X" — route to "web_search" (or "news"/"finance" when \
 the subject squarely fits). A plain question is NEVER "build" and NEVER \
 "orchestrate".
+17. STATUS / UPDATE: a general request to be brought up to speed — "give me an \
+update", "catch me up", "system status", "status report", "sitrep", "where are \
+we", "what have we been working on", "bring me up to speed" — ALWAYS routes to \
+the "system_update" skill (it reports recent changes + suggested next targets + \
+what's pending). Dispatch it directly, do NOT clarify. This is distinct from \
+file-specific code questions ("what's in <file>", "what changed in X") which go \
+to "codebase".
 
 ROSTER:
 {roster}
