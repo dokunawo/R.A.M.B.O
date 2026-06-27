@@ -42,6 +42,115 @@ def slugify(name: str) -> str:
     return slug or "build"
 
 
+# ── build naming (short, human folder names) ────────────────────────────────
+def _heuristic_name(goal: str) -> str:
+    """Best-effort short name when no LLM is available. Strips the imperative
+    'build me a …' lead and trailing filler, keeps the core noun phrase."""
+    g = (goal or "").strip()
+    g = re.sub(r"^(please\s+)?(build|make|create|write|generate|code|develop|design)\s+"
+               r"(me\s+)?(a|an|the|some)?\s*", "", g, flags=re.I)
+    g = re.sub(r"^(small|simple|basic|quick|little|cool|new)\s+", "", g, flags=re.I)
+    g = re.split(r"\b(from scratch|and place|and put|in this director|into the|that |which |so that|for me)\b",
+                 g, flags=re.I)[0]
+    g = re.sub(r"\b(app|application|program|tool|script|project)\b\s*$", "", g.strip(), flags=re.I)
+    g = re.sub(r"\s+", " ", g).strip(" .,-")
+    return " ".join(g.split()[:4]).title() or "Build"
+
+
+async def _llm_name(llm, goal: str) -> str:
+    try:
+        import model_config
+        from usage_capture import record_usage
+        resp = await llm.messages.create(
+            model=model_config.fast_model(), max_tokens=20,
+            messages=[{"role": "user", "content": (
+                "Give a SHORT project name (1-3 words, Title Case, no punctuation, no "
+                "generic words like 'app'/'project'/'tool') for this build request. "
+                "Examples: 'build me a calculator app' -> Calculator; "
+                "'build a snake game simulator' -> Snake Game. "
+                "Reply with ONLY the name.\n\nRequest: " + (goal or ""))}],
+        )
+        try:
+            await record_usage(model_config.fast_model(), resp.usage, source="build_name")
+        except Exception:
+            pass
+        txt = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+        txt = re.sub(r"[^A-Za-z0-9 ]", "", txt).strip()
+        return " ".join(txt.split()[:3]).title()
+    except Exception:
+        return ""
+
+
+async def summarize_build_name(llm, goal: str) -> str:
+    """A short, human folder name for a build request ('Calculator', 'Snake Game').
+    LLM-summarized with a heuristic fallback."""
+    name = (await _llm_name(llm, goal)) if llm else ""
+    return name or _heuristic_name(goal)
+
+
+# ── delete a build (folder + dock record) ───────────────────────────────────
+_REPO = None  # set at startup by main.py so the delete skill can reach the dock DB
+
+
+def set_repo(repo) -> None:
+    global _REPO
+    _REPO = repo
+
+
+def _on_rm_error(func, path, exc):
+    """rmtree onerror: clear read-only (Windows .git objects) and retry once."""
+    import stat
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except Exception:
+        pass
+
+
+async def delete_build(slug: str) -> dict:
+    """Remove a build: delete its folder under builds/<slug>/ AND its dock record.
+    Path-guarded so it can never escape the builds root."""
+    import shutil
+    root = builds_dir().resolve()
+    p = (root / slug).resolve()
+    removed_dir = False
+    if (p == root or root in p.parents) and p.is_dir():
+        shutil.rmtree(p, onerror=_on_rm_error)
+        removed_dir = True
+    if _REPO is not None:
+        try:
+            await _REPO.delete(slug)
+        except Exception:
+            logger.exception("builds_repo.delete failed for %s", slug)
+    return {"slug": slug, "deleted": True, "removed_dir": removed_dir}
+
+
+async def delete_build_by_name(query: str) -> dict:
+    """Find the build whose slug/name best matches the spoken `query` and delete it.
+    Returns an error (with the current build list) when nothing matches."""
+    if _REPO is None:
+        return {"error": "the builds system isn't available right now"}
+    q = re.sub(r"[^a-z0-9 ]", " ", (query or "").lower())
+    q = re.sub(r"\b(delete|remove|get|rid|of|the|my|that|this|a|an|build|builds|app|"
+               r"project|folder|please)\b", " ", q)
+    q = re.sub(r"\s+", " ", q).strip()
+    builds = await _REPO.list_all()
+    if not builds:
+        return {"error": "there are no builds to delete"}
+
+    def score(b: dict) -> int:
+        hay = (b["slug"].replace("-", " ") + " " + (b.get("name") or "")).lower()
+        return sum(1 for w in q.split() if w and w in hay)
+
+    best = max(builds, key=score)
+    if not q or score(best) == 0:
+        return {"error": f"no build matches \"{query}\"",
+                "builds": [b["slug"] for b in builds]}
+    res = await delete_build(best["slug"])
+    res["name"] = best.get("name") or best["slug"]
+    return res
+
+
 def to_host_path(container_path: str | Path) -> str:
     """Translate a path under the repo into the Windows path the operator sees.
 

@@ -557,27 +557,21 @@ class Orchestrator:
         return target.replace("-", " ").replace("_", " ").title()
 
     async def _announce_handoff(self, target: str, task: str):
-        """Tell the operator which agent RAMBO is handing the task to. Skipped for
-        'converse', where RAMBO answers directly rather than handing off."""
-        if target == "converse":
+        """Announce a hand-off ONLY when it's going to the Engineer (a build or a
+        self-code edit) — that's the only hand-off the operator wants called out.
+        Every other target just gets done quietly; RAMBO voices the result via
+        _speak() afterward, so no 'handing this to X' chatter."""
+        if target not in ("build", "dev"):
             return
-        label = self._target_label(target)
         snippet = (task or "").strip()
         if len(snippet) > 80:
             snippet = snippet[:77].rstrip() + "…"
-        msg = f"Handing this to {label}"
+        msg = "Building" if target == "build" else "Drafting that change"
         if snippet:
             msg += f" — {snippet}"
-        await self.broadcast(f"[R.A.M.B.O] {msg}.")
-        # Say it out loud (ElevenLabs) so the operator hears the handoff before the
-        # agent's work begins — e.g. "Building that now" right before the Engineer
-        # task bar comes up. Spoken phrasing is friendlier than the log line.
-        if target in ("build",):
-            spoken = "On it — building that now."
-        elif target in ("dev",):
-            spoken = "On it — drafting that change now."
-        else:
-            spoken = f"Handing this to {label} now."
+        await self.broadcast(f"[Engineer] {msg}.")
+        spoken = "On it — building that now." if target == "build" \
+            else "On it — drafting that change now."
         await self._voice_text(spoken)
 
     async def _set_status(self, name: str, status: str):
@@ -990,11 +984,14 @@ class Orchestrator:
         from dev_agent import builds as builds_mod
         import uuid
 
-        # Derive a short name from the task for the slug.
-        name = task.strip()[:48] or "build"
-        slug = builds_mod.slugify(name)
-        if await self.builds_repo.slug_taken(slug):
-            slug = f"{slug}-{uuid.uuid4().hex[:4]}"
+        # Short, human folder name (e.g. "Calculator", "Snake Game") instead of the
+        # whole sentence. LLM-summarized with a heuristic fallback.
+        name = await builds_mod.summarize_build_name(self.llm, task)
+        slug = base = builds_mod.slugify(name)
+        i = 2
+        while await self.builds_repo.slug_taken(slug):
+            slug = f"{base}-{i}"
+            i += 1
         await self.builds_repo.create(uuid.uuid4().hex[:12], slug, name, task)
         await self._set_status("engineer", "working")
         await self.broadcast(f"[Engineer] Building: {task}")

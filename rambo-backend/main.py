@@ -213,6 +213,7 @@ async def _init_dev_agent():
 async def _init_builds():
     await _builds_repo.init_db()
     rambo.set_builds(_builds_repo)
+    builds_mod.set_repo(_builds_repo)   # lets the delete-build skill reach the dock DB
 
 
 @app.on_event("startup")
@@ -891,18 +892,21 @@ class BuildRequest(BaseModel):
 async def builds_create(req: BuildRequest):
     if rambo.llm is None:
         return {"error": "LLM client not configured — cannot build"}
-    slug = builds_mod.slugify(req.name)
-    if await _builds_repo.slug_taken(slug):
-        import uuid
-        slug = f"{slug}-{uuid.uuid4().hex[:4]}"
+    # Short human name (the caller often passes the whole goal as the name).
+    name = await builds_mod.summarize_build_name(rambo.llm, req.name or req.goal)
+    slug = base = builds_mod.slugify(name)
+    i = 2
+    while await _builds_repo.slug_taken(slug):
+        slug = f"{base}-{i}"
+        i += 1
     import uuid
-    await _builds_repo.create(uuid.uuid4().hex[:12], slug, req.name, req.goal)
+    await _builds_repo.create(uuid.uuid4().hex[:12], slug, name, req.goal)
 
     async def _drive():
         def _emit(**kw):
             asyncio.create_task(manager.broadcast_json({"t": "build_progress", "slug": slug, **kw}))
         await builds_mod.build_app(
-            llm=rambo.llm, repo=_builds_repo, slug=slug, name=req.name, goal=req.goal,
+            llm=rambo.llm, repo=_builds_repo, slug=slug, name=name, goal=req.goal,
             personality_text=rambo.personality_text, on_event=_emit,
         )
 
@@ -935,6 +939,12 @@ async def builds_test(slug: str):
 async def builds_run(slug: str):
     """Run the built project's entry point and return its output."""
     return await builds_mod.run_app(slug)
+
+
+@app.delete("/builds/{slug}")
+async def builds_delete(slug: str):
+    """Delete a build: its folder under builds/<slug>/ AND its dock record."""
+    return await builds_mod.delete_build(slug)
 
 
 # ── Desktop-open bridge (host AHK helper polls and opens in VS Code/Explorer) ──

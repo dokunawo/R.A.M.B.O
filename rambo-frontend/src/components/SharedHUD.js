@@ -875,12 +875,21 @@ export function CodeReviewDock() {
 }
 
 // ── Builds dock: standalone apps RAMBO built — open, run, or test them ──
-function BuildCard({ build: b }) {
+function BuildCard({ build: b, onDeleted }) {
   const [busy, setBusy] = useState("");
   const [out, setOut] = useState(null);
 
   const statusLabel =
     b.status === "building" ? "BUILDING…" : b.status === "failed" ? "FAILED" : "READY";
+
+  const del = async () => {
+    if (busy) return;
+    if (!window.confirm(`Delete the ${b.name || b.slug} build? This removes its folder.`)) return;
+    setBusy("delete");
+    try { await fetch(`${API}/builds/${b.slug}`, { method: "DELETE" }); onDeleted && onDeleted(); }
+    catch { setOut({ error: "delete failed" }); }
+    finally { setBusy(""); }
+  };
 
   const act = async (verb) => {
     if (busy) return;
@@ -906,6 +915,8 @@ function BuildCard({ build: b }) {
         <span className={`hud-dev-rec hud-dev-rec-${b.status === "ready" ? "merge" : b.status === "failed" ? "hold" : "escalate"}`}>
           {statusLabel}
         </span>
+        <button className="hud-proactive-x" title="Delete this build" onClick={del}
+          disabled={!!busy}>{busy === "delete" ? "…" : "✕"}</button>
       </div>
       {b.summary && <div className="hud-factory-specialty">{b.summary}</div>}
       {b.host_path && <div className="hud-builds-path">{b.host_path}</div>}
@@ -953,7 +964,7 @@ export function BuildsDock() {
             ids={visible.map(idOf)} onHide={hideAll} onRefresh={refresh} />
           {visible.length === 0
             ? <div className="hud-factory-empty">{"// nothing built yet"}</div>
-            : visible.map(b => <BuildCard key={idOf(b)} build={b} />)}
+            : visible.map(b => <BuildCard key={idOf(b)} build={b} onDeleted={refresh} />)}
         </div>
       )}
     </div>

@@ -34,6 +34,17 @@ async def system_update_skill(goal: str, ctx: dict) -> str:
     from system_briefing import compose_briefing
     return await compose_briefing(None, ctx, mode="concise")
 
+
+async def delete_build_skill(goal: str, ctx: dict) -> str:
+    """Delete an existing build the operator no longer wants (folder + dock entry)."""
+    from dev_agent import builds as builds_mod
+    res = await builds_mod.delete_build_by_name(goal)
+    if res.get("error"):
+        extra = (" Current builds: " + ", ".join(res["builds"]) + ".") if res.get("builds") else ""
+        return res["error"] + extra
+    where = "and its folder" if res.get("removed_dir") else "(the folder was already gone)"
+    return f"Done — deleted the {res.get('name', res['slug'])} build {where}."
+
 try:
     from gmail_skill import gmail_skill as _gmail_skill
     _HAS_GMAIL = True
@@ -234,6 +245,14 @@ SKILLS = [
             "bring me up to speed", "sitrep",
         )),
         "run": system_update_skill,
+    },
+    {
+        "name": "delete_build",
+        "agent": "seeker",
+        "desc": "delete/remove an existing build the operator no longer wants (its folder + dock entry) — \"delete the calculator build\", \"remove my snake game build\", \"get rid of that build\"",
+        "match": lambda g: ("build" in g.lower()) and any(
+            w in g.lower() for w in ("delete", "remove", "get rid of", "throw away", "trash")),
+        "run": delete_build_skill,
     },
     {
         "name": "codebase",

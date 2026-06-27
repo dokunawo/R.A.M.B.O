@@ -156,6 +156,11 @@ what's pending). Dispatch it directly, do NOT clarify. This is distinct from \
 file-specific code questions ("what's in <file>", "what changed in X") which go \
 to "codebase".
 
+18. DELETE A BUILD: removing/deleting an EXISTING build the operator already made \
+("delete the calculator build", "remove my snake game build", "get rid of that \
+build", "trash that build") → the "delete_build" skill. This is the opposite of \
+"build" (which CREATES a new project) — never route a deletion to "build".
+
 ROSTER:
 {roster}
 
