@@ -128,6 +128,60 @@ def fetch_team_stats(season: int, *, client: Optional[httpx.Client] = None) -> R
             client.close()
 
 
+def fetch_daterange_stats(start_date: str, end_date: str, group: str = "hitting", *,
+                          client: Optional[httpx.Client] = None) -> RunResult:
+    """League-wide last-N-day leaderboard (one call = every player's recent line).
+    Same data as mlb.com/stats?timeframe=-N. One item per player: {mlb_id, group,
+    window, start/end, stat}. Lands under SOURCE_RECENT."""
+    own = client is None
+    client = _client(client)
+    try:
+        params = {**cfg.DEFAULT_PARAMS["stats_range"], "group": group,
+                  "startDate": str(start_date), "endDate": str(end_date)}
+        data = _get(client, cfg.ENDPOINTS["stats_range"], params)
+        blocks = data.get("stats") or []
+        splits = blocks[0].get("splits", []) if blocks else []
+        items: list[dict[str, Any]] = []
+        for sp in splits:
+            pid = (sp.get("player") or {}).get("id")
+            if pid is None:
+                continue
+            items.append({"mlb_id": pid, "group": group, "window": "L15",
+                          "start_date": str(start_date), "end_date": str(end_date),
+                          "stat": sp.get("stat") or {}})
+        logger.info("statsapi recent %s %s..%s: %d players", group, start_date, end_date, len(items))
+        return _run_result(cfg.SOURCE_RECENT, "recent", items)
+    finally:
+        if own:
+            client.close()
+
+
+def fetch_boxscore(game_pk: int, *, client: Optional[httpx.Client] = None) -> RunResult:
+    """Confirmed lineup for one game via boxscore battingOrder. One item per batter
+    actually in the order (battingOrder populated). Lands under SOURCE_LINEUPS."""
+    own = client is None
+    client = _client(client)
+    try:
+        path = cfg.ENDPOINTS["boxscore"].format(game_pk=game_pk)
+        data = _get(client, path, {})
+        items: list[dict[str, Any]] = []
+        for side in ("home", "away"):
+            team = (data.get("teams") or {}).get(side) or {}
+            team_id = (team.get("team") or {}).get("id")
+            for pdata in (team.get("players") or {}).values():
+                order = pdata.get("battingOrder")          # "100".."900" starters; None pre-lineup
+                pid = (pdata.get("person") or {}).get("id")
+                if not order or pid is None:
+                    continue
+                items.append({"game_pk": int(game_pk), "team_id": team_id, "mlb_id": pid,
+                              "batting_order": int(order), "side": side})
+        logger.info("statsapi boxscore %s: %d in lineup", game_pk, len(items))
+        return _run_result(cfg.SOURCE_LINEUPS, "lineups", items)
+    finally:
+        if own:
+            client.close()
+
+
 def fetch_player_stats(mlb_id: int, season: int, *,
                        group: str = "hitting",
                        client: Optional[httpx.Client] = None) -> RunResult:

@@ -12,6 +12,12 @@ MARKET_TITLE = {
     "k": "STRIKEOUTS", "ml": "MONEYLINE",
 }
 
+# Lane label so a number here is never mistaken for a cowork-style sportsbook prop.
+PRODUCT = {
+    "hr": "DK Pick6", "hrr": "DK Pick6", "sb": "DK Pick6", "k": "DK Pick6",
+    "ml": "Moneyline (de-vig book lean)",
+}
+
 
 def slip_label(pick: Pick) -> str:
     """Short slip phrasing. Props drop the '— OVER' suffix; moneyline becomes
@@ -25,10 +31,13 @@ def _confidence_word(market: str) -> str:
     return "to win" if market == "ml" else "to hit"
 
 
-def build_slip(picks: list[Pick], market: str, count: int | None = None) -> dict:
+def build_slip(picks: list[Pick], market: str, count: int | None = None, *,
+               as_of: str | None = None, book: str | None = None) -> dict:
     """Rank `picks` for the slip (props by hit-probability, moneyline by lean),
-    take the top N, and return the roster + a copy-paste ChatGPT prompt."""
+    take the top N, and return the roster + a copy-paste ChatGPT prompt. `as_of`/
+    `book` stamp the slip's provenance (product label + data-as-of)."""
     requested = count or SLIP_SIZE.get(market, 6)
+    product = PRODUCT.get(market, market.upper())
     key = (lambda p: p.edge) if market == "ml" else (lambda p: p.model_p)
     # One play per player: props list ladders (e.g. a pitcher's 2.5+…10.5+ K lines),
     # so keep only each player's best-ranked line before taking the top N.
@@ -57,16 +66,22 @@ def build_slip(picks: list[Pick], market: str, count: int | None = None) -> dict
     title = MARKET_TITLE.get(market, market.upper())
     return {
         "title": title,
+        "product": product,
         "count": len(players),
         "requested": requested,
         "shortfall": max(0, requested - len(players)),
         "players": players,
-        "prompt": _build_prompt(title, market, players),
+        "prompt": _build_prompt(title, market, players, product, as_of, book),
     }
 
 
-def _build_prompt(title: str, market: str, players: list[dict]) -> str:
+def _build_prompt(title: str, market: str, players: list[dict],
+                  product: str = "", as_of: str | None = None,
+                  book: str | None = None) -> str:
     conf = _confidence_word(market)
+    stamp = " · ".join(x for x in (product, f"as of {as_of}" if as_of else None,
+                                   book) if x)
+    banner = f"[{stamp}]\n\n" if stamp else ""
     lines = []
     for p in players:
         if market == "ml":
@@ -77,7 +92,7 @@ def _build_prompt(title: str, market: str, players: list[dict]) -> str:
                          f"{p['pick']} — {p['model_pct']}% {conf}")
     roster = "\n".join(lines) if lines else "(no plays available for this market today)"
 
-    return (
+    return banner + (
         'Create a premium sports-betting slip graphic for the brand "Chances Make '
         'Champions" (CMC).\n\n'
         "STYLE: cinematic, black background with gold and amber smoke, floating gold "

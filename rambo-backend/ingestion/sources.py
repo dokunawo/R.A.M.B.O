@@ -22,8 +22,9 @@ from ingestion import statsapi_client as sapi
 from ingestion.raw_store import land_raw, pull_and_land
 
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
-STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats"}
-SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES)
+STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats", "lineups"}
+OTHER_SOURCES = {"odds_api"}                             # The Odds API (free-path landing)
+SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES | OTHER_SOURCES)
 
 
 def _season(params: dict) -> int:
@@ -70,6 +71,21 @@ def pull_source(conn: sqlite3.Connection, source: str,
         run = sapi.fetch_player_stats(int(pid), _season(params), group=group)
     elif source == "team_stats":
         run = sapi.fetch_team_stats(_season(params))
+    elif source == "recent_stats":
+        group = params.get("group", "hitting")            # "hitting" | "pitching"
+        end = params.get("end_date") or _date(params)
+        days = int(params.get("days", 14))                # 15-day window inclusive
+        start = params.get("start_date") or (
+            _dt.date.fromisoformat(end) - _dt.timedelta(days=days)).isoformat()
+        run = sapi.fetch_daterange_stats(start, end, group)
+    elif source == "lineups":
+        gp = params.get("game_pk")
+        if gp is None:
+            raise ValueError("lineups source requires game_pk")
+        run = sapi.fetch_boxscore(int(gp))
+    elif source == "odds_api":
+        from ingestion import the_odds_api_client as toa
+        run = toa.fetch_moneyline(params.get("date"))
     else:
         raise KeyError(f"unknown source {source!r} (valid: {SOURCES})")
 

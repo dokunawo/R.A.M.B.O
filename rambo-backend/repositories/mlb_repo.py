@@ -149,6 +149,39 @@ class MlbRepo:
         except (TypeError, ValueError):
             return None
 
+    def player_recent(self, mlb_id: int, group: str = "hitting",
+                      window: str = "L15") -> Optional[dict]:
+        """Recent (last-N-day) stat dict, or None if not pulled."""
+        row = self.conn.execute(
+            "SELECT stats FROM player_recent_stats "
+            "WHERE mlb_id=? AND stat_group=? AND window=?",
+            (mlb_id, group, window)).fetchone()
+        import json
+        return json.loads(row["stats"]) if row else None
+
+    def lineup_slot(self, mlb_id: int, game_pk: int) -> Optional[int]:
+        """battingOrder (100..900) if the player is in the confirmed lineup, else None."""
+        row = self.conn.execute(
+            "SELECT batting_order FROM game_lineups WHERE game_pk=? AND mlb_id=?",
+            (game_pk, mlb_id)).fetchone()
+        return row["batting_order"] if row else None
+
+    def lineup_confirmed(self, game_pk: int) -> bool:
+        """True once any batting order is posted for the game."""
+        return self.conn.execute(
+            "SELECT COUNT(*) FROM game_lineups WHERE game_pk=?", (game_pk,)).fetchone()[0] > 0
+
+    def latest_capture(self, kind: str) -> Optional[str]:
+        """Most-recent captured_at for provenance: kind 'moneyline' -> odds_lines
+        (pregame), else -> prop_lines."""
+        if kind == "moneyline":
+            row = self.conn.execute(
+                "SELECT MAX(captured_at) FROM odds_lines "
+                "WHERE market='moneyline' AND book NOT LIKE '%Live%'").fetchone()
+        else:
+            row = self.conn.execute("SELECT MAX(captured_at) FROM prop_lines").fetchone()
+        return row[0] if row and row[0] else None
+
     def moneyline_slate(self, date: str) -> list[dict]:
         """Games on `date` with a two-sided PREGAME moneyline, incl. team ids/abbrs,
         probable-pitcher ids, and home/away American prices. Picks the latest price
@@ -158,7 +191,8 @@ class MlbRepo:
             """WITH ml AS (
                    SELECT game_pk, side, price,
                           ROW_NUMBER() OVER (PARTITION BY game_pk, side
-                                             ORDER BY captured_at DESC) AS rn
+                                             ORDER BY (book='DraftKings') DESC,
+                                                      captured_at DESC) AS rn
                    FROM odds_lines
                    WHERE market='moneyline' AND price <> 0 AND book NOT LIKE '%Live%'
                )

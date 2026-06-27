@@ -34,6 +34,8 @@ class HRFeatures:
     line: float
     multiplier: float
     season_hr: int
+    recent_hr: int = 0          # HR over the last-15 window (recency signal)
+    support: str = ""           # display, e.g. "4 HR L15" (falls back to season)
 
 @dataclass
 class CountFeatures:

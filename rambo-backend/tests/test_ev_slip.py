@@ -65,6 +65,15 @@ def test_slip_labels():
     assert slip_label(_ml("CWS", 0.56, 0.01, -131)) == "CWS ML -131"
 
 
+def test_slip_carries_product_and_provenance_banner():
+    s = build_slip([_prop("X", 0.3, -0.2)], "hr",
+                   as_of="2026-06-27T18:00Z", book="DraftKings Pick6")
+    assert s["product"] == "DK Pick6"
+    assert "DK Pick6" in s["prompt"] and "as of 2026-06-27T18:00Z" in s["prompt"]
+    ml = build_slip([_ml("WSH", 0.4, 0.05, 118)], "ml")
+    assert ml["product"] == "Moneyline (de-vig book lean)"
+
+
 def test_prompt_contains_all_players_and_title():
     picks = [_prop("Aaron Judge", 0.3, -0.2), _prop("Mike Trout", 0.25, -0.3)]
     slip = build_slip(picks, "hr", count=2)

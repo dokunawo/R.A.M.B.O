@@ -39,7 +39,7 @@ def test_hrr_market_builds_pick(tmp_path):
     assert len(picks) == 1
     pk = picks[0]
     assert pk.market == "hrr" and pk.pick == "2+ H+R+RBI — OVER"
-    assert pk.support.endswith("H+R+RBI/gm")
+    assert "H+R+RBI/gm" in pk.support
     assert 0.5 < pk.model_p < 0.8                 # mean ~2.27 -> P(>=2) ~0.66
     assert pk.edge == round(pk.model_p * 1.7 - 1, 4)
 

@@ -1,0 +1,86 @@
+"""Slate prep — one call that pulls every source for a date so slips are built on a
+fully-sourced, fresh board (schedule + The Odds API + last-15 recency + lineups +
+team stats + DK Pick6 props), resolves prop players, and tops up the per-player stats
+the models need. Used by POST /betting/prep."""
+from __future__ import annotations
+
+import datetime as _dt
+import logging
+import sqlite3
+
+from ingestion.sources import pull_source
+from ingestion.normalize import normalize_pending
+
+logger = logging.getLogger("rambo.ingestion.prep")
+
+_BATTER_MARKETS = ("HR", "H+R+RBI", "SB", "H")
+
+
+def _has_stats(conn, mlb_id, season, group) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM player_season_stats WHERE mlb_id=? AND season=? AND stat_group=?",
+        (mlb_id, season, group)).fetchone() is not None
+
+
+def prep_slate(conn: sqlite3.Connection, date: str | None = None,
+               with_props: bool = True) -> dict:
+    """Pull + normalize the full multi-source board for `date`. Returns a summary."""
+    from brains.id_resolver import IdResolver
+
+    d = date or _dt.date.today().isoformat()
+    season = int(d[:4])
+    summary: dict = {"date": d}
+
+    summary["schedule"] = pull_source(conn, "schedule", {"date": d})["items"]
+    summary["odds"] = pull_source(conn, "odds_api", {"date": d})["items"]
+    summary["team_stats"] = pull_source(conn, "team_stats", {"season": season})["items"]
+    summary["recent_hitting"] = pull_source(
+        conn, "recent_stats", {"group": "hitting", "end_date": d})["items"]
+    summary["recent_pitching"] = pull_source(
+        conn, "recent_stats", {"group": "pitching", "end_date": d})["items"]
+    if with_props:
+        summary["props"] = pull_source(conn, "props", {"overrides": {"maxItems": 100}})["items"]
+    normalize_pending(conn)
+
+    # confirmed lineups for each scheduled game
+    games = [g[0] for g in conn.execute(
+        "SELECT game_pk FROM games WHERE official_date=?", (d,))]
+    lineups = 0
+    for gp in games:
+        try:
+            lineups += pull_source(conn, "lineups", {"game_pk": gp})["items"]
+        except Exception as exc:                       # one bad boxscore shouldn't abort prep
+            logger.warning("lineup pull failed for %s: %s", gp, exc)
+    normalize_pending(conn)
+    summary["lineups"] = lineups
+
+    # resolve prop player names, then top up the per-player stats the models need
+    summary["resolved"] = IdResolver(conn).run_unresolved_props()
+    batters = [r[0] for r in conn.execute(
+        f"SELECT DISTINCT mlb_id FROM prop_lines WHERE mlb_id IS NOT NULL "
+        f"AND market IN ({','.join('?' * len(_BATTER_MARKETS))})", _BATTER_MARKETS)]
+    pitchers = [r[0] for r in conn.execute(
+        "SELECT DISTINCT mlb_id FROM prop_lines WHERE mlb_id IS NOT NULL AND market='SO'")]
+    # moneyline needs each probable starter's ERA
+    starters = [r[0] for r in conn.execute(
+        "SELECT home_probable_pitcher_id FROM games WHERE official_date=? "
+        "UNION SELECT away_probable_pitcher_id FROM games WHERE official_date=?", (d, d))
+        if r[0] is not None]
+    pulled = 0
+    for mid in batters:
+        if not _has_stats(conn, mid, season, "hitting"):
+            try:
+                pull_source(conn, "stats", {"season": season, "player_id": mid, "group": "hitting"})
+                pulled += 1
+            except Exception:
+                pass
+    for mid in set(pitchers) | set(starters):
+        if not _has_stats(conn, mid, season, "pitching"):
+            try:
+                pull_source(conn, "stats", {"season": season, "player_id": mid, "group": "pitching"})
+                pulled += 1
+            except Exception:
+                pass
+    normalize_pending(conn)
+    summary["stat_pulls"] = pulled
+    return summary

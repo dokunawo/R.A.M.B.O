@@ -25,6 +25,8 @@ SOURCE_ROSTER = "mlb/statsapi:roster"
 SOURCE_SCHEDULE = "mlb/statsapi:schedule"
 SOURCE_STATS = "mlb/statsapi:stats"
 SOURCE_TEAMS = "mlb/statsapi:teams"
+SOURCE_RECENT = "mlb/statsapi:recent"     # last-N-day date-range leaderboard
+SOURCE_LINEUPS = "mlb/statsapi:lineups"   # confirmed boxscore battingOrder
 
 # Path suffixes under BASE. {placeholders} are filled by the Step 2 client.
 ENDPOINTS: dict[str, str] = {
@@ -35,6 +37,8 @@ ENDPOINTS: dict[str, str] = {
     "people": "/people/{person_id}",
     "people_stats": "/people/{person_id}/stats",
     "teams_stats": "/teams/stats",                   # all teams' season stats, one call/group
+    "stats_range": "/stats",                          # league leaderboard for a date range
+    "boxscore": "/game/{game_pk}/boxscore",           # confirmed lineups (battingOrder)
 }
 
 # Default query params per logical call (merged with runtime args).
@@ -52,4 +56,6 @@ DEFAULT_PARAMS: dict[str, dict] = {
                      "sitCodes": "vr,vl"},
     # All teams' season runs (group=hitting → scored, group=pitching → allowed).
     "teams_stats": {"sportIds": SPORT_ID, "stats": "season"},
+    # League-wide last-N-day leaderboard (group + startDate/endDate added at call time).
+    "stats_range": {"stats": "byDateRange", "sportId": SPORT_ID, "limit": 2000},
 }

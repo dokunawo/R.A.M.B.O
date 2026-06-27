@@ -113,6 +113,24 @@ def test_moneyline_slate_excludes_live_odds(tmp_path):
     assert slate[0]["home_price"] == -120 and slate[0]["away_price"] == 100   # pregame, not live
 
 
+def test_odds_api_mapper_expands_event(tmp_path):
+    from ingestion.normalize import map_odds_api
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_name, away_team_name, home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (999,'2026-06-27',111,147,'Boston Red Sox','New York Yankees',"
+                 "'BOS','NYY','2026-06-27T00:00:00Z')")
+    event = {"home_team": "Boston Red Sox", "away_team": "New York Yankees",
+             "commence_time": "2026-06-27T23:10:00Z",
+             "bookmakers": [{"title": "DraftKings", "markets": [{"key": "h2h", "outcomes": [
+                 {"name": "Boston Red Sox", "price": -120},
+                 {"name": "New York Yankees", "price": 105}]}]}]}
+    map_odds_api(conn, event, "2026-06-27T20:00Z")
+    slate = MlbRepo(conn).moneyline_slate("2026-06-27")
+    assert len(slate) == 1
+    assert slate[0]["home_price"] == -120 and slate[0]["away_price"] == 105
+
+
 def test_market_anchored_prob_bounds():
     # an absurd model prob is clamped + pulled toward the book -> small, sane lean
     anchored = market_anchored_prob(0.91, 0.62)

@@ -51,7 +51,7 @@ class HRMarket:
                 pick="1+ HOME RUN — OVER", line=feat.line,
                 multiplier=feat.multiplier, breakeven=round(breakeven(feat.multiplier), 4),
                 model_p=model_p, edge=round(edge(model_p, feat.multiplier), 4),
-                support=f"{feat.season_hr} HR", tags=["EDGE"], glow="gold",
+                support=feat.support, tags=["EDGE"], glow="gold",
                 headshot_url=_HEADSHOT.format(mlb_id=feat.mlb_id), rationale="",
             ))
         return picks

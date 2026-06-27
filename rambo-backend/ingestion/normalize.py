@@ -30,7 +30,9 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
-from config.statsapi import SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS
+from config.statsapi import (SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS,
+                             SOURCE_RECENT, SOURCE_LINEUPS)
+from config.the_odds_api import SOURCE_ID as ODDS_API_SOURCE
 
 logger = logging.getLogger("rambo.ingestion.normalize")
 
@@ -345,6 +347,45 @@ def map_odds(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_odds_api(conn, item, scraped_at) -> bool:
+    """The Odds API event -> odds_lines (moneyline). One event expands to many rows
+    (book x side). Links by full team names; tries the commence date AND the day
+    before (a late ET game's UTC commence date rolls to the next day)."""
+    home_name, away_name = item.get("home_team"), item.get("away_team")
+    if not (home_name and away_name):
+        return True  # nothing to map; don't reprocess
+    commence = item.get("commence_time") or ""
+    game_pk = None
+    if len(commence) >= 10:
+        import datetime as _d
+        d0 = commence[:10]
+        game_pk = _match_game_pk(conn, d0, home_name, away_name)
+        if game_pk is None:
+            try:
+                d1 = (_d.date.fromisoformat(d0) - _d.timedelta(days=1)).isoformat()
+                game_pk = _match_game_pk(conn, d1, home_name, away_name)
+            except ValueError:
+                pass
+    captured = item.get("_captured_at") or scraped_at
+    for bk in item.get("bookmakers") or []:
+        book = bk.get("title") or bk.get("key")
+        for mkt in bk.get("markets") or []:
+            if mkt.get("key") != "h2h":
+                continue
+            for oc in mkt.get("outcomes") or []:
+                price = _as_int(oc.get("price"))
+                name = oc.get("name")
+                side = "home" if name == home_name else "away" if name == away_name else None
+                if price is None or side is None:
+                    continue
+                _insert_odds(conn, {
+                    "game_pk": game_pk, "book": book, "market": "moneyline",
+                    "side": side, "line": None, "price": price,
+                    "captured_at": mkt.get("last_update") or captured,
+                })
+    return True
+
+
 def map_props(conn, item, scraped_at) -> bool:
     """DK Pick6 prop -> prop_lines (verified shape: player_name, line, stat_abbr,
     over/under_multiplier). mlb_id stays NULL until the ID resolver links it (Step 4).
@@ -391,11 +432,50 @@ def map_team_stats(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_recent_stats(conn, item, scraped_at) -> bool:
+    """statsapi byDateRange item {mlb_id, group, window, stat} -> player_recent_stats."""
+    mid = _as_int(item.get("mlb_id"))
+    if mid is None:
+        return False
+    conn.execute(
+        """INSERT INTO player_recent_stats
+             (mlb_id, window, stat_group, stats, start_date, end_date, source, scraped_at)
+           VALUES (?,?,?,?,?,?,'mlb',?)
+           ON CONFLICT(mlb_id, window, stat_group) DO UPDATE SET
+             stats=excluded.stats, start_date=excluded.start_date,
+             end_date=excluded.end_date, scraped_at=excluded.scraped_at;""",
+        (mid, item.get("window") or "L15", item.get("group") or "hitting",
+         json.dumps(item.get("stat") or {}), item.get("start_date"), item.get("end_date"),
+         scraped_at),
+    )
+    return True
+
+
+def map_lineups(conn, item, scraped_at) -> bool:
+    """statsapi boxscore item {game_pk, team_id, mlb_id, batting_order, side} -> game_lineups."""
+    gp, mid = _as_int(item.get("game_pk")), _as_int(item.get("mlb_id"))
+    if gp is None or mid is None:
+        return False
+    conn.execute(
+        """INSERT INTO game_lineups (game_pk, team_id, mlb_id, batting_order, side, scraped_at)
+           VALUES (?,?,?,?,?,?)
+           ON CONFLICT(game_pk, mlb_id) DO UPDATE SET
+             team_id=excluded.team_id, batting_order=excluded.batting_order,
+             side=excluded.side, scraped_at=excluded.scraped_at;""",
+        (gp, _as_int(item.get("team_id")), mid, _as_int(item.get("batting_order")),
+         item.get("side"), scraped_at),
+    )
+    return True
+
+
 DISPATCH: dict[str, Callable] = {
     SOURCE_ROSTER: map_roster,
     SOURCE_SCHEDULE: map_scoreboard,
     SOURCE_STATS: map_stats,
     SOURCE_TEAMS: map_team_stats,
+    SOURCE_RECENT: map_recent_stats,
+    SOURCE_LINEUPS: map_lineups,
+    ODDS_API_SOURCE: map_odds_api,
     "seemuapps/sports-odds-scraper": map_odds,
     "zen-studio/draftkings-pick6-player-props": map_props,
 }

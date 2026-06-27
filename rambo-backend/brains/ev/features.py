@@ -1,8 +1,24 @@
 from __future__ import annotations
 import json
+import os
 from typing import Optional
 from brains.ev.parks import hr_factor
 from brains.ev.types import HRFeatures, CountFeatures
+
+# Recency weight: recent (last-15) form is the primary signal, season-long is context
+# (cowork philosophy). Tunable via RAMBO_RECENT_WEIGHT.
+RECENT_WEIGHT = float(os.environ.get("RAMBO_RECENT_WEIGHT", "0.55"))
+
+
+def _blend(recent: Optional[float], season: Optional[float],
+           w: float = RECENT_WEIGHT) -> Optional[float]:
+    """Weighted blend of recent vs season; falls back to whichever exists."""
+    if recent is None:
+        return season
+    if season is None:
+        return recent
+    return w * recent + (1.0 - w) * season
+
 
 def _hr_rate(stat: Optional[dict]) -> Optional[float]:
     if not stat:
@@ -44,11 +60,17 @@ def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
         elif hand == "R":
             rate = _hr_rate(splits.get("vr")) or overall
 
+    # Recency: blend the season/matchup rate with the last-15 HR rate.
+    recent = repo.player_recent(mlb_id, "hitting")
+    rate = _blend(_hr_rate(recent), rate)
+    recent_hr = int((recent or {}).get("homeRuns") or 0)
+    support = f"{recent_hr} HR L15" if recent is not None else f"{season_hr} HR"
+
     return HRFeatures(
         mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
         opponent_abbr=opp_abbr, pitcher_hand=hand, hr_rate=rate,
         park_factor=park, line=prop["line"], multiplier=prop["multiplier"],
-        season_hr=season_hr,
+        season_hr=season_hr, recent_hr=recent_hr, support=support,
     )
 
 
@@ -98,9 +120,15 @@ def build_count_features(repo, date: str, prop: dict, *, stat_keys: list[str],
             elif hand == "R":
                 mean = _per_game_sum(splits.get("vr"), stat_keys, games_key) or overall
 
+    # Recency: blend the season/matchup mean with the last-15 per-game mean.
+    recent_mean = _per_game_sum(repo.player_recent(mlb_id, group), stat_keys, games_key)
+    mean = _blend(recent_mean, mean)
+    shown = recent_mean if recent_mean is not None else overall
+    window = "L15" if recent_mean is not None else "season"
+
     return CountFeatures(
         mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
         opponent_abbr=opp_abbr, pitcher_hand=hand, per_game_mean=mean,
         line=prop["line"], multiplier=prop["multiplier"],
-        support=f"{overall:.1f} {label}/gm",
+        support=f"{shown:.1f} {label}/gm {window}",
     )
