@@ -35,6 +35,16 @@ function Smoke() {
   );
 }
 
+function BrushUnderline() {
+  return (
+    <svg className="brush" width="420" height="26" viewBox="0 0 420 26" fill="none" aria-hidden="true">
+      <path d="M8 15 C90 4 170 18 250 11 C320 5 372 8 412 14 C372 22 300 25 210 20 C140 16 70 24 8 15 Z"
+            fill="#d6a21e" />
+      <path d="M30 17 C120 10 220 19 300 13" stroke="#f0cf73" strokeWidth="2" strokeLinecap="round" opacity="0.6" fill="none" />
+    </svg>
+  );
+}
+
 function Crown({ w = 56 }) {
   return (
     <svg className="crown" width={w} height={w * 0.62} viewBox="0 0 120 74" fill="none" aria-hidden="true">
@@ -172,30 +182,28 @@ export default function EdgeCardPoster() {
       <div className="poster" ref={posterRef}>
         <Smoke />
         <div className="cmc-logo">
-          <Crown w={54} />
+          <Crown w={50} />
           <div className="mark gold-foil">CMC</div>
           <div className="full">CHANCES MAKE <b>CHAMPIONS</b></div>
         </div>
 
-        <div className="poster-panel">
-          <span className="br tl" /><span className="br tr" /><span className="br bl" /><span className="br brr" />
-          <div className="panel-title">
-            <h1 className="gold-foil">{title}</h1>
-            <span className="cap">{CAPS[market] || ""}</span>
-          </div>
+        <div className="hero">
+          <h1 className="hr-title gold-foil">{title}</h1>
+          <BrushUnderline />
+          <div className="hero-cap">{CAPS[market] || ""}</div>
+        </div>
 
-          {picks && <Banner market={market} anyPos={anyPos} />}
+        {picks && <Banner market={market} anyPos={anyPos} />}
 
-          {picks === null && <div className="poster-empty">Reading the slate…</div>}
-          {picks && picks.length === 0 && <div className="poster-empty">No lines for this market today.</div>}
-          {picks && picks.length > 0 && (
-            <div className="tiles">{picks.map((p, i) => <Tile key={`${p.mlb_id}-${i}`} pick={p} />)}</div>
-          )}
+        {picks === null && <div className="poster-empty">Reading the slate…</div>}
+        {picks && picks.length === 0 && <div className="poster-empty">No lines for this market today.</div>}
+        {picks && picks.length > 0 && (
+          <div className="tiles">{picks.map((p, i) => <Tile key={`${p.mlb_id}-${i}`} pick={p} />)}</div>
+        )}
 
-          <div className="poster-foot">
-            <div className="l">{footL} &nbsp;|&nbsp; MODEL POWERED BY <b>CMC</b></div>
-            <div className="r">Always bet with an edge.</div>
-          </div>
+        <div className="poster-foot">
+          <div className="l">{footL} &nbsp;|&nbsp; MODEL POWERED BY <b>CMC</b></div>
+          <div className="r">Always bet with an edge.</div>
         </div>
       </div>
     </div>

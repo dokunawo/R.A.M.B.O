@@ -1,13 +1,14 @@
-/* Chances Make Champions — downloadable Daily Edge poster (LANDSCAPE).
-   Captured to PNG via html-to-image: no backdrop-filter; headshots are loaded
-   crossOrigin (MLB CDN sends ACAO:*) so the canvas isn't tainted. */
+/* Chances Make Champions — cinematic Daily Edge poster.
+   Black/gold, smoky, gritty, brush-lettered. Captured to PNG via html-to-image:
+   no backdrop-filter; textures are CSS gradients + inline SVG (feTurbulence);
+   headshots load crossOrigin so the canvas isn't tainted. */
 
-@import url('https://fonts.googleapis.com/css2?family=Metal+Mania&family=Oswald:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@300;400;500;600;700&family=Permanent+Marker&family=Road+Rage&display=swap');
 
 .poster-page {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
-  padding: 26px 16px 48px; min-height: 100vh;
-  background: radial-gradient(120% 60% at 50% 0%, #15110d, #0a0908 50%, #000 100%);
+  padding: 26px 16px 56px; min-height: 100vh;
+  background: #000;
   font-family: 'Oswald', system-ui, sans-serif;
 }
 .poster-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
@@ -21,103 +22,110 @@
 .poster-btn:active { transform: translateY(1px); }
 .poster-hint { font-size: 12px; color: #8a8167; letter-spacing: .5px; }
 
-/* ---------- poster canvas (captured node) — landscape ---------- */
+/* ---------- poster canvas (captured) — poster proportions ---------- */
 .poster {
-  position: relative; width: 1140px; box-sizing: border-box;
-  padding: 26px 30px 24px; overflow: hidden; color: #f2f2f2;
+  position: relative; width: 1040px; box-sizing: border-box;
+  padding: 46px 46px 30px; overflow: hidden; color: #f4f1ea;
   background:
-    radial-gradient(60% 50% at 10% 12%, rgba(214,162,30,.12), transparent 60%),
-    radial-gradient(60% 60% at 92% 80%, rgba(214,162,30,.10), transparent 60%),
-    radial-gradient(120% 90% at 50% -10%, #18140f, #0b0a08 55%, #050504 100%);
-  border: 1px solid rgba(214,162,30,.25);
-  border-radius: 6px;
+    radial-gradient(70% 36% at 16% 10%, rgba(214,162,30,.13), transparent 60%),
+    radial-gradient(62% 40% at 90% 78%, rgba(214,162,30,.10), transparent 60%),
+    radial-gradient(140% 110% at 50% -8%, #0b0a07 0%, #050403 48%, #000 100%);
+  border: 2px solid rgba(214,162,30,.55);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.8), 0 0 60px rgba(214,162,30,.22),
+              inset 0 0 200px 50px rgba(0,0,0,.92);
 }
+/* scanlines + gold dust */
 .poster::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .8; z-index: 1;
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
   background:
-    radial-gradient(2px 2px at 9% 26%, rgba(240,207,115,.8), transparent),
-    radial-gradient(1.5px 1.5px at 22% 12%, rgba(240,207,115,.7), transparent),
-    radial-gradient(1.5px 1.5px at 78% 16%, rgba(240,207,115,.7), transparent),
-    radial-gradient(2px 2px at 90% 60%, rgba(240,207,115,.6), transparent),
-    radial-gradient(1.5px 1.5px at 60% 90%, rgba(240,207,115,.6), transparent),
-    radial-gradient(1px 1px at 40% 20%, rgba(240,207,115,.7), transparent),
-    radial-gradient(1px 1px at 70% 75%, rgba(240,207,115,.6), transparent);
+    radial-gradient(2px 2px at 8% 22%, rgba(240,207,115,.85), transparent),
+    radial-gradient(1.5px 1.5px at 20% 9%, rgba(240,207,115,.7), transparent),
+    radial-gradient(1.5px 1.5px at 80% 12%, rgba(240,207,115,.7), transparent),
+    radial-gradient(2px 2px at 93% 54%, rgba(240,207,115,.6), transparent),
+    radial-gradient(1.5px 1.5px at 64% 92%, rgba(240,207,115,.6), transparent),
+    radial-gradient(1px 1px at 38% 16%, rgba(240,207,115,.7), transparent),
+    radial-gradient(1px 1px at 72% 70%, rgba(240,207,115,.6), transparent),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
 }
-/* procedural smoke + gold marbling (SVG feTurbulence), masked to the edges */
+/* procedural smoke + gold marbling, masked to the edges */
 .poster-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-.poster > .cmc-logo, .poster > .poster-panel { position: relative; z-index: 2; }
+.poster > .cmc-logo, .poster > .hero, .poster > .poster-banner, .poster > .tiles, .poster > .poster-foot { position: relative; z-index: 2; }
 
-/* metallic gold-foil lettering — gradient sheen + stroke + glow */
+/* metallic gold-foil lettering */
 .gold-foil {
-  background: linear-gradient(176deg, #fff6d6 0%, #f3d479 20%, #d6a21e 44%, #855f0c 58%, #eccd6e 70%, #f7e6a8 100%);
+  background: linear-gradient(176deg, #fff6d6 0%, #f3d479 20%, #d6a21e 44%, #6f4e08 58%, #eccd6e 70%, #fff0c4 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
-  -webkit-text-stroke: 0.6px rgba(70,48,6,.45);
-  filter: drop-shadow(0 0 18px rgba(214,162,30,.6)) drop-shadow(0 2px 1px rgba(0,0,0,.55));
+  -webkit-text-stroke: 0.7px rgba(58,40,4,.5);
+  filter: drop-shadow(0 0 22px rgba(214,162,30,.6)) drop-shadow(0 3px 2px rgba(0,0,0,.6));
 }
 
-/* ---------- CMC logo header ---------- */
-.cmc-logo { text-align: center; margin-bottom: 14px; }
-.cmc-logo .crown { display: block; margin: 0 auto -6px; filter: drop-shadow(0 0 12px rgba(240,207,115,.8)); }
-.cmc-logo .mark { font-family: 'Metal Mania', cursive; font-size: 72px; line-height: .9; letter-spacing: 3px; }
-.cmc-logo .full { font-weight: 600; letter-spacing: 6px; font-size: 14px; margin-top: 2px; color: #f2f2f2; }
+/* ---------- CMC brand (top) ---------- */
+.cmc-logo { text-align: center; margin-bottom: 18px; }
+.cmc-logo .crown { display: block; margin: 0 auto -4px; filter: drop-shadow(0 0 14px rgba(240,207,115,.85)); }
+.cmc-logo .mark { font-family: 'Permanent Marker', cursive; font-size: 60px; line-height: .9; letter-spacing: 4px; }
+.cmc-logo .full { font-weight: 600; letter-spacing: 7px; font-size: 13px; margin-top: 4px; color: #f4f1ea; }
 .cmc-logo .full b { color: #d6a21e; font-weight: 600; }
 
-/* ---------- panel ---------- */
-.poster-panel { position: relative; border: 1px solid rgba(214,162,30,.4); border-radius: 12px; padding: 22px 24px 16px; background: rgba(8,7,6,.5); }
-.br { position: absolute; width: 26px; height: 26px; border: 2px solid rgba(214,162,30,.85); }
-.br.tl { top: -1px; left: -1px; border-right: none; border-bottom: none; border-top-left-radius: 12px; }
-.br.tr { top: -1px; right: -1px; border-left: none; border-bottom: none; border-top-right-radius: 12px; }
-.br.bl { bottom: -1px; left: -1px; border-right: none; border-top: none; border-bottom-left-radius: 12px; }
-.br.brr { bottom: -1px; right: -1px; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
+/* ---------- big brush HOME RUNS header (middle) ---------- */
+.hero { text-align: center; margin: 6px 0 18px; }
+.hero .hr-title { font-family: 'Road Rage', cursive; font-weight: 400; font-size: 104px; line-height: .82; margin: 0; letter-spacing: 1px; }
+.hero .brush { display: block; margin: 2px auto 6px; filter: drop-shadow(0 0 10px rgba(214,162,30,.55)); }
+.hero .hero-cap { font-weight: 600; letter-spacing: 6px; font-size: 14px; color: #c2b487; text-transform: uppercase; }
 
-.panel-title { display: flex; align-items: baseline; gap: 16px; }
-.panel-title h1 { font-family: 'Metal Mania', cursive; font-weight: 400; font-size: 54px; margin: 0; line-height: .9; }
-.panel-title .cap { font-weight: 600; letter-spacing: 4px; font-size: 14px; color: #b9ad8e; text-transform: uppercase; }
+/* ---------- banner ---------- */
+.poster-banner { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; padding: 14px 20px; border-radius: 10px; border: 1px solid var(--bc, rgba(255,90,90,.45)); background: var(--bg, rgba(255,40,40,.06)); box-shadow: inset 0 0 30px rgba(0,0,0,.6), 0 0 22px var(--bg, rgba(255,90,90,.08)); }
+.poster-banner .icon { font-size: 26px; flex: 0 0 auto; }
+.poster-banner .txt { font-size: 15px; line-height: 1.45; color: #ddd3bc; }
+.poster-banner .txt b { color: var(--hl, #ff6a6a); }
 
-/* ---------- -EV / lean banner ---------- */
-.poster-banner { display: flex; align-items: center; gap: 14px; margin: 14px 0 18px; padding: 12px 18px; border-radius: 10px; border: 1px solid var(--bc, rgba(255,90,90,.4)); background: var(--bg, rgba(255,90,90,.05)); }
-.poster-banner .icon { font-size: 24px; flex: 0 0 auto; }
-.poster-banner .txt { font-size: 14.5px; line-height: 1.45; color: #d7cdb6; }
-.poster-banner .txt b { color: var(--hl, #ff5a5a); }
+/* ---------- tall premium pick cards ---------- */
+.tiles { display: flex; gap: 18px; }
+.ptile {
+  position: relative; flex: 1 1 0; min-width: 0; min-height: 360px;
+  display: flex; flex-direction: column;
+  padding: 22px 20px 20px; border-radius: 12px;
+  background: linear-gradient(165deg, rgba(32,28,22,.85), rgba(10,9,7,.9));
+  border: 1px solid rgba(214,162,30,.28);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.7), 0 14px 30px rgba(0,0,0,.55);
+}
+.ptile .br { position: absolute; width: 26px; height: 26px; border: 3px solid #e7cd86; filter: drop-shadow(0 0 5px rgba(214,162,30,.7)); }
+.ptile .br.tl { top: 7px; left: 7px; border-right: none; border-bottom: none; }
+.ptile .br.tr { top: 7px; right: 7px; border-left: none; border-bottom: none; }
+.ptile .br.bl { bottom: 7px; left: 7px; border-right: none; border-top: none; }
+.ptile .br.brr { bottom: 7px; right: 7px; border-left: none; border-top: none; }
 
-/* ---------- tiles row ---------- */
-.tiles { display: flex; gap: 16px; }
-.ptile { position: relative; flex: 1 1 0; min-width: 0; padding: 16px 16px 14px; border-radius: 10px; background: linear-gradient(160deg, rgba(26,23,20,.72), rgba(13,11,9,.72)); }
-.ptile .br { width: 18px; height: 18px; border-color: rgba(214,162,30,.7); }
-.ptile .br.tl { top: 5px; left: 5px; border-radius: 0; } .ptile .br.tr { top: 5px; right: 5px; border-radius: 0; }
-.ptile .br.bl { bottom: 5px; left: 5px; border-radius: 0; } .ptile .br.brr { bottom: 5px; right: 5px; border-radius: 0; }
-
-.ptile-top { display: flex; align-items: center; gap: 13px; }
-.porb { width: 66px; height: 66px; border-radius: 50%; flex: 0 0 auto; overflow: hidden; background: radial-gradient(circle at 36% 28%, #2c2820, #0c0b09); box-shadow: 0 0 0 2px var(--g, #d6a21e), 0 0 16px var(--g, rgba(214,162,30,.55)); }
+.ptile-top { display: flex; align-items: center; gap: 14px; }
+.porb { width: 84px; height: 84px; border-radius: 50%; flex: 0 0 auto; overflow: hidden; background: radial-gradient(circle at 36% 28%, #2c2820, #0a0907); box-shadow: 0 0 0 3px var(--g, #d6a21e), 0 0 22px var(--g, rgba(214,162,30,.6)); }
 .porb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.porb span { display: grid; place-items: center; width: 100%; height: 100%; font-weight: 700; font-size: 20px; color: #f0cf73; }
+.porb span { display: grid; place-items: center; width: 100%; height: 100%; font-weight: 700; font-size: 26px; color: #f0cf73; }
 .ptile-id { min-width: 0; }
-.ptile-name { font-weight: 700; font-size: 21px; line-height: 1.02; text-transform: uppercase; color: #fff; }
-.ptile-matchup { font-size: 12px; letter-spacing: .5px; color: #c9b079; margin-top: 3px; }
+.ptile-name { font-family: 'Oswald'; font-weight: 700; font-size: 23px; line-height: 1.02; text-transform: uppercase; color: #fff; letter-spacing: .3px; }
+.ptile-matchup { font-size: 13px; letter-spacing: .6px; color: #c9b079; margin-top: 4px; }
 
-.ptile-pick { margin: 13px 0 11px; font-weight: 600; font-size: 16px; letter-spacing: .3px; text-transform: uppercase; color: #e7cd86; }
+.ptile-pick { font-family: 'Permanent Marker', cursive; font-size: 19px; letter-spacing: .5px; text-transform: uppercase; color: #e7cd86; margin: 18px 0 6px; text-shadow: 0 0 12px rgba(214,162,30,.4); }
 
-.ptile-stats { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.ptile-edge .num { font-weight: 700; font-size: 34px; line-height: 1; }
-.ptile-edge.pos .num { color: #6dff86; text-shadow: 0 0 7px #39ff5a, 0 0 18px rgba(57,255,90,.8), 0 0 34px rgba(57,255,90,.45); }
-.ptile-edge.neg .num { color: #ff7a7a; text-shadow: 0 0 7px #ff5a5a, 0 0 18px rgba(255,90,90,.7), 0 0 32px rgba(255,90,90,.4); }
-.ptile-edge .cap { display: block; font-size: 10px; letter-spacing: 2px; color: #8a8167; margin-top: 4px; }
-.ptile-mb { text-align: right; font-size: 13px; color: #9a9078; line-height: 1.55; }
+.ptile-stats { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; }
+.ptile-edge .num { font-weight: 700; font-size: 50px; line-height: .9; font-family: 'Oswald'; }
+.ptile-edge.pos .num { color: #7dff93; text-shadow: 0 0 10px #39ff5a, 0 0 26px rgba(57,255,90,.85), 0 0 48px rgba(57,255,90,.5); }
+.ptile-edge.neg .num { color: #ff7d7d; text-shadow: 0 0 10px #ff4a4a, 0 0 26px rgba(255,70,70,.8), 0 0 46px rgba(255,70,70,.45); }
+.ptile-edge .cap { display: block; font-size: 10px; letter-spacing: 2px; color: #8a8167; margin-top: 6px; }
+.ptile-mb { text-align: right; font-size: 13px; color: #9a9078; line-height: 1.6; }
 .ptile-mb b { color: #fff; font-weight: 600; }
-.ptile-mb .m { color: #4ea0ff; } .ptile-mb .x { color: #e7cd86; }
+.ptile-mb .m { color: #5aa6ff; } .ptile-mb .x { color: #e7cd86; }
 
-.ptile-season { margin-top: 11px; font-size: 12px; letter-spacing: .5px; color: #8f866d; border-top: 1px dashed rgba(214,162,30,.22); padding-top: 9px; }
-.ptile-tag { display: inline-block; margin-top: 11px; font-size: 11px; font-weight: 600; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
-.ptile-tag.skip { color: #ff5a5a; border: 1px solid rgba(255,90,90,.6); }
-.ptile-tag.edge { color: #39ff5a; border: 1px solid rgba(57,255,90,.6); }
+.ptile-season { margin-top: 14px; font-size: 12.5px; letter-spacing: .5px; color: #978d72; border-top: 1px dashed rgba(214,162,30,.25); padding-top: 11px; }
+.ptile-tag { display: inline-block; margin-top: 12px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; }
+.ptile-tag.skip { color: #ff6a6a; border: 1px solid rgba(255,90,90,.65); box-shadow: 0 0 14px rgba(255,90,90,.25); }
+.ptile-tag.edge { color: #39ff5a; border: 1px solid rgba(57,255,90,.65); box-shadow: 0 0 14px rgba(57,255,90,.25); }
 .ptile-tag.lean { color: #04210a; background: #39ff5a; }
-.ptile-tag.hot { color: #ff9a3c; border: 1px solid rgba(255,154,60,.6); margin-left: 6px; }
+.ptile-tag.hot { color: #ff9a3c; border: 1px solid rgba(255,154,60,.65); margin-left: 7px; }
 
-/* ---------- footer ---------- */
-.poster-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 12px; }
-.poster-foot .l { font-weight: 500; letter-spacing: 2.5px; font-size: 12.5px; color: #9a9078; text-transform: uppercase; }
-.poster-foot .l b { color: #e7cd86; font-family: 'Metal Mania', cursive; font-weight: 400; font-size: 18px; letter-spacing: 1px; }
-.poster-foot .r { font-weight: 600; letter-spacing: 3px; font-size: 13px; color: #b9ad8e; text-transform: uppercase; }
+/* ---------- subtle footer ---------- */
+.poster-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; padding-top: 14px; border-top: 1px solid rgba(214,162,30,.22); }
+.poster-foot .l { font-weight: 500; letter-spacing: 2.5px; font-size: 12px; color: #8a8167; text-transform: uppercase; }
+.poster-foot .l b { color: #d6a21e; font-family: 'Permanent Marker', cursive; font-weight: 400; letter-spacing: 1px; }
+.poster-foot .r { font-weight: 600; letter-spacing: 3px; font-size: 12.5px; color: #a89c79; text-transform: uppercase; }
 
-.poster-empty { text-align: center; color: #9a9078; padding: 34px; font-size: 14px; }
+.poster-empty { text-align: center; color: #9a9078; padding: 40px; font-size: 14px; }
