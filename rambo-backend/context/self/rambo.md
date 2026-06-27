@@ -85,15 +85,16 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 175 commits:
+Last 14 days — 176 commits:
 
-- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (3 minutes ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (7 minutes ago)`
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (11 minutes ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (16 minutes ago)`
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (25 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (28 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (33 minutes ago)`
+- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (2 minutes ago)`
+- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (5 minutes ago)`
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (9 minutes ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (13 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (18 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (28 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (30 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (35 minutes ago)`
 - `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
 - `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (2 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 175 commits:
 - `a12a63f feat(cmc): poster texture system + branded-plate slot (17 hours ago)`
 - `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (17 hours ago)`
 - `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (17 hours ago)`
-- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (18 hours ago)`
-- … and 155 more
+- … and 156 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

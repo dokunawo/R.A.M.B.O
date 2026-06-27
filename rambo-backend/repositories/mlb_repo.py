@@ -126,6 +126,16 @@ class MlbRepo:
             "SELECT throws FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
         return row["throws"] if row else None
 
+    def player_bats(self, mlb_id: int) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT bats FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
+        return row["bats"] if row else None
+
+    def player_name(self, mlb_id: int) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT full_name FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
+        return row["full_name"] if row else None
+
     def team_runs(self, team_id: int, season: int) -> Optional[dict]:
         row = self.conn.execute(
             "SELECT runs_scored, runs_allowed, games_played FROM team_season_stats "
