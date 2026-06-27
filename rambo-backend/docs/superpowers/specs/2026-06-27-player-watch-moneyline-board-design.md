@@ -49,6 +49,14 @@ the rest of `api/betting.py`.
 
 ## 4. Player Watch
 
+> **Update 2026-06-27 (post-build):** Player Watch is **slate-wide**, not propped-only.
+> Our DK Pick6 HR plays ("leans") are pinned at the top (ranked by HR%), then the
+> board fills to 11 with the highest-HR% hitters from the day's confirmed lineups
+> (`MlbRepo.lineup_batters`), scored via `features.build_hr_features_core` (a
+> prop-less HR feature builder). Lean rows are tagged `[CMC LEAN]`. `prep` now pulls
+> hitting stats for every lineup batter (free statsapi) so the pool can be ranked.
+> The §4.1 text below describes the original propped-only v1.
+
 ### 4.1 Data assembly
 Run the existing HR market via `daily_edge(date, "hr", threshold=-1.0)` to get a
 ranked candidate list (threshold -1 so we can fill 11 rows even though HR legs are

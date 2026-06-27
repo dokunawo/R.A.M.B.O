@@ -7,7 +7,8 @@ import os
 from brains.ev.engine import daily_edge
 from brains.ev.moneyline_model import evaluate_game
 from brains.ev.parks import hr_factor
-from brains.ev.features import TEMP_PARKS, LG_BARREL, LG_HARD_HIT
+from brains.ev.features import TEMP_PARKS, LG_BARREL, LG_HARD_HIT, build_hr_features_core
+from brains.ev.hr_model import hr_probability
 from brains.ev.slip import PRODUCT
 
 DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
@@ -23,8 +24,9 @@ def _open(repo):
     return MlbRepo(conn), conn
 
 
-def _pw_row(repo, date: str, season: int, rank: int, pick) -> dict:
-    ctx = repo.player_game_context(pick.mlb_id, date) or {}
+def _pw_row(repo, date: str, season: int, rank: int, mlb_id: int, name: str,
+            team: str, model_p: float, support: str, is_lean: bool) -> dict:
+    ctx = repo.player_game_context(mlb_id, date) or {}
     game_pk = ctx.get("game_pk")
     home_abbr = ctx.get("home_abbr") or ""
     pitcher = ""
@@ -38,14 +40,14 @@ def _pw_row(repo, date: str, season: int, rank: int, pick) -> dict:
         temp = w.get("temp")
         wind = w.get("wind") or ""
     park = 1.0 if home_abbr in TEMP_PARKS else hr_factor(home_abbr)
-    sc = repo.player_statcast(pick.mlb_id, season) or {}
+    sc = repo.player_statcast(mlb_id, season) or {}
     return {
-        "rank": rank, "name": pick.name, "team": pick.team,
-        "bats": repo.player_bats(pick.mlb_id) or "",
-        "pitcher": pitcher, "hr_pct": round(pick.model_p * 100, 1),
+        "rank": rank, "name": name, "team": team, "is_lean": is_lean,
+        "bats": repo.player_bats(mlb_id) or "",
+        "pitcher": pitcher, "hr_pct": round(model_p * 100, 1),
         "venue": venue, "temp": temp, "env_pct": round((park - 1) * 100),
         "wind": wind, "barrel": sc.get("barrel_rate"), "hard_hit": sc.get("hard_hit"),
-        "form": pick.support,
+        "form": support,
     }
 
 
@@ -54,6 +56,8 @@ def _pw_line(r: dict) -> str:
     if r["pitcher"]:
         head += f" · vs {r['pitcher']}"
     head += ")"
+    if r.get("is_lean"):
+        head += " [CMC LEAN]"
     parts = [head, f"HR {r['hr_pct']}%"]
     venue = r["venue"]
     if r["temp"] is not None and r["temp"] != "":
@@ -91,9 +95,11 @@ def _pw_prompt(rows: list[dict], as_of, book) -> str:
         "player (team · bat hand · vs starting pitcher), a big HR%, the ballpark and "
         "temperature, the HR environment (park factor % + wind), the power tags, and "
         "recent form. Even spacing, easy to read.\n\n"
-        "KEY: % = our model's home-run probability. ↑ = above league average, "
-        "↓ = below. No pitch-mix or batter-vs-pitcher shown — figures are model and "
-        "Statcast based.\n\n"
+        "KEY: % = our model's home-run probability (top of the list = highest). "
+        "[CMC LEAN] marks hitters we have an actual DK Pick6 HR play on (shown first); "
+        "the rest are the slate's next-best HR threats by model probability. "
+        "↑ = above league average, ↓ = below. No pitch-mix or batter-vs-pitcher shown "
+        "— figures are model and Statcast based.\n\n"
         "CRITICAL: reproduce ALL text below EXACTLY as written — do not change, "
         "abbreviate, reorder, add, or invent any name, team, number, %, or stat.\n\n"
         f"HITTERS:\n{body}"
@@ -102,21 +108,44 @@ def _pw_prompt(rows: list[dict], as_of, book) -> str:
 
 def player_watch(date: str, repo=None, *, count: int = PLAYER_WATCH_SIZE,
                  as_of: str | None = None, book: str | None = None) -> dict:
+    """Top-`count` HR threats for the slate. Hitters we have a DK Pick6 HR play on
+    (our "leans") are pinned first, ranked by HR%; the rest of the board is filled
+    with the highest-probability hitters from the day's confirmed lineups."""
     repo, conn = _open(repo)
     try:
         season = int(date[:4])
-        picks = daily_edge(date, "hr", repo=repo, threshold=-1.0)
-        picks = sorted(picks, key=lambda p: p.model_p, reverse=True)
-        seen: set[int] = set()
-        top = []
-        for p in picks:
-            if p.mlb_id in seen:
+        # 1) Our leans = players with a DK Pick6 HR prop, best HR% first.
+        lean_by_id: dict[int, object] = {}
+        for p in sorted(daily_edge(date, "hr", repo=repo, threshold=-1.0),
+                        key=lambda p: p.model_p, reverse=True):
+            lean_by_id.setdefault(p.mlb_id, p)
+
+        # 2) Pool = every other hitter in a confirmed lineup, scored by HR model.
+        pool = []
+        for b in repo.lineup_batters(date):
+            mid = b["mlb_id"]
+            if mid is None or mid in lean_by_id:
                 continue
-            seen.add(p.mlb_id)
-            top.append(p)
-            if len(top) >= count:
+            feat = build_hr_features_core(repo, date, mid, b.get("name") or "")
+            if feat is None:
+                continue
+            pool.append((mid, feat, hr_probability(feat.hr_rate, feat.park_factor)))
+        pool.sort(key=lambda t: t[2], reverse=True)
+
+        # 3) Leans pinned first, then the pool, capped at `count`.
+        rows: list[dict] = []
+        for p in sorted(lean_by_id.values(), key=lambda p: p.model_p, reverse=True):
+            if len(rows) >= count:
                 break
-        rows = [_pw_row(repo, date, season, i + 1, p) for i, p in enumerate(top)]
+            rows.append(_pw_row(repo, date, season, len(rows) + 1,
+                                p.mlb_id, p.name, p.team, p.model_p, p.support, True))
+        for mid, feat, mp in pool:
+            if len(rows) >= count:
+                break
+            rows.append(_pw_row(repo, date, season, len(rows) + 1,
+                                mid, (feat.name or "").upper(), feat.team_abbr,
+                                mp, feat.support, False))
+
         return {"title": "PLAYER WATCH", "product": PRODUCT["hr"],
                 "count": len(rows), "rows": rows,
                 "prompt": _pw_prompt(rows, as_of, book)}

@@ -195,6 +195,17 @@ class MlbRepo:
         return self.conn.execute(
             "SELECT COUNT(*) FROM game_lineups WHERE game_pk=?", (game_pk,)).fetchone()[0] > 0
 
+    def lineup_batters(self, date: str) -> list[dict]:
+        """Every hitter in a confirmed lineup on `date` (distinct mlb_id + name) —
+        the candidate pool for the slate-wide Player Watch board."""
+        return _dicts(self.conn.execute(
+            """SELECT DISTINCT gl.mlb_id AS mlb_id, p.full_name AS name
+               FROM game_lineups gl
+               JOIN games g ON g.game_pk = gl.game_pk
+               LEFT JOIN players p ON p.mlb_id = gl.mlb_id
+               WHERE g.official_date = ?
+               ORDER BY gl.mlb_id""", (date,)))
+
     def latest_capture(self, kind: str) -> Optional[str]:
         """Most-recent captured_at for provenance: kind 'moneyline' -> odds_lines
         (pregame), else -> prop_lines."""

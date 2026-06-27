@@ -70,7 +70,19 @@ def _hr_rate(stat: Optional[dict]) -> Optional[float]:
     return hr / pa if pa > 0 else None
 
 def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
-    mlb_id = prop["mlb_id"]
+    """HR features for a DK Pick6 prop. Carries the prop's line/multiplier (used by
+    the HR market for edge)."""
+    return build_hr_features_core(
+        repo, date, prop["mlb_id"], prop["player_name_raw"],
+        line=prop["line"], multiplier=prop["multiplier"])
+
+
+def build_hr_features_core(repo, date: str, mlb_id: int, name: str, *,
+                           line: float = 0.5,
+                           multiplier: float = 0.0) -> Optional[HRFeatures]:
+    """HR features for ANY hitter from their mlb_id (no prop required) — powers the
+    slate-wide Player Watch pool. `line`/`multiplier` default to a 1+ HR line with no
+    payout; pass the prop's values to drive the propped-market edge math."""
     season = int(date[:4])
     rows = repo.player_season(mlb_id, season, "hitting")
     if not rows:
@@ -115,9 +127,9 @@ def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
         support += " · TEMP PARK"
 
     return HRFeatures(
-        mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
+        mlb_id=mlb_id, name=name, team_abbr=team_abbr,
         opponent_abbr=opp_abbr, pitcher_hand=hand, hr_rate=rate,
-        park_factor=park, line=prop["line"], multiplier=prop["multiplier"],
+        park_factor=park, line=line, multiplier=multiplier,
         season_hr=season_hr, recent_hr=recent_hr, support=support, temp_park=temp_park,
     )
 

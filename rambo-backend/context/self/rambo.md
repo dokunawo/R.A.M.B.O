@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 183 commits:
+Last 14 days — 184 commits:
 
-- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (15 minutes ago)`
-- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (19 minutes ago)`
-- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (21 minutes ago)`
-- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (29 minutes ago)`
-- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (33 minutes ago)`
-- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (36 minutes ago)`
-- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (40 minutes ago)`
-- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (42 minutes ago)`
-- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (45 minutes ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (49 minutes ago)`
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (53 minutes ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (58 minutes ago)`
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (68 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (70 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (75 minutes ago)`
-- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
-- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
+- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (9 minutes ago)`
+- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (24 minutes ago)`
+- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (28 minutes ago)`
+- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (30 minutes ago)`
+- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (38 minutes ago)`
+- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (42 minutes ago)`
+- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (45 minutes ago)`
+- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (49 minutes ago)`
+- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (51 minutes ago)`
+- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (54 minutes ago)`
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (58 minutes ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (62 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (67 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (77 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (79 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (84 minutes ago)`
+- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (3 hours ago)`
+- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (3 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (3 hours ago)`
 - `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (3 hours ago)`
-- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (3 hours ago)`
-- … and 163 more
+- … and 164 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

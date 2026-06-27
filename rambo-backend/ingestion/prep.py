@@ -67,6 +67,13 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     batters = [r[0] for r in conn.execute(
         f"SELECT DISTINCT mlb_id FROM prop_lines WHERE mlb_id IS NOT NULL "
         f"AND market IN ({','.join('?' * len(_BATTER_MARKETS))})", _BATTER_MARKETS)]
+    # Player Watch ranks the WHOLE slate, so pull hitting stats for every hitter in a
+    # confirmed lineup too (free statsapi), not just the propped ones. Dedupe, keep
+    # the propped batters first.
+    lineup_batters = [r[0] for r in conn.execute(
+        "SELECT DISTINCT gl.mlb_id FROM game_lineups gl JOIN games g ON g.game_pk=gl.game_pk "
+        "WHERE g.official_date=? AND gl.mlb_id IS NOT NULL", (d,))]
+    batters = list(dict.fromkeys(batters + lineup_batters))
     pitchers = [r[0] for r in conn.execute(
         "SELECT DISTINCT mlb_id FROM prop_lines WHERE mlb_id IS NOT NULL AND market='SO'")]
     # moneyline needs each probable starter's ERA
