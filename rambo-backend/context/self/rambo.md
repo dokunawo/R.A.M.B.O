@@ -85,17 +85,18 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 177 commits:
+Last 14 days — 178 commits:
 
-- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (4 minutes ago)`
-- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (6 minutes ago)`
-- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (9 minutes ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (13 minutes ago)`
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (17 minutes ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (21 minutes ago)`
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (31 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (34 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (39 minutes ago)`
+- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (3 minutes ago)`
+- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (7 minutes ago)`
+- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (9 minutes ago)`
+- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (12 minutes ago)`
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (16 minutes ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (20 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (25 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (34 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (37 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (42 minutes ago)`
 - `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
 - `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (2 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 177 commits:
 - `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (4 hours ago)`
 - `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (10 hours ago)`
 - `a12a63f feat(cmc): poster texture system + branded-plate slot (17 hours ago)`
-- `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (17 hours ago)`
-- … and 157 more
+- … and 158 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
