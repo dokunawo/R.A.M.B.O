@@ -85,11 +85,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 168 commits:
+Last 14 days — 169 commits:
 
-- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (71 minutes ago)`
-- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (71 minutes ago)`
-- `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (84 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (5 minutes ago)`
+- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (76 minutes ago)`
+- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (76 minutes ago)`
+- `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (89 minutes ago)`
 - `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (2 hours ago)`
 - `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (2 hours ago)`
 - `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (3 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 168 commits:
 - `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (18 hours ago)`
 - `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (18 hours ago)`
 - `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (18 hours ago)`
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (18 hours ago)`
-- … and 148 more
+- … and 149 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
