@@ -2,56 +2,32 @@
 
 ## 1. Mission
 
-R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agent AI orchestration system. React 19 frontend with a WebGL cosmic orb interface, FastAPI backend whose 10 original agents are now consolidated into **3 routable modes (Planner/Executor/Researcher) + Keeper/Sentinel/Pilot services** (the UI may still show the legacy roster names), voice control via Web Speech API, Spotify in-app playback, screen vision, and Google service integrations. The operator (Daniel) uses it as a personal ops hub for two businesses: armed security and photography. The system is functional end-to-end — the current phase is expanding integrations, polishing the UI, and wiring up the Anthropic API for personality-driven responses.
+R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agent AI orchestration system. React 19 frontend with a WebGL cosmic orb interface, FastAPI backend with an LLM `SmartRouter` over a live agent roster (core agents + skills + spawned manifests), wake-word voice control ("Operator") with **ElevenLabs neural TTS** (browser-TTS fallback), Spotify in-app playback, screen vision, Google service integrations, a self-coding lane, and a **data-only MLB betting edge engine**. Current build: **MK V**. The operator (Daniel) uses it as a personal ops hub for two businesses: armed security and photography. The system is functional end-to-end — the current active thread is the MLB betting edge engine (brand "Chances Make Champions").
+
+> **Note:** This HANDOFF is a quick-orientation doc. The authoritative, current status is `ROADMAP.md` (consolidated 06/27/2026, supersedes all dated `ROADMAP_*` files). When in doubt, trust ROADMAP.md and git over this file.
 
 ## 2. Current State
 
 ### Working and verified
 - **Cosmic orb renders on all pages** — wireframe icosahedron (detail 18), GLSL simplex noise displacement, fresnel rim glow, billboarded halo, additive blending. Bloom threshold 0.7, intensity 0.6, radius 0.5, smoothing 0.95. `toneMapped: false` on orb materials.
-- **Voice system** — wake word "Rambo" via continuous SpeechRecognition, singleton pattern (one instance per tab), auto-starts on page mount. TTS readback with natural voice (pitch 1.05, rate 1.0). Conversational follow-up ("Is there anything else?"). Works on all pages.
+- **Voice system** — wake word "Operator" via continuous SpeechRecognition, singleton pattern (one instance per tab), auto-starts on page mount. **ElevenLabs neural TTS** with browser-TTS fallback, streaming per-sentence playback, orb pulses to its own voice, watchdog + dedup + half-duplex echo control. Conversational follow-up. Works on all pages.
 - **Backend skills** — weather (Open-Meteo, no key), Google Calendar (read + create events), Google Drive (list + search files), Chief of Staff (doctrine-anchored daily briefs from `north-star.md`).
 - **Agent pages** — left panel (roster-style profile + objectives), right panel (parameters-style stats), response branches connected to orb via bezier SVG curves, bottom quick-switch bar for all 10 agents.
 - **Phase 2 main console** — full orb + agent roster + system parameters + command input + WebSocket activity feed + stat bars.
 - **Round Table** — 10 agents orbiting orb as clickable nodes, AgentConstellation in 3D.
 - **Tier 5/6** — dispatch beams, processing helix, WebSocket-driven animations, performance mode (battery/visibility/prefers-reduced-motion).
-- **Git state**: on `main`, latest commit `d60d48d` (self-coding lane merge). Working tree has **uncommitted** Spotify/startup fixes from the 2026-06-25 session (see §2a).
+- **Git state**: on `main`, up to date with `origin/main`. Latest commit `cef4135` (EV weather modifier + temp-park guard, Phase 2B). Working tree only lightly dirty: modified `rambo-frontend/package-lock.json`, untracked `rambo-frontend/public/cmc/plate.png`. The Spotify/startup fixes from the 2026-06-25 session are **committed**.
 
-## 2a. Session 2026-06-25 — Spotify control + startup fixes (UNCOMMITTED)
+## 2a. MLB betting edge engine — "Chances Make Champions" (CURRENT ACTIVE THREAD, 06/26–06/27)
 
-All verified working on dev (:3001) and prod (:3000) rebuilt. Files touched:
-`rambo-backend/spotify_client.py`, `rambo-backend/main.py`,
-`rambo-frontend/src/components/spotifyEngine.js`, `docker-compose.yml`,
-`rambo-startup.ps1`, plus new `rambo-mediakeys.ahk`, `docs/spotify-extended-quota.md`.
+Data-only +EV MLB tool integrated into the RAMBO backend. Brand "CMC"; ~$10 flat units; data-only (Sentinel boundary — no bet placement). **The earlier "betting agent scrapped" note is obsolete** — this is the new, in-RAMBO angle that replaced the deleted standalone `mlb-betting` repo. Full status in `ROADMAP.md` → "Betting Agent — Chances Make Champions".
 
-- **Click-the-wrong-song bug → FIXED.** `SpotifyClient.play()` now forces shuffle
-  OFF whenever a specific track is selected (`uris` or `offset` present) — with
-  shuffle on, Spotify ignored the start position and began on a random track.
-- **Play/pause BUTTON → FIXED.** `spotifyEngine.js` replaced the flaky SDK
-  `togglePlay()` with explicit `resume()`/`pause()` off tracked state, with a
-  backend Web-API fallback.
-- **Hardware media keys → solved at OS level, NOT in-browser.** The Web Playback
-  SDK plays audio in a cross-origin iframe that owns the OS media session, so
-  Chrome won't deliver the play/pause key to our page (confirmed: top-frame
-  `mediaSession.playbackState` stayed `none`; a silent-audio anchor did not win
-  the session). Solution: new `/spotify/toggle` endpoint + `rambo-mediakeys.ahk`
-  (AutoHotkey v2) maps play/pause/next/prev → backend. Auto-launched by the
-  startup script. **Requires AutoHotkey v2 installed** (now is).
-- **Playlist track listings → Spotify limitation, not a bug.** `/playlists/{id}/tracks`
-  403s for ALL playlists (incl. own) because the app is in Dev Mode. Needs
-  Extended Quota Mode — steps in `docs/spotify-extended-quota.md`. Playback via ▶
-  (context_uri) still works; Liked Songs lists fine (`/me/tracks` isn't restricted).
-- **Dev server wasn't recompiling → FIXED.** CRA 5 / webpack 5 watches via
-  watchpack, not chokidar; on Docker/Windows it needs `WATCHPACK_POLLING=true`
-  (added to compose) or edits silently never reach the :3001 bundle. Also set
-  `WDS_SOCKET_PORT=3001` so HMR stops failing against :3000. **This is why early
-  fixes "didn't work" — the running dev build was stale.**
-- **Startup blank "screen" tab → FIXED.** Root cause: `--auto-select-desktop-capture-source=Entire screen`
-  has a space and was unquoted, so PowerShell split it and Chrome opened the bare
-  `screen` token as a URL. Now quoted. Also: kill leftover RAMBO-profile Chrome
-  before relaunch + suppress session restore.
-- **Note:** backend compose command uses `--reload`, so .py edits DO auto-reload
-  (the old "no auto-reload" note was wrong). Prod frontend (:3000) must be rebuilt
-  (`docker compose up -d --build rambo-frontend`) to pick up frontend changes.
+- **Ingestion (data-only):** free `statsapi.mlb.com` + paid Apify (odds scraper, DK Pick6 props) → spend-capped landing → `raw_ingest` → per-source normalize → typed tables → read-only `MlbRepo`. Code in `rambo-backend/ingestion/`, `repositories/mlb_repo.py`. Verified live.
+- **EV brain — 5 markets** (`rambo-backend/brains/ev/`, market-pluggable `REGISTRY`): Home Runs / H+R+RBI / Stolen Bases / Strikeouts (DK Pick6 props, Pick6 EV = `P×mult − 1`; HR via `1−(1−rate)^4.2` w/ handedness+park; counts via Poisson) + **Moneyline** (pitcher-adjusted run model, market-anchored to de-vigged book → honest bounded *leans*, not fake +EV). Per-slate Haiku explainer. **37 EV tests.**
+- **Recent (06/27):** multi-source recency-aware data layer (Phase 1); Baseball Savant barrel%/hard-hit% → HR power modifier (Phase 2A); weather modifier + temp-park guard for HR model (Phase 2B). New: `config/savant.py`, `config/the_odds_api.py`, `ingestion/savant_client.py`, `ingestion/the_odds_api_client.py`, `db/migrations/008_weather.sql`.
+- **Durable finding:** single DK Pick6 legs are structurally −EV (multipliers carry the house margin). The tool's value is **−EV avoidance + honest leans + line shopping**, not pretending to beat the book.
+- **CMC cards:** web dashboard at `/edge`; downloadable poster at `/card/:market` (`html-to-image` PNG, real headshots, procedural smoke/gold/grunge textures in `public/cmc/`, auto-detected branded `plate.png`).
+- **Next (betting):** prop→game link + team confirmation; Pick6 MLB-only filter; line shopping across books (needs multi-book odds) + CLV tracking; a genuinely backtested predictive moneyline model.
 
 ### Half-built
 - **Personality engine** — `personality.py`, `conversation.py`, `AGENT.md` all exist and are wired into the orchestrator's `_speak()` method. Falls back gracefully to raw results when no API key is set. **Not yet live** because Daniel hasn't set `ANTHROPIC_API_KEY`.
@@ -63,9 +39,11 @@ All verified working on dev (:3001) and prod (:3000) rebuilt. Files touched:
 - **Spotify integration** — not built. Requires separate OAuth app at developer.spotify.com.
 
 ### Next action
-**Active initiative: self-coding agent.** See `docs/PLAN_self-coding-agent.md` — plan to give RAMBO the ability to read/write/review its own code in its AGENT.md voice via Managed Agents, with self-modification sandboxed behind a branch→PR→Daniel-merges loop. **Self-coding lane BUILT (Hybrid, 06/25).** New `rambo-backend/dev_agent/` lets RAMBO edit its OWN code on an isolated local git worktree → diff + impact + recommendation (merge/escalate/hold) → operator merges locally. Endpoints `/dev/*`; routable `dev` target in the orchestrator; `CodeReviewDock` in the frontend (SharedHUD.js). Factory (helper-agent spawning) unchanged. Full suite 307 pass; pipeline verified in-process. Plan: `docs/PLAN_self-coding-agent.md`. **To exercise it live: restart the backend container** (uvicorn no auto-reload — the running one is 4h old and lacks `/dev/*`); merge also requires a clean working tree (currently dirty with uncommitted work). Phase 0 (API key) + Phase 1a (agent loop) were done 06/24.
+**Active thread: MLB betting edge engine (CMC)** — see §2a and `ROADMAP.md`. Next betting steps: prop→game link + team confirmation, Pick6 MLB-only filter on paid pulls, line shopping across books + CLV tracking, and a genuinely backtested predictive moneyline model (the only path to validated edge). Wait for Daniel's direction.
 
-Other pending threads: visual polish on the branch panels, Gmail/Spotify integration, testing calendar/drive skills through the voice interface.
+Already-shipped initiatives now in maintenance: **self-coding lane** (`rambo-backend/dev_agent/` — drafts changes on an isolated git worktree → TDD red→green → impact report → lands on `main` only on explicit operator merge; endpoints `/dev/*`); **Factory** sub-agent spawner; **morning brief** scheduler; cost tracking + `/usage` dashboard. Test suite: **320 core + 37 EV pass**.
+
+Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar/drive skills through the voice interface.
 
 ## 3. Decisions Made (and Why)
 
@@ -169,7 +147,7 @@ Other pending threads: visual polish on the branch panels, Gmail/Spotify integra
 - **Backend**: FastAPI, no ORM. SQLite via `sqlite_store.py` for memory. Skills pattern: matcher function + async runner, registered in `SKILLS` list.
 - **Git**: Descriptive multi-line commit messages. `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` on every commit. Use Bash heredoc, not PowerShell, for commit messages.
 - **No unit tests on frontend** — we're prototyping. Backend has `tests/test_personality.py` (15 tests, all pass).
-- **Voice**: "Rambo" is the wake word. TTS prefers natural/female English voices. Pitch 1.05, rate 1.0.
+- **Voice**: "Operator" is the wake word. ElevenLabs neural TTS (browser TTS fallback), streaming per-sentence playback.
 - **Color scheme**: gold #e8b15a is the primary accent. Each agent has a unique color defined in AGENT_META. Dark backgrounds rgba(8,9,11,X).
 
 ## 7. Open Questions
@@ -191,4 +169,4 @@ Other pending threads: visual polish on the branch panels, Gmail/Spotify integra
 
 ## 9. Resume Command
 
-> Read HANDOFF.md. The project is R.A.M.B.O at `C:\Users\dokun\PycharmProjects\R.A.M.B.O`. Check `git log --oneline -5` and `git status` to confirm state. Wait for Daniel's direction — he was testing UI changes (response tree branches on agent pages, quick-switch bar) and may want visual adjustments, new integrations (Gmail, Spotify), or other features. Do not modify bloom/shader settings, the voice singleton pattern, or the personality file without being asked. Daniel views at 80% Chrome zoom, timezone America/Detroit.
+> Read HANDOFF.md (then `ROADMAP.md` for authoritative status). The project is R.A.M.B.O at `C:\Users\dokun\PycharmProjects\R.A.M.B.O`. Check `git log --oneline -5` and `git status` to confirm state. Wait for Daniel's direction — the current active thread is the MLB betting edge engine ("Chances Make Champions"): data-only ingestion + EV brain (5 markets) + CMC cards. Do not modify bloom/shader settings, the voice singleton pattern, or the personality file without being asked. Daniel views at 80% Chrome zoom, timezone America/Detroit.
