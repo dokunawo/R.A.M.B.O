@@ -116,18 +116,31 @@ inlined in `MoneylineMarket.raw_picks` into a shared helper
 (`moneyline_model.evaluate_game(...)` or similar) returning both-side numbers, so
 `moneyline_board` and the `ml` market both call it (no duplicated math).
 
-### 5.2 Ordering (no bias)
-Rows are listed in **strict slate order, NOT ranked by lean** — the dedicated `ml`
-slip already surfaces our best plays, so the board stays a neutral menu. Order key:
-alphabetical by away-team abbr, then home-team abbr (deterministic). True
-first-pitch order is deferred: the `games` table stores `official_date` +
-`day_night` but no start timestamp, so game-time sorting would need ingesting the
-schedule `gameDate` into a new column (see §7).
+### 5.2 Ordering (no bias) — game time
+Rows are listed in **first-pitch game-time order, NOT ranked by lean** — the
+dedicated `ml` slip already surfaces our best plays, so the board stays a neutral
+menu.
+
+The schedule payload already carries `gameDate` (full ISO UTC timestamp), but it
+isn't stored — `_upsert_game` only keeps `officialDate` (date) + `dayNight`. So:
+- **Migration `009_game_datetime.sql`** — `ALTER TABLE games ADD COLUMN
+  game_datetime TEXT;` (allowed on STRICT tables).
+- **`ingestion/normalize._upsert_game`** — capture
+  `"game_datetime": _dig(item, "gameDate")` and add the column to the upsert's
+  INSERT column list + VALUES.
+- **`MlbRepo.moneyline_slate` / `games_on`** — select `game_datetime` and
+  `ORDER BY game_datetime` (NULLs last, then `away_team_abbr` as a stable
+  tiebreaker for same-time games / missing timestamps).
+
+Re-pull note: existing `games` rows get `game_datetime` populated on the next
+schedule pull (daily `prep` already re-pulls the schedule), so the column
+backfills naturally. Rows that predate the migration (or any null timestamp) fall
+back to alphabetical so ordering is always deterministic.
 
 ### 5.3 Prompt shape
 Same envelope. Title **"MONEYLINE BOARD"**, provenance
 `[Moneyline (de-vig book lean) · as of <ts> · DraftKings]`. One row per game in
-the order above:
+game-time order (earliest first):
 `1. ARI (+130) @ ATL (-150) — model: ATL 58% / ARI 42% — CMC lean: ATL +1.2%`
 Neutral example: `2. BOS (+105) @ NYY (-115) — model: NYY 51% / BOS 49% — no lean`
 CRITICAL + KEY clauses as above ("leans are bounded disagreements with the
@@ -136,12 +149,13 @@ de-vigged book, not guarantees; build your own card from any side").
 ### 5.4 Existing moneyline output also re-ordered (user request)
 The current `ml` results (the `daily-edge?market=ml` list and the `ml` slip
 prompt) are today ranked by lean magnitude. Per the operator, switch the **`ml`
-market's presentation order to the same alphabetical slate order** so the daily
-moneyline reads in a consistent, unbiased sequence. This is an ordering change
-only — the +EV/threshold filtering and the lean math are unchanged. Concretely:
-`build_slip`'s `ml` branch and `daily_edge` for `ml` sort by matchup (away abbr,
-home abbr) instead of by `edge`. Other markets (hr/hrr/sb/k) keep their
-probability ranking.
+market's presentation order to the same game-time order** so the daily moneyline
+reads in a consistent, unbiased sequence. This is an ordering change only — the
++EV/threshold filtering and the lean math are unchanged. Concretely: `build_slip`'s
+`ml` branch and `daily_edge` for `ml` sort by `game_datetime` (away abbr
+tiebreaker) instead of by `edge`. This requires the `ml` `Pick` to carry its
+`game_pk`/`game_datetime` for sorting (small `Pick` field add, populated in
+`MoneylineMarket`). Other markets (hr/hrr/sb/k) keep their probability ranking.
 
 ## 6. cmc-daily.ps1 integration
 
@@ -159,8 +173,6 @@ so they cost nothing extra and work under `-SkipPrep`.
 - Ingesting pitch-mix arsenal or BvP (possible future follow-up; explicitly
   deferred — and BvP was judged low-value previously).
 - Run line / totals on the Moneyline Board (moneyline only).
-- True first-pitch game-time ordering (deferred — needs ingesting schedule
-  `gameDate` into a new `games` column; alphabetical slate order used for now).
 - Any bet-placement capability (Sentinel boundary).
 
 ## 8. Testing
@@ -171,11 +183,14 @@ Unit tests in `rambo-backend/tests/`:
   prompt containing each player's exact text; missing optional fields are omitted
   (never "None"/faked).
 - `test_watch_moneyline.py` — `moneyline_board` returns one row per slate game with
-  both-side odds + model %, rows in alphabetical slate order (away abbr, home
-  abbr), the lean side matches the `ml` market's pick for the same game (shared
-  helper consistency), and neutral games render "no lean".
+  both-side odds + model %, rows in game-time order (earliest `game_datetime`
+  first, away abbr tiebreaker), the lean side matches the `ml` market's pick for
+  the same game (shared helper consistency), and neutral games render "no lean".
 - `test_ev_moneyline.py` (extend) — assert the `ml` slip / `daily_edge` output is
-  ordered alphabetically by matchup, not by lean.
+  ordered by `game_datetime`, not by lean.
+- `test_watch_schedule_time.py` (or extend a normalize test) — `_upsert_game`
+  persists `game_datetime` from the schedule `gameDate`, and `moneyline_slate`
+  returns it.
 - API smoke: both endpoints return 200 with `prompt` + `provenance`.
 
 ## 9. Honesty / provenance recap
