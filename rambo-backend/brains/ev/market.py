@@ -5,7 +5,7 @@ from brains.ev.hr_model import hr_probability, edge, breakeven
 from brains.ev.count_model import poisson_prob_over
 from brains.ev.moneyline_model import (pythag_winpct, matchup_winprob, devig_two_way,
                                        expected_runs, winprob_from_runs,
-                                       market_anchored_prob)
+                                       market_anchored_prob, evaluate_game)
 from brains.ev.types import Pick, CountFeatures
 
 _HEADSHOT = ("https://img.mlbstatic.com/mlb-photos/image/upload/"
@@ -125,34 +125,17 @@ class MoneylineMarket:
         season = int(date[:4])
         picks: list[Pick] = []
         for g in repo.moneyline_slate(date):
-            hr, ar = repo.team_runs(g["home_team_id"], season), repo.team_runs(g["away_team_id"], season)
-            if not hr or not ar:
+            ev = evaluate_game(repo, season, g)
+            if ev is None:
                 continue
-            home_era = repo.pitcher_era(g["home_probable_pitcher_id"], season)
-            away_era = repo.pitcher_era(g["away_probable_pitcher_id"], season)
-            hg, ag = hr["games_played"], ar["games_played"]
-            if home_era and away_era and hg and ag:
-                # pitcher-adjusted: each offense vs the OPPOSING starter
-                exp_home = expected_runs(hr["runs_scored"] / hg, away_era)
-                exp_away = expected_runs(ar["runs_scored"] / ag, home_era)
-                model_home = winprob_from_runs(exp_home, exp_away)
-                home_support = f"vs {away_era:.2f} ERA SP"
-                away_support = f"vs {home_era:.2f} ERA SP"
+            if ev["diff"] >= 0:
+                tid, abbr, opp = g["home_team_id"], ev["home_abbr"], ev["away_abbr"]
+                mp, bp, price, support = (ev["model_home"], ev["book_home"],
+                                          g["home_price"], ev["home_support"])
             else:
-                # fallback: pure season Pythagorean (no starter info)
-                model_home = matchup_winprob(
-                    pythag_winpct(hr["runs_scored"], hr["runs_allowed"]),
-                    pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
-                home_support = away_support = "Pythag (no SP)"
-            book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
-            # anchor the model to the market; the lean is the bounded disagreement
-            anchored_home = market_anchored_prob(model_home, book_home)
-            if anchored_home - book_home >= 0:
-                tid, abbr, opp = g["home_team_id"], g["home_team_abbr"], g["away_team_abbr"]
-                mp, bp, price, support = anchored_home, book_home, g["home_price"], home_support
-            else:
-                tid, abbr, opp = g["away_team_id"], g["away_team_abbr"], g["home_team_abbr"]
-                mp, bp, price, support = 1.0 - anchored_home, book_away, g["away_price"], away_support
+                tid, abbr, opp = g["away_team_id"], ev["away_abbr"], ev["home_abbr"]
+                mp, bp, price, support = (ev["model_away"], ev["book_away"],
+                                          g["away_price"], ev["away_support"])
             abbr = abbr or ""
             picks.append(Pick(
                 market="ml", mlb_id=tid, name=abbr.upper(), initials=abbr.upper(),
@@ -161,6 +144,7 @@ class MoneylineMarket:
                 breakeven=round(bp, 4), model_p=round(mp, 4), edge=round(mp - bp, 4),
                 support=support, tags=["LEAN"], glow="gold",
                 headshot_url=_TEAM_LOGO.format(team_id=tid), rationale="",
+                game_pk=ev["game_pk"], game_datetime=ev["game_datetime"] or "",
             ))
         return picks
 

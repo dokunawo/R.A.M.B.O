@@ -21,6 +21,8 @@ class Pick:
     glow: str              # badge ring colour
     headshot_url: str
     rationale: str = ""
+    game_pk: int = 0
+    game_datetime: str = ""
 
 @dataclass
 class HRFeatures:
