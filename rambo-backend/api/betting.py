@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException
 from brains.ev.engine import daily_edge
 from brains.ev.market import REGISTRY
 from brains.ev.slip import build_slip, PRODUCT
+from brains.ev.watch import player_watch, moneyline_board
 
 router = APIRouter(prefix="/betting", tags=["betting"])
 
@@ -85,6 +86,30 @@ def get_slip(market: str = "hr", date: Optional[str] = None,
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"slip failed: {e}") from e
     return {"market": market, "date": d, **slip, "provenance": prov}
+
+
+@router.get("/player-watch")
+def get_player_watch(date: Optional[str] = None) -> dict:
+    """Top-11 HR board + a ready-to-paste ChatGPT image prompt (+ provenance)."""
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, as_of, _ = _provenance("hr")
+        watch = player_watch(d, as_of=as_of, book="DraftKings Pick6")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"player_watch failed: {e}") from e
+    return {"date": d, **watch, "provenance": prov}
+
+
+@router.get("/moneyline-board")
+def get_moneyline_board(date: Optional[str] = None) -> dict:
+    """Every slate game (book odds + model %) + a ChatGPT image prompt (+ provenance)."""
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, as_of, book = _provenance("ml")
+        board = moneyline_board(d, as_of=as_of, book=book)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"moneyline_board failed: {e}") from e
+    return {"date": d, **board, "provenance": prov}
 
 
 @router.post("/prep")

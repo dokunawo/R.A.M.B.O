@@ -126,6 +126,16 @@ class MlbRepo:
             "SELECT throws FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
         return row["throws"] if row else None
 
+    def player_bats(self, mlb_id: int) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT bats FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
+        return row["bats"] if row else None
+
+    def player_name(self, mlb_id: int) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT full_name FROM players WHERE mlb_id=?", (mlb_id,)).fetchone()
+        return row["full_name"] if row else None
+
     def team_runs(self, team_id: int, season: int) -> Optional[dict]:
         row = self.conn.execute(
             "SELECT runs_scored, runs_allowed, games_played FROM team_season_stats "
@@ -210,7 +220,7 @@ class MlbRepo:
                    FROM odds_lines
                    WHERE market='moneyline' AND price <> 0 AND book NOT LIKE '%Live%'
                )
-               SELECT g.game_pk, g.home_team_id, g.away_team_id,
+               SELECT g.game_pk, g.game_datetime, g.home_team_id, g.away_team_id,
                       g.home_team_abbr, g.away_team_abbr,
                       g.home_probable_pitcher_id, g.away_probable_pitcher_id,
                       MAX(CASE WHEN m.side='home' THEN m.price END) AS home_price,
@@ -218,7 +228,8 @@ class MlbRepo:
                FROM games g
                JOIN ml m ON m.game_pk=g.game_pk AND m.rn=1
                WHERE g.official_date=?
-               GROUP BY g.game_pk""", (date,)).fetchall()
+               GROUP BY g.game_pk
+               ORDER BY g.game_datetime IS NULL, g.game_datetime, g.away_team_abbr""", (date,)).fetchall()
         return [dict(r) for r in rows
                 if r["home_price"] is not None and r["away_price"] is not None]
 

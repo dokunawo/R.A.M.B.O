@@ -140,3 +140,23 @@ def test_market_anchored_prob_bounds():
 
 def test_registry_has_moneyline():
     assert REGISTRY["ml"].market_key == "ml"
+
+
+def test_ml_output_in_game_time_order(tmp_path):
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    now = "2026-06-27T00:00:00Z"
+    conn.execute("INSERT INTO team_season_stats VALUES (147,2026,800,600,162,'mlb',?)", (now,))
+    conn.execute("INSERT INTO team_season_stats VALUES (111,2026,600,800,162,'mlb',?)", (now,))
+    # two games; the later-starting one inserted first
+    for pk, dt, home, away in [(2, "2026-06-27T23:10:00Z", "LAD", "SDP"),
+                               (1, "2026-06-27T17:05:00Z", "NYY", "BOS")]:
+        conn.execute("INSERT INTO games (game_pk, official_date, game_datetime, "
+                     "home_team_id, away_team_id, home_team_abbr, away_team_abbr, "
+                     "scraped_at) VALUES (?,?,?,147,111,?,?,?)", (pk, "2026-06-27", dt, home, away, now))
+        for side, price in (("home", -120), ("away", 100)):
+            conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, "
+                         "captured_at) VALUES (?, 'DraftKings','moneyline',?,?,?)",
+                         (pk, side, price, "2026-06-27T12:00:00Z"))
+    from brains.ev.engine import daily_edge
+    picks = daily_edge("2026-06-27", "ml", repo=MlbRepo(conn), threshold=-1.0)
+    assert [p.game_pk for p in picks] == [1, 2]            # earliest first, not lean-ranked

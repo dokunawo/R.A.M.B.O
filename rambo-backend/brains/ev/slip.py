@@ -33,17 +33,20 @@ def _confidence_word(market: str) -> str:
 
 def build_slip(picks: list[Pick], market: str, count: int | None = None, *,
                as_of: str | None = None, book: str | None = None) -> dict:
-    """Rank `picks` for the slip (props by hit-probability, moneyline by lean),
+    """Rank `picks` for the slip (props by hit-probability, moneyline by game time),
     take the top N, and return the roster + a copy-paste ChatGPT prompt. `as_of`/
     `book` stamp the slip's provenance (product label + data-as-of)."""
     requested = count or SLIP_SIZE.get(market, 6)
     product = PRODUCT.get(market, market.upper())
-    key = (lambda p: p.edge) if market == "ml" else (lambda p: p.model_p)
-    # One play per player: props list ladders (e.g. a pitcher's 2.5+…10.5+ K lines),
-    # so keep only each player's best-ranked line before taking the top N.
+    if market == "ml":
+        ordered = sorted(picks, key=lambda p: (p.game_datetime or "~", p.team))  # "~" sorts after any ISO datetime, so games with no start time go last
+    else:
+        ordered = sorted(picks, key=lambda p: p.model_p, reverse=True)
+    # One play per player: prop ladders repeat a player; keep each player's first
+    # (best-ranked / earliest) row before taking the top N.
     seen: set[int] = set()
     ranked: list[Pick] = []
-    for p in sorted(picks, key=key, reverse=True):
+    for p in ordered:
         if p.mlb_id in seen:
             continue
         seen.add(p.mlb_id)

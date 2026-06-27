@@ -73,3 +73,37 @@ def devig_two_way(home_odds: int, away_odds: int) -> tuple[float, float]:
     ih, ia = american_to_implied(home_odds), american_to_implied(away_odds)
     total = ih + ia
     return ih / total, ia / total
+
+
+def evaluate_game(repo, season: int, g: dict) -> dict | None:
+    """Both-side model/book numbers for one `moneyline_slate` game, or None when
+    team run data is missing. `diff = model_home - book_home` (signed lean toward
+    home). model_home/model_away are market-anchored and sum to 1.0."""
+    hr, ar = repo.team_runs(g["home_team_id"], season), repo.team_runs(g["away_team_id"], season)
+    if not hr or not ar:
+        return None
+    home_era = repo.pitcher_era(g["home_probable_pitcher_id"], season)
+    away_era = repo.pitcher_era(g["away_probable_pitcher_id"], season)
+    hg, ag = hr["games_played"], ar["games_played"]
+    if home_era and away_era and hg and ag:
+        exp_home = expected_runs(hr["runs_scored"] / hg, away_era)
+        exp_away = expected_runs(ar["runs_scored"] / ag, home_era)
+        model_home = winprob_from_runs(exp_home, exp_away)
+        home_support = f"vs {away_era:.2f} ERA SP"
+        away_support = f"vs {home_era:.2f} ERA SP"
+    else:
+        model_home = matchup_winprob(
+            pythag_winpct(hr["runs_scored"], hr["runs_allowed"]),
+            pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
+        home_support = away_support = "Pythag (no SP)"
+    book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
+    anchored_home = market_anchored_prob(model_home, book_home)
+    return {
+        "game_pk": g["game_pk"], "game_datetime": g.get("game_datetime"),
+        "home_abbr": g["home_team_abbr"], "away_abbr": g["away_team_abbr"],
+        "home_price": g["home_price"], "away_price": g["away_price"],
+        "book_home": book_home, "book_away": book_away,
+        "model_home": anchored_home, "model_away": 1.0 - anchored_home,
+        "diff": anchored_home - book_home,
+        "home_support": home_support, "away_support": away_support,
+    }
