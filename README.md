@@ -375,6 +375,11 @@ npm start          # serves on http://localhost:3000
 | `POST` | `/factory/approve/{id}` | — | Approve a proposed agent → registers `dispatch_to_<slug>` |
 | `POST` | `/factory/reject/{id}` | `{ "feedback": "..." \| null }` | Reject (feedback = revise, blank = kill) |
 | `GET` | `/factory/agents` | — | List active spawned agents |
+| `POST` | `/betting/prep` | `?date=` | Pull + normalize the full MLB slate (data-only; paid Apify) |
+| `GET` | `/betting/daily-edge` | `?market=&date=&threshold=` | Ranked picks for one market (+EV only by default) |
+| `GET` | `/betting/slip` | `?market=&date=` | Fixed-size slip roster + a ChatGPT image prompt |
+| `GET` | `/betting/player-watch` | `?date=` | Top-11 HR board (our leans pinned) + prompt |
+| `GET` | `/betting/moneyline-board` | `?date=` | Every game in game-time order (book odds + model %) + prompt |
 | `WS` | `/ws/activity` | — | Live activity + `STATUS:<agent>:<state>` feed |
 
 **Example — run a goal:**
@@ -460,6 +465,13 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-27 — Player Watch + Moneyline Board, daily script, single-instance boot
+- **[Player Watch]** New `GET /betting/player-watch` — the slate's **top 11 HR threats**. Our DK Pick6 HR plays ("leans", tagged `[CMC LEAN]`) are pinned first; the rest fill from confirmed lineups by model HR%. New prop-less scorer `features.build_hr_features_core` + `MlbRepo.lineup_batters`; `prep` now pulls hitting stats for **every** lineup batter (free statsapi) so the whole slate can be ranked.
+- **[Moneyline Board]** New `GET /betting/moneyline-board` — **every** game in **game-time order** with both book odds, model win % per side, and our lean (or "no lean"), for mix-and-match. Shared `moneyline_model.evaluate_game` (also used by the `ml` market); new `games.game_datetime` column (migration `009`) captured from the schedule, and the existing `ml` output re-ordered by first pitch.
+- **[Daily script]** `cmc-daily.ps1` — one command pulls the slate, prints all 5 slips + Player Watch + Moneyline Board prompts, and writes a Consolas-9 `CMC_Daily_<date>.docx` to the repo root (`-SkipPrep` regenerates free; `-Date`, `-Open`). UTF-8-safe fetch.
+- **[Startup]** `rambo-startup.ps1` gains a **single-instance lock** (global mutex) so the login Task Scheduler job and the desktop shortcut can't race into two Chrome windows; stale-Chrome cleanup hardened; the desktop shortcut dropped `-Fresh` for a fast open.
+- **[Honesty]** Player Watch fills empty visual slots (no pitch-mix/BvP) with real Statcast power + form; optional fields omitted when absent, never faked. 360+ tests pass.
 
 ### 2026-06-26/27 — MLB betting edge engine + Chances Make Champions card
 - **[Ingestion]** Data-only MLB layer: free `statsapi.mlb.com` (roster/schedule/stats/team stats) + paid Apify (odds, DK Pick6 props) → spend-capped landing → normalize → typed tables → read-only `MlbRepo`. Sentinel boundary by construction (no bet-placement imports).

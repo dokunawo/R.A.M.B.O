@@ -34,10 +34,12 @@ data-only MLB betting edge engine. Current build: **MK V**.
 - **MLB betting edge engine** — data-only ingestion + EV brain (5 markets) + CMC card. See
   the [Betting Agent](#betting-agent--chances-make-champions) section.
 
-Test suite: **320 pass** (core) + **37** (EV brain). Stack: React 19 / R3F / Three.js
-front end; FastAPI back end; SQLite (usage / dispatch / factory / keeper / dev_changes /
-mlb_ingest); Docker Compose (`rambo-backend` :8000, prod `:3000`, dev hot-reload `:3001`);
-PowerShell control panel.
+Test suite: **320 pass** (core) + **~45** (EV brain + Player Watch / Moneyline Board). Stack:
+React 19 / R3F / Three.js front end; FastAPI back end; SQLite (usage / dispatch / factory /
+keeper / dev_changes / mlb_ingest); Docker Compose (`rambo-backend` :8000, prod `:3000`, dev
+hot-reload `:3001`); PowerShell control panel + `cmc-daily.ps1` (daily betting run).
+`rambo-startup.ps1` is single-instance (a global mutex stops the boot task + desktop shortcut
+from ever opening two Chrome windows).
 
 ---
 
@@ -117,17 +119,28 @@ Make Champions" (CMC); ~$10 flat units; data-only (Sentinel boundary — no bet 
   - **Moneyline** — pitcher-adjusted run model **market-anchored** to the de-vigged book
     (book = prior, clamp to realistic single-game range) → small honest **leans**, not
     fake +EV. Team-stats ingestion + starter ERA.
-  - Per-slate Haiku explainer (honest, market-aware; only explains genuine plays); 37 tests.
+  - Per-slate Haiku explainer (honest, market-aware; only explains genuine plays).
+- **Player Watch board** (`GET /betting/player-watch`): the slate's **top 11 HR threats** —
+  our DK Pick6 HR plays ("leans", tagged `[CMC LEAN]`) pinned first, the rest filled from
+  confirmed lineups by model HR%. Prop-less scorer `features.build_hr_features_core` +
+  `MlbRepo.lineup_batters`; `prep` now pulls hitting stats for every lineup batter.
+- **Moneyline Board** (`GET /betting/moneyline-board`): **every** game in **game-time order**
+  (book odds + model % per side + lean / no-lean) for mix-and-match. Shared
+  `moneyline_model.evaluate_game`; `games.game_datetime` (migration `009`); `ml` output
+  re-ordered by first pitch.
 - **Key finding (durable):** single DK Pick6 legs are structurally −EV (multipliers carry
   the house margin); a naive heuristic can't beat a sharp moneyline. The tool's value is
   **−EV avoidance + honest leans + line shopping**, not pretending to beat the book.
-- **CMC cards:** web dashboard at `/edge` (moneyline leans lead, props as honest −EV skips)
-  + **downloadable poster** at `/card/:market` (`html-to-image` PNG export, real headshots,
-  procedural smoke/gold/grunge textures in `public/cmc/`, auto-detected branded `plate.png`).
+- **CMC cards + daily run:** web dashboard at `/edge` (moneyline leans lead, props as honest
+  −EV skips) + **downloadable poster** at `/card/:market` (`html-to-image` PNG, real
+  headshots, procedural textures in `public/cmc/`, branded `plate.png`). One-command daily
+  workflow `cmc-daily.ps1` (pull slate → print every slip/board prompt → write
+  `CMC_Daily_<date>.docx`). EV brain + boards: ~45 tests.
 
 ### Next (betting)
 - Prop → game link + team confirmation; Pick6 MLB-only filter on paid pulls.
 - Line shopping across books (needs multi-book odds); confidence/CLV tracking.
+- True first-pitch ordering is live; consider TZ-localized display times.
 - A genuinely backtested predictive moneyline model (the only path to validated edge).
 
 ---
@@ -169,7 +182,8 @@ Factory: `POST /factory/spawn` · `GET /factory/pending` · `GET /factory/task/{
 Confirm/Handoff: `GET /confirmations` · `GET /handoffs` (+approve/accept/reject)
 Dev lane: `POST /dev/propose` · `GET /dev/pending` · `GET /dev/change/{id}` ·
 `POST /dev/merge|reject|escalate/{id}`
-Betting: `POST /ingest/run` · `GET /betting/daily-edge?market=&date=&threshold=`
+Betting: `POST /ingest/run` · `POST /betting/prep` · `GET /betting/daily-edge?market=&date=&threshold=` ·
+`GET /betting/slip?market=&date=` · `GET /betting/player-watch?date=` · `GET /betting/moneyline-board?date=`
 
 ### Notable env vars
 `ANTHROPIC_API_KEY` · `RAMBO_MODEL` · `RAMBO_FAST_MODEL` · `RAMBO_CACHE_TTL` ·

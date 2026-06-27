@@ -32,6 +32,14 @@ All commands run from the project root: `C:\Users\dokun\PycharmProjects\R.A.M.B.
 | `.\start-dev.ps1` | Bring the stack up for development. |
 | `.\start-prod.ps1` | Bring the stack up in production mode. |
 | `.\rambo-control-panel.ps1` | Interactive 7-step boot / health-scan / rebuild / browser-launch control panel. |
+| `.\cmc-daily.ps1` | The daily MLB betting run (pull slate + print all prompts + write the Word doc). See §6. |
+
+### Boot, the desktop shortcut, and the "two windows" guarantee
+RAMBO opens two ways, and **both can run without ever opening a duplicate window**:
+- **At login** — a Task Scheduler job ("RAMBO Startup") runs `rambo-startup.ps1` hidden.
+- **On demand** — the **desktop shortcut `R.A.M.B.O.lnk`** runs the same script (now **without** the slow `-Fresh` rebuild, so it opens fast).
+
+`rambo-startup.ps1` holds a **single-instance lock** (a global mutex): if a launch is already in progress, a second trigger exits immediately *before* touching Docker or Chrome — so the login job and a shortcut click can never race into two kiosk windows. It also kills any leftover RAMBO-profile Chrome before opening a fresh one. (RAMBO uses its **own** Chrome profile at `.chrome-profile\` — your everyday Chrome is never touched.)
 
 ### The direct way (Docker Compose)
 | Goal | Command |
@@ -142,13 +150,114 @@ This lets RAMBO **read, write, test, and review changes to its own source code**
 
 ---
 
-## 6. Running the tests
+## 6. The MLB betting tool — "Chances Make Champions" (CMC)
 
-From `rambo-backend/`: `python -m pytest -q`  (320+ tests). The self-coding lane itself uses this same command internally to verify its own changes.
+A **data-only** MLB edge tool baked into the backend. It never places bets. It pulls
+free + paid data, runs a 5-market EV model, and produces ready-to-paste **ChatGPT
+image prompts** plus a web dashboard and downloadable posters. Brand: **Chances Make
+Champions (CMC)**; ~$10 flat units; honest framing (it leads with −EV avoidance and
+bounded *leans*, not fake "locks").
+
+### 6.1 The one-command daily run
+From the project root:
+
+```powershell
+.\cmc-daily.ps1
+```
+
+This: (1) **pulls a fresh slate**, (2) prints all the picks + every ChatGPT image
+prompt to the console, and (3) writes a readable **Word doc** to the repo root:
+`CMC_Daily_<date>.docx` (Consolas 9, gitignored — these don't get committed).
+
+| Flag | Use |
+|---|---|
+| *(none)* | Pull a fresh slate for **today**, print everything, write the doc. **Costs money** (paid Apify pulls) — run once per day. |
+| `-SkipPrep` | **Free.** Don't re-pull; just regenerate the doc/prompts from already-pulled data. |
+| `-Date 2026-06-27` | Run a specific slate date. |
+| `-Open` | Open the Word doc in Word when done. |
+
+> **PowerShell gotcha:** `curl` is an alias for `Invoke-WebRequest` and won't accept
+> `-s -X POST`. To hit the API by hand use **`Invoke-RestMethod`** (or `curl.exe`).
+> The script already uses a UTF-8-safe fetch, so em-dashes/°/↑ render correctly.
+
+### 6.2 What you get (the boards)
+- **5 per-market slips** — Home Runs, H+R+RBI, Stolen Bases, Strikeouts, Moneyline.
+- **Player Watch** — the top **11 HR threats** of the slate. Our actual DK Pick6 HR
+  plays ("**leans**", tagged `[CMC LEAN]`) are pinned at the top; the rest fill from
+  the day's confirmed lineups by model HR%.
+- **Moneyline Board** — **every** game in **game-time order** with both book odds,
+  our model win % for each side, and our lean (or "no lean") — so you can mix-and-match
+  your own moneyline alongside ours.
+
+### 6.3 Where to read / use the picks
+- **Dashboard:** `http://localhost:3000/edge` (moneyline leans lead; props shown as
+  honest −EV skips).
+- **Posters:** `http://localhost:3000/card/<market>` (e.g. `/card/hr`) — a downloadable
+  cinematic PNG.
+- **ChatGPT prompts:** copy the `prompt` text from the Word doc (or the console) into
+  ChatGPT image-gen to produce the branded card art.
+- **By hand (API):**
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "http://localhost:8000/betting/prep"          # pull slate (paid)
+(Invoke-RestMethod "http://localhost:8000/betting/slip?market=hr").prompt          # one slip prompt
+(Invoke-RestMethod "http://localhost:8000/betting/player-watch").prompt            # Player Watch
+(Invoke-RestMethod "http://localhost:8000/betting/moneyline-board").prompt         # Moneyline Board
+```
+
+### 6.4 Reading the output honestly (not a bug)
+- **Prop markets usually show `count: 0`** on `/betting/daily-edge` — single DK Pick6
+  legs are structurally −EV, so the model refuses them. The slips/dashboard still list
+  the near-misses (labeled skips) for transparency. The prop value is **−EV avoidance**.
+- **Moneyline** is the market that produces real output — small, bounded **leans**
+  (honest disagreements with the de-vigged book), never guarantees.
+
+### 6.5 The data (and what costs money)
+`POST /betting/prep` pulls the whole board: free `statsapi.mlb.com` (schedule, lineups,
+team/player stats — including hitting stats for **every lineup batter**, which is what
+lets Player Watch rank the whole slate) **plus paid Apify** (DraftKings odds + DK Pick6
+props). So **prep is the paid step — run it once a day**; everything else (`-SkipPrep`,
+the slips, boards, dashboard, posters) reads already-pulled data for free.
+
+> **Schema note:** the SQLite DB auto-applies its migrations whenever prep or the
+> ingestion CLI runs, so new columns (e.g. game start time `game_datetime`) appear on
+> the next prep with nothing to do manually.
+
+### 6.6 Where everything lives
+| Thing | Location |
+|---|---|
+| Daily script | `cmc-daily.ps1` (repo root) |
+| Generated docs | `CMC_Daily_<date>.docx` (repo root, gitignored) |
+| EV model + boards | `rambo-backend/brains/ev/` (`market.py`, `hr_model.py`, `moneyline_model.py`, `features.py`, `slip.py`, `watch.py`) |
+| API endpoints | `rambo-backend/api/betting.py` (`/betting/*`) |
+| Data ingestion | `rambo-backend/ingestion/` + `repositories/mlb_repo.py` |
+| Card art assets | `rambo-frontend/public/cmc/` (textures + branded `plate.png`) |
+| Local data | `rambo-backend/data/mlb_ingest.db` (gitignored) |
+
+### 6.7 Betting endpoints
+| Endpoint | Does |
+|---|---|
+| `POST /betting/prep?date=` | Pull + normalize the full slate (paid). |
+| `GET /betting/daily-edge?market=&date=&threshold=` | Ranked picks for one market (+EV only by default). |
+| `GET /betting/slip?market=&date=` | Fixed-size slip roster + a ChatGPT image prompt. |
+| `GET /betting/player-watch?date=` | Top-11 HR board (leans pinned) + prompt. |
+| `GET /betting/moneyline-board?date=` | Every game in game-time order + prompt. |
 
 ---
 
-## 7. Quick troubleshooting
+## 7. Running the tests
+
+From `rambo-backend/`: `python -m pytest -q`  (360+ tests, incl. the EV brain + the
+Player Watch / Moneyline Board suites). The self-coding lane uses this same command
+internally to verify its own changes.
+
+> On this machine, run pytest with the project venv:
+> `cd rambo-backend ; .\.venv\Scripts\python.exe -m pytest -q` (the bare `python`
+> lacks the backend's deps).
+
+---
+
+## 8. Quick troubleshooting
 
 | Symptom | Fix |
 |---|---|
@@ -160,11 +269,15 @@ From `rambo-backend/`: `python -m pytest -q`  (320+ tests). The self-coding lane
 | Voice not talking (only text) | Check `ANTHROPIC_API_KEY` (and `ELEVENLABS_*` for the neural voice) in `.env`, then restart the backend. |
 | Self-coding "merge" refused | You have uncommitted edits in a file the change touches — commit/stash them, or it's safely blocked by design. |
 | Dev lane says "pytest not installed" | The backend image needs a rebuild: `docker compose build rambo-backend && docker compose up -d rambo-backend`. |
+| `.\cmc-daily.ps1` errors on `curl` / `Invoke-WebRequest` | Use the script as-is; if hitting the API by hand, use `Invoke-RestMethod` (not the `curl` alias). |
+| Player Watch shows fewer than 11 | Run a fresh `prep` (it pulls hitting stats for all lineup batters); on a very light/early slate the pool can still be thin. |
+| Two Chrome windows open at boot | Shouldn't happen anymore (single-instance lock). If it does, a stale RAMBO Chrome is wedged — close it; the next launch self-heals. |
 
 ---
 
-## 8. Where to read more
-- **`README.md`** — the feature overview.
-- **`ROADMAP_R.A.M.B.O_*.md`** — dated logs of what shipped each day (newest = most current).
+## 9. Where to read more
+- **`README.md`** — the feature overview, API reference, and changelog.
+- **`ROADMAP.md`** — the consolidated roadmap (status snapshot + forward plan; supersedes the old dated `ROADMAP_*` files).
 - **`HANDOFF.md`** — the running context handoff (state, decisions, gotchas).
 - **`docs/PLAN_self-coding-agent.md`** — the design of the self-coding lane.
+- **`rambo-backend/docs/superpowers/specs/`** & **`.../plans/`** — design specs + implementation plans (e.g. the Player Watch + Moneyline Board build).
