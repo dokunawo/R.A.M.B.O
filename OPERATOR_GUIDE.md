@@ -109,6 +109,14 @@ Top-right chips show **API token cost** and **ElevenLabs voice credits** in real
 ### Factory (RAMBO builds *helper agents*)
 Ask RAMBO to spawn a specialist agent; it researches the role, drafts a system prompt, and **stages it for your approval** in the **Factory dock** (left side). You approve/reject; approved agents become callable with no restart. *This is different from the self-coding lane — the Factory makes new agents; the self-coding lane edits RAMBO's actual source code.*
 
+### Standalone builds (RAMBO builds *apps* for you)
+"Build me a calculator" / "build a snake game" → the Engineer builds a fresh standalone project into `builds/<name>/` (each gets its own git repo) and it appears in the **Builds dock** with **Open / Run / Run tests** buttons.
+- **Short folder names:** the folder is named from a **summarized title** — "build me a calculator app from scratch" → `calculator`, "build a snake game simulator" → `snake-game` (no more `build-a-calculator-app-from-scratch-and-place-it`). Names are LLM-summarized with a heuristic fallback.
+- **Deleting a build:** click the **✕** on a build's dock card, or just say **"delete the calculator build" / "remove my snake game build" / "get rid of that build"** — RAMBO removes both the folder and the dock entry. (Endpoint: `DELETE /builds/{slug}`.)
+
+### Hand-off announcements (quieter now)
+RAMBO only calls out a hand-off **when it's going to the Engineer** — i.e. when it's **building an app or editing its own code** ("On it — building that now."). For everything else (weather, memory, calendar, search, etc.) it just does the task and speaks the result — no more "handing this to X" chatter.
+
 ### Approval docks (left side of the screen)
 Small collapsible panels that hold things waiting for your decision:
 - **FACTORY** — proposed new agents.

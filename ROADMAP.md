@@ -182,6 +182,8 @@ Factory: `POST /factory/spawn` · `GET /factory/pending` · `GET /factory/task/{
 Confirm/Handoff: `GET /confirmations` · `GET /handoffs` (+approve/accept/reject)
 Dev lane: `POST /dev/propose` · `GET /dev/pending` · `GET /dev/change/{id}` ·
 `POST /dev/merge|reject|escalate/{id}`
+Builds: `POST /builds/create` · `GET /builds` · `GET /builds/{slug}` ·
+`POST /builds/{slug}/test|run` · `DELETE /builds/{slug}` (short auto-named folders; deletable by ✕ or voice)
 Betting: `POST /ingest/run` · `POST /betting/prep` · `GET /betting/daily-edge?market=&date=&threshold=` ·
 `GET /betting/slip?market=&date=` · `GET /betting/player-watch?date=` · `GET /betting/moneyline-board?date=`
 

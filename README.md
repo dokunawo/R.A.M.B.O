@@ -370,6 +370,9 @@ npm start          # serves on http://localhost:3000
 | `POST` | `/brief/run` | — | Generate the morning brief now (on-screen + email) |
 | `GET` | `/greeting` | — | Jarvis-style boot greeting (spoken) |
 | `GET` | `/briefing/boot` | — | Boot briefing: on-screen card + spoken summary (recent changes since last boot, suggested targets, weather, pending, health) |
+| `POST` | `/builds/create` | `{ "name": "...", "goal": "..." }` | Build a standalone app (short auto-named folder) |
+| `GET` | `/builds` | — | List builds in the dock |
+| `DELETE` | `/builds/{slug}` | — | Delete a build (folder + dock record) |
 | `GET` | `/google/status` | — | Google OAuth auth state |
 | `POST` | `/factory/spawn` | `{ "name_hint": "...", "role_description": "...", "special_requirements": "" }` | Stage a new sub-agent build |
 | `GET` | `/factory/pending` | — | All tasks awaiting approval (page-load hydration) |
@@ -467,6 +470,11 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-27 — Build names, build deletion, quieter hand-offs
+- **[Build names]** Standalone builds now get a **summarized short folder name** (LLM via fast-model + heuristic fallback): "build me a calculator app…" → `calculator`, "build a snake game simulator" → `snake-game` (was `build-a-calculator-app-from-scratch-and-place-it`). Applied in the build lane + `/builds/create`.
+- **[Delete builds]** RAMBO can delete builds it made: `builds.delete_build` (folder rmtree + dock record), `DELETE /builds/{slug}`, a `delete_build` skill + router rule ("delete/remove the X build"), and a ✕ button on each Builds-dock card.
+- **[Quieter hand-offs]** `_announce_handoff` now speaks/logs only for the **Engineer** (build + dev/self-edit); every other target is dispatched silently — no more "handing this to X."
 
 ### 2026-06-27 — Boot briefing + on-demand "catch me up"
 - **[Boot briefing]** New `GET /briefing/boot` — at startup RAMBO renders an Architect **card** (recent changes **since last boot**, suggested roadmap targets from ROADMAP/HANDOFF, weather, pending approvals, uncommitted-changes warning, today's calendar, north-star, system health + cost) and speaks a short summary after the greeting. Shared composer `system_briefing.py`; "since last boot" persisted in `data/boot_state.json` (read-only otherwise).
