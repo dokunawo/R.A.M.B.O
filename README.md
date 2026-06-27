@@ -471,6 +471,9 @@ dated `ROADMAP_*` files). Highlights:
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
 
+### 2026-06-27 — Operator-approved GitHub push
+- **[Git push]** RAMBO can commit + push its own repo, **gated behind per-push approval** (Confirm dock or voice: "approve the push" / "deny the push"). New `dev_agent/git_remote.py` (never force-pushes, commits only tracked changes, **secret-scans** the diff, https-github-only, token scrubbed from output); `GET /git/status`, `POST /git/push` (stages a confirmation); `git_push` + `resolve_push` skills + router rule. Needs a fine-grained `RAMBO_GITHUB_TOKEN` (repo-scoped, Contents: read/write); disabled until set. 6 guardrail tests.
+
 ### 2026-06-27 — One-click run launchers for builds
 - **[Launchers]** Every standalone build now gets a **`run.bat`** (+ `run.sh`) at its root, auto-generated deterministically after the build (points at the detected entry, cd's to its folder, keeps the console open). Double-click to run — no IDLE. (Builder is a Linux container, so a true Windows `.exe` isn't produced there; the launcher is the equivalent.) Backfilled the existing `arithmetic-calculator` build.
 

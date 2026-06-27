@@ -35,6 +35,55 @@ async def system_update_skill(goal: str, ctx: dict) -> str:
     return await compose_briefing(None, ctx, mode="concise")
 
 
+async def git_push_skill(goal: str, ctx: dict) -> str:
+    """Stage a commit+push of RAMBO's repo for the operator's approval. Never pushes
+    on its own — it queues a confirmation the operator approves (dock or voice)."""
+    from dev_agent import git_remote
+    from factory import confirmations
+    try:
+        preview = await git_remote.push_preview()
+    except Exception as e:
+        return f"I couldn't check the repo state: {e}"
+    if not preview.get("token_configured"):
+        return ("I can't push yet — there's no GitHub token configured. Add a "
+                "fine-grained PAT as RAMBO_GITHUB_TOKEN in rambo-backend/.env "
+                "(scope it to this repo, Contents: read/write) and I'll be able to push.")
+    msg = f"Update {preview['branch']} via R.A.M.B.O"
+    confirmations.request_confirmation("git_push",
+                                       {"branch": preview["branch"], "message": msg},
+                                       agent_slug="operator")
+    n_files = len(preview.get("tracked_changes") or [])
+    ahead = preview.get("ahead")
+    bits = [f"branch {preview['branch']}"]
+    if ahead:
+        bits.append(f"{ahead} commit{'s' if ahead != 1 else ''} ahead")
+    if n_files:
+        bits.append(f"{n_files} changed file{'s' if n_files != 1 else ''} to commit")
+    return ("Push staged — " + ", ".join(bits) +
+            ". Say \"approve the push\" to send it to GitHub, or \"deny the push\" to cancel.")
+
+
+async def resolve_push_skill(goal: str, ctx: dict) -> str:
+    """Approve or deny the pending git push by voice."""
+    from dev_agent import git_remote
+    from factory import confirmations
+    pend = [c for c in confirmations.list_pending() if c["tool_name"] == "git_push"]
+    if not pend:
+        return "There's no push waiting for approval right now."
+    rec = pend[-1]
+    low = goal.lower()
+    if any(w in low for w in ("deny", "cancel", "reject", "don't", "do not", "stop", "abort")):
+        confirmations.resolve(rec["id"], "rejected")
+        return "Cancelled — I won't push."
+    confirmations.resolve(rec["id"], "approved")
+    try:
+        res = await git_remote.commit_and_push(
+            message=rec["tool_input"].get("message"), branch=rec["tool_input"].get("branch"))
+        return f"Done — pushed {res.get('branch')} to GitHub."
+    except Exception as e:
+        return f"The push failed: {e}"
+
+
 async def delete_build_skill(goal: str, ctx: dict) -> str:
     """Delete an existing build the operator no longer wants (folder + dock entry)."""
     from dev_agent import builds as builds_mod
@@ -245,6 +294,25 @@ SKILLS = [
             "bring me up to speed", "sitrep",
         )),
         "run": system_update_skill,
+    },
+    {
+        "name": "resolve_push",
+        "agent": "seeker",
+        "desc": "approve or deny a pending git push by voice (\"approve the push\", \"deny the push\", \"cancel the push\")",
+        "match": lambda g: "push" in g.lower() and any(w in g.lower() for w in (
+            "approve", "confirm", "deny", "cancel", "reject", "go ahead", "do it",
+            "send it", "yes", "abort")),
+        "run": resolve_push_skill,
+    },
+    {
+        "name": "git_push",
+        "agent": "seeker",
+        "desc": "commit + push RAMBO's repo to GitHub (STAGES a push for operator approval — never auto-pushes)",
+        "match": lambda g: any(p in g.lower() for p in (
+            "push to github", "push to git", "push the repo", "push the code",
+            "push my changes", "push the changes", "commit and push", "save to github",
+            "upload to github", "push everything", "push to origin", "push to remote")),
+        "run": git_push_skill,
     },
     {
         "name": "delete_build",

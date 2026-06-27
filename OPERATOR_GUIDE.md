@@ -115,6 +115,15 @@ Ask RAMBO to spawn a specialist agent; it researches the role, drafts a system p
 - **Run it without IDLE:** every build gets a **`run.bat`** (and `run.sh`) at its folder root — **double-click `run.bat`** and the app launches in a console window that stays open. No opening IDLE, no typing `python`. (The builder is a Linux container, so it can't emit a true Windows `.exe`; the launcher is the no-hassle equivalent.)
 - **Deleting a build:** click the **✕** on a build's dock card, or just say **"delete the calculator build" / "remove my snake game build" / "get rid of that build"** — RAMBO removes both the folder and the dock entry. (Endpoint: `DELETE /builds/{slug}`.)
 
+### Pushing to GitHub (operator-approved)
+RAMBO can **commit + push its own repo** — but never on its own. Every push waits for your approval.
+- **Trigger it:** say/type **"push my changes to GitHub" / "commit and push" / "push the repo."** RAMBO stages it (tells you the branch + how many commits/files) and asks for the go-ahead.
+- **Approve or deny by voice:** **"approve the push"** sends it; **"deny the push"** / **"cancel the push"** drops it. (You can also approve/reject in the Confirm dock.)
+- **Guardrails:** never force-pushes; commits only **tracked** changes and **secret-scans** the diff first (refuses if it sees anything like a key); pushes the **current branch** over HTTPS to GitHub only; the token is never logged.
+- **One-time setup:** create a **fine-grained GitHub PAT** scoped to *only this repo* with **Contents: read/write**, and put it in `rambo-backend/.env` as `RAMBO_GITHUB_TOKEN=…`, then restart the backend. Until then, RAMBO will tell you it can't push. (Endpoints: `GET /git/status`, `POST /git/push`.)
+
+> Note: inside a Claude Code session, the assistant already commits/pushes for you with your host credentials — this is for when you're driving **RAMBO directly** (voice/console).
+
 ### Hand-off announcements (quieter now)
 RAMBO only calls out a hand-off **when it's going to the Engineer** — i.e. when it's **building an app or editing its own code** ("On it — building that now."). For everything else (weather, memory, calendar, search, etc.) it just does the task and speaks the result — no more "handing this to X" chatter.
 

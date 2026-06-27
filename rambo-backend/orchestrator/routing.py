@@ -156,6 +156,10 @@ what's pending). Dispatch it directly, do NOT clarify. This is distinct from \
 file-specific code questions ("what's in <file>", "what changed in X") which go \
 to "codebase".
 
+18b. GIT PUSH: "push to github", "commit and push", "push my changes", "save to \
+github" → the "git_push" skill (it STAGES a push for your approval — never \
+auto-pushes). Approving/denying that push — "approve the push", "deny the push", \
+"cancel the push" — → the "resolve_push" skill. These are about RAMBO's OWN repo.
 18. DELETE A BUILD: removing/deleting an EXISTING build the operator already made \
 ("delete the calculator build", "remove my snake game build", "get rid of that \
 build", "trash that build") → the "delete_build" skill. This is the opposite of \
