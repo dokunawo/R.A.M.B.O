@@ -98,6 +98,11 @@ RAMBO routes your request to the right capability automatically:
 ### Morning brief
 A daily scheduler composes a brief (date + today's calendar + priorities) and both shows it on screen and emails it. Trigger on demand: `POST /brief/run`. Schedule via `MORNING_BRIEF_TIME` / `MORNING_BRIEF_TZ`.
 
+### Boot briefing + "catch me up"
+- **At boot**, after the spoken greeting, RAMBO drops a **System Briefing card** in the roster and speaks a short summary. It covers: today's date/time, **recent changes since you were last here** (read from its own git history), suggested next targets (from `ROADMAP.md` / `HANDOFF.md`), the weather, what's waiting on you (Factory/Confirm/Handoff/Code-Review docks), an uncommitted-changes warning, today's calendar, your north-star, and system health + API cost. Endpoint: `GET /briefing/boot`. "Since last boot" is tracked in `rambo-backend/data/boot_state.json`.
+- **Any time**, ask **"give me an update" / "catch me up" / "system status" / "sitrep" / "where are we"** (voice or console) for a concise spoken version of the same. File-specific questions like "what changed in orchestrator.py" still go to the codebase self-awareness skill.
+- Optional env: `RAMBO_HOME_CITY` (default Detroit, for boot weather), `RAMBO_CHANGES_LOOKBACK` (default "24 hours ago"), `RAMBO_CHANGES_MAX` (default 15).
+
 ### Cost + voice-credit tracking
 Top-right chips show **API token cost** and **ElevenLabs voice credits** in real time. Click to expand for a per-model breakdown.
 

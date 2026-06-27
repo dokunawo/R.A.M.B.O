@@ -368,6 +368,8 @@ npm start          # serves on http://localhost:3000
 | `GET` | `/agents/health` | — | Per-agent backend status (LIVE / CONNECTED / OFFLINE) |
 | `GET` | `/integrations/status` | — | Google / Echo / ElevenLabs / Anthropic status |
 | `POST` | `/brief/run` | — | Generate the morning brief now (on-screen + email) |
+| `GET` | `/greeting` | — | Jarvis-style boot greeting (spoken) |
+| `GET` | `/briefing/boot` | — | Boot briefing: on-screen card + spoken summary (recent changes since last boot, suggested targets, weather, pending, health) |
 | `GET` | `/google/status` | — | Google OAuth auth state |
 | `POST` | `/factory/spawn` | `{ "name_hint": "...", "role_description": "...", "special_requirements": "" }` | Stage a new sub-agent build |
 | `GET` | `/factory/pending` | — | All tasks awaiting approval (page-load hydration) |
@@ -465,6 +467,11 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-27 — Boot briefing + on-demand "catch me up"
+- **[Boot briefing]** New `GET /briefing/boot` — at startup RAMBO renders an Architect **card** (recent changes **since last boot**, suggested roadmap targets from ROADMAP/HANDOFF, weather, pending approvals, uncommitted-changes warning, today's calendar, north-star, system health + cost) and speaks a short summary after the greeting. Shared composer `system_briefing.py`; "since last boot" persisted in `data/boot_state.json` (read-only otherwise).
+- **[Catch me up]** New `system_update` skill — "give me an update / catch me up / system status / sitrep / where are we" → a concise spoken status. SmartRouter policy rule 17 + roster description so it dispatches instead of clarifying; ordered before `codebase` so file-specific "what changed in X" still routes to `codebase`.
+- Reuses existing parts (git reader, weather, greeting clock, pending-parts, calendar, chief-of-staff, usage dashboard); best-effort sections; 14 tests.
 
 ### 2026-06-27 — Player Watch + Moneyline Board, daily script, single-instance boot
 - **[Player Watch]** New `GET /betting/player-watch` — the slate's **top 11 HR threats**. Our DK Pick6 HR plays ("leans", tagged `[CMC LEAN]`) are pinned first; the rest fill from confirmed lineups by model HR%. New prop-less scorer `features.build_hr_features_core` + `MlbRepo.lineup_batters`; `prep` now pulls hitting stats for **every** lineup batter (free statsapi) so the whole slate can be ranked.

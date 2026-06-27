@@ -86,11 +86,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 186 commits:
+Last 14 days — 187 commits:
 
-- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (54 minutes ago)`
-- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (74 minutes ago)`
-- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (83 minutes ago)`
+- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (2 minutes ago)`
+- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (55 minutes ago)`
+- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (75 minutes ago)`
+- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (84 minutes ago)`
 - `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (2 hours ago)`
 - `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (2 hours ago)`
 - `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (2 hours ago)`
@@ -107,8 +108,7 @@ Last 14 days — 186 commits:
 - `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (3 hours ago)`
 - `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (3 hours ago)`
 - `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (4 hours ago)`
-- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (4 hours ago)`
-- … and 166 more
+- … and 167 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

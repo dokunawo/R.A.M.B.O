@@ -150,7 +150,7 @@ Make Champions" (CMC); ~$10 flat units; data-only (Sentinel boundary — no bet 
 ### Short term
 - Voice/self-review polish — "Operator, review the auth module" points the dev agent at open changes.
 - Full-suite `run_tests` option before a dev-lane merge.
-- Operator greeting + shutdown/logout sequence; task-history panel.
+- Operator greeting **+ boot briefing DONE** (`/briefing/boot` card + spoken; "catch me up" skill); shutdown/logout sequence + task-history panel still open.
 - Echo channels (push/SMS via Twilio); Keeper recall injected into prompt context.
 - Retire remaining stub `execute()` agents or give them real handlers.
 
@@ -176,7 +176,7 @@ Make Champions" (CMC); ~$10 flat units; data-only (Sentinel boundary — no bet 
 ### Endpoints (accumulated)
 Core: `POST /rambo/execute` · `GET /agents/status` · `GET /agents/{key}/detail` ·
 `GET /agents/health` · `GET /integrations/status` · `GET /system/stats` · `GET /usage` ·
-`GET /usage/tts` · `GET /learning/log` · `POST /brief/run`
+`GET /usage/tts` · `GET /learning/log` · `POST /brief/run` · `GET /greeting` · `GET /briefing/boot`
 Memory: `POST|GET /keeper` · `GET /keeper/{key}` · `GET /keeper/confirm`
 Factory: `POST /factory/spawn` · `GET /factory/pending` · `GET /factory/task/{id}` (+approve/reject)
 Confirm/Handoff: `GET /confirmations` · `GET /handoffs` (+approve/accept/reject)
