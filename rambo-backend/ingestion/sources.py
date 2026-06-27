@@ -23,7 +23,7 @@ from ingestion.raw_store import land_raw, pull_and_land
 
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
 STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats", "lineups"}
-OTHER_SOURCES = {"odds_api"}                             # The Odds API (free-path landing)
+OTHER_SOURCES = {"odds_api", "statcast"}                 # The Odds API + Baseball Savant
 SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES | OTHER_SOURCES)
 
 
@@ -86,6 +86,9 @@ def pull_source(conn: sqlite3.Connection, source: str,
     elif source == "odds_api":
         from ingestion import the_odds_api_client as toa
         run = toa.fetch_moneyline(params.get("date"))
+    elif source == "statcast":
+        from ingestion import savant_client as sv
+        run = sv.fetch_statcast(_season(params))
     else:
         raise KeyError(f"unknown source {source!r} (valid: {SOURCES})")
 

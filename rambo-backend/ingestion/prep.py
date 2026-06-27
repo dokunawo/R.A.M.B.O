@@ -34,6 +34,10 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     summary["schedule"] = pull_source(conn, "schedule", {"date": d})["items"]
     summary["odds"] = pull_source(conn, "odds_api", {"date": d})["items"]
     summary["team_stats"] = pull_source(conn, "team_stats", {"season": season})["items"]
+    try:
+        summary["statcast"] = pull_source(conn, "statcast", {"season": season})["items"]
+    except Exception as exc:                            # Savant hiccup shouldn't abort prep
+        logger.warning("statcast pull failed: %s", exc)
     summary["recent_hitting"] = pull_source(
         conn, "recent_stats", {"group": "hitting", "end_date": d})["items"]
     summary["recent_pitching"] = pull_source(

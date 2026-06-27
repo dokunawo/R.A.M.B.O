@@ -159,6 +159,13 @@ class MlbRepo:
         import json
         return json.loads(row["stats"]) if row else None
 
+    def player_statcast(self, mlb_id: int, season: int) -> Optional[dict]:
+        """Batter barrel% + hard-hit% (Baseball Savant), or None."""
+        row = self.conn.execute(
+            "SELECT barrel_rate, hard_hit FROM player_statcast WHERE mlb_id=? AND season=?",
+            (mlb_id, season)).fetchone()
+        return dict(row) if row else None
+
     def lineup_slot(self, mlb_id: int, game_pk: int) -> Optional[int]:
         """battingOrder (100..900) if the player is in the confirmed lineup, else None."""
         row = self.conn.execute(

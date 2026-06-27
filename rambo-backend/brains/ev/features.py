@@ -20,6 +20,21 @@ def _blend(recent: Optional[float], season: Optional[float],
     return w * recent + (1.0 - w) * season
 
 
+# Statcast power baselines (league-average barrel% / hard-hit%).
+LG_BARREL, LG_HARD_HIT = 7.5, 39.0
+
+
+def _power_modifier(sc: Optional[dict]) -> float:
+    """barrel% + hard-hit% -> HR-rate multiplier; hot bat boosts, weak fades. Clamped
+    so a quality signal nudges (not overrides) the realized rate."""
+    if not sc:
+        return 1.0
+    b, h = sc.get("barrel_rate"), sc.get("hard_hit")
+    rb = (b / LG_BARREL) if b else 1.0
+    rh = (h / LG_HARD_HIT) if h else 1.0
+    return max(0.75, min(1.35, 0.65 * rb + 0.35 * rh))   # barrel weighted (HR proxy)
+
+
 def _hr_rate(stat: Optional[dict]) -> Optional[float]:
     if not stat:
         return None
@@ -63,6 +78,8 @@ def build_hr_features(repo, date: str, prop: dict) -> Optional[HRFeatures]:
     # Recency: blend the season/matchup rate with the last-15 HR rate.
     recent = repo.player_recent(mlb_id, "hitting")
     rate = _blend(_hr_rate(recent), rate)
+    # Statcast power quality nudges the rate (barrel% / hard-hit%).
+    rate = rate * _power_modifier(repo.player_statcast(mlb_id, season))
     recent_hr = int((recent or {}).get("homeRuns") or 0)
     support = f"{recent_hr} HR L15" if recent is not None else f"{season_hr} HR"
 

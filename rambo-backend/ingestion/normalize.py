@@ -33,6 +33,7 @@ from typing import Any, Callable, Optional
 from config.statsapi import (SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS,
                              SOURCE_RECENT, SOURCE_LINEUPS)
 from config.the_odds_api import SOURCE_ID as ODDS_API_SOURCE
+from config.savant import SOURCE_ID as SAVANT_SOURCE
 
 logger = logging.getLogger("rambo.ingestion.normalize")
 
@@ -468,6 +469,23 @@ def map_lineups(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_statcast(conn, item, scraped_at) -> bool:
+    """Baseball Savant item {mlb_id, season, barrel_rate, hard_hit} -> player_statcast."""
+    mid, season = _as_int(item.get("mlb_id")), _as_int(item.get("season"))
+    if mid is None or season is None:
+        return False
+    conn.execute(
+        """INSERT INTO player_statcast (mlb_id, season, barrel_rate, hard_hit, source, scraped_at)
+           VALUES (?,?,?,?,'savant',?)
+           ON CONFLICT(mlb_id, season) DO UPDATE SET
+             barrel_rate=excluded.barrel_rate, hard_hit=excluded.hard_hit,
+             scraped_at=excluded.scraped_at;""",
+        (mid, season, _as_float(item.get("barrel_rate")), _as_float(item.get("hard_hit")),
+         scraped_at),
+    )
+    return True
+
+
 DISPATCH: dict[str, Callable] = {
     SOURCE_ROSTER: map_roster,
     SOURCE_SCHEDULE: map_scoreboard,
@@ -476,6 +494,7 @@ DISPATCH: dict[str, Callable] = {
     SOURCE_RECENT: map_recent_stats,
     SOURCE_LINEUPS: map_lineups,
     ODDS_API_SOURCE: map_odds_api,
+    SAVANT_SOURCE: map_statcast,
     "seemuapps/sports-odds-scraper": map_odds,
     "zen-studio/draftkings-pick6-player-props": map_props,
 }
