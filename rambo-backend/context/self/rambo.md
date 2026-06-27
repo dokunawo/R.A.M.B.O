@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 179 commits:
+Last 14 days — 180 commits:
 
-- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (5 minutes ago)`
-- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (8 minutes ago)`
-- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (12 minutes ago)`
-- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (14 minutes ago)`
-- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (17 minutes ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (21 minutes ago)`
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (25 minutes ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (29 minutes ago)`
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (39 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (41 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (47 minutes ago)`
+- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (8 minutes ago)`
+- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (12 minutes ago)`
+- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (15 minutes ago)`
+- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (19 minutes ago)`
+- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (21 minutes ago)`
+- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (24 minutes ago)`
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (28 minutes ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (32 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (37 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (47 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (49 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (54 minutes ago)`
 - `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
 - `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (2 hours ago)`
 - `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (2 hours ago)`
-- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (2 hours ago)`
+- `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (3 hours ago)`
 - `a5719a4 fix(ev): moneyline used in-game 'Live Odds' (+440) instead of pregame line (3 hours ago)`
 - `2bec4a8 fix(ev): strikeouts market is DK 'SO' not 'K'; dedupe slip to one play per player (4 hours ago)`
 - `cb6e0e7 feat(ev): per-market slip export (GET /betting/slip) for ChatGPT-image flow (4 hours ago)`
-- `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (10 hours ago)`
-- … and 159 more
+- … and 160 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
