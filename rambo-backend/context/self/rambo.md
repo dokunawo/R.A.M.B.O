@@ -85,13 +85,14 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 171 commits:
+Last 14 days — 172 commits:
 
-- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (10 minutes ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (12 minutes ago)`
-- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (17 minutes ago)`
-- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (88 minutes ago)`
-- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (88 minutes ago)`
+- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (4 minutes ago)`
+- `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (14 minutes ago)`
+- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (17 minutes ago)`
+- `bb6af95 docs: design spec for Player Watch + Moneyline Board prompt boards (22 minutes ago)`
+- `b56b969 feat(cmc): add branded plate.png asset + lockfile resolution (2 hours ago)`
+- `34a2a37 docs: refresh HANDOFF.md to MK V / MLB betting edge engine state (2 hours ago)`
 - `cef4135 feat(ev): weather modifier + temp-park guard for HR model (Phase 2B) (2 hours ago)`
 - `d7f5168 feat(ev): Baseball Savant barrel%/hard-hit% -> HR power modifier (Phase 2A) (2 hours ago)`
 - `e46052c feat(ev): multi-source, recency-aware betting data layer (Phase 1) (2 hours ago)`
@@ -103,11 +104,10 @@ Last 14 days — 171 commits:
 - `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (17 hours ago)`
 - `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (17 hours ago)`
 - `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (17 hours ago)`
-- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (17 hours ago)`
+- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (18 hours ago)`
 - `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (18 hours ago)`
 - `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (18 hours ago)`
-- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (18 hours ago)`
-- … and 151 more
+- … and 152 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

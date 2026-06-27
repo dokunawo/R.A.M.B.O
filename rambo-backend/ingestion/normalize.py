@@ -109,13 +109,13 @@ def _self_alias(conn: sqlite3.Connection, mlb_id: int, name: str, scraped_at: st
 def _upsert_game(conn: sqlite3.Connection, g: dict, scraped_at: str) -> None:
     conn.execute(
         """INSERT INTO games
-             (game_pk, official_date, season, game_type, status_detail,
+             (game_pk, official_date, game_datetime, season, game_type, status_detail,
               home_team_id, home_team_name, away_team_id, away_team_name,
               home_score, away_score, venue_id, venue_name, day_night,
               double_header, scheduled_innings, url,
               home_probable_pitcher_id, away_probable_pitcher_id,
               home_team_abbr, away_team_abbr, scraped_at)
-           VALUES (:game_pk,:official_date,:season,:game_type,:status_detail,
+           VALUES (:game_pk,:official_date,:game_datetime,:season,:game_type,:status_detail,
               :home_team_id,:home_team_name,:away_team_id,:away_team_name,
               :home_score,:away_score,:venue_id,:venue_name,:day_night,
               :double_header,:scheduled_innings,:url,
@@ -123,6 +123,7 @@ def _upsert_game(conn: sqlite3.Connection, g: dict, scraped_at: str) -> None:
               :home_team_abbr,:away_team_abbr,:scraped_at)
            ON CONFLICT(game_pk) DO UPDATE SET
               status_detail=excluded.status_detail,
+              game_datetime=excluded.game_datetime,
               home_score=excluded.home_score, away_score=excluded.away_score,
               home_probable_pitcher_id=excluded.home_probable_pitcher_id,
               away_probable_pitcher_id=excluded.away_probable_pitcher_id,
@@ -226,6 +227,7 @@ def map_scoreboard(conn, item, scraped_at) -> bool:
     _upsert_game(conn, {
         "game_pk": game_pk,
         "official_date": _first(item, "officialDate", "gameDate"),
+        "game_datetime": _dig(item, "gameDate"),
         "season": _as_int(_first(item, "season")),
         "game_type": _first(item, "gameType"),
         "status_detail": _dig(item, "status", "detailedState"),
