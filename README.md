@@ -471,6 +471,9 @@ dated `ROADMAP_*` files). Highlights:
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
 
+### 2026-06-27 — One-click run launchers for builds
+- **[Launchers]** Every standalone build now gets a **`run.bat`** (+ `run.sh`) at its root, auto-generated deterministically after the build (points at the detected entry, cd's to its folder, keeps the console open). Double-click to run — no IDLE. (Builder is a Linux container, so a true Windows `.exe` isn't produced there; the launcher is the equivalent.) Backfilled the existing `arithmetic-calculator` build.
+
 ### 2026-06-27 — Build names, build deletion, quieter hand-offs
 - **[Build names]** Standalone builds now get a **summarized short folder name** (LLM via fast-model + heuristic fallback): "build me a calculator app…" → `calculator`, "build a snake game simulator" → `snake-game` (was `build-a-calculator-app-from-scratch-and-place-it`). Applied in the build lane + `/builds/create`.
 - **[Delete builds]** RAMBO can delete builds it made: `builds.delete_build` (folder rmtree + dock record), `DELETE /builds/{slug}`, a `delete_build` skill + router rule ("delete/remove the X build"), and a ✕ button on each Builds-dock card.

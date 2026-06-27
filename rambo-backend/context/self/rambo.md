@@ -87,20 +87,21 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 189 commits:
+Last 14 days — 190 commits:
 
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (2 minutes ago)`
-- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (26 minutes ago)`
-- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (27 minutes ago)`
-- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (81 minutes ago)`
+- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (11 minutes ago)`
+- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (13 minutes ago)`
+- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (37 minutes ago)`
+- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (38 minutes ago)`
+- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (2 hours ago)`
 - `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (2 hours ago)`
 - `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (2 hours ago)`
 - `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (2 hours ago)`
 - `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (2 hours ago)`
 - `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (2 hours ago)`
-- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (2 hours ago)`
-- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (2 hours ago)`
-- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (2 hours ago)`
+- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (3 hours ago)`
+- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (3 hours ago)`
+- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (3 hours ago)`
 - `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (3 hours ago)`
 - `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (3 hours ago)`
 - `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (3 hours ago)`
@@ -108,8 +109,7 @@ Last 14 days — 189 commits:
 - `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (3 hours ago)`
 - `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (3 hours ago)`
 - `6b4f7e2 docs: Moneyline Board + ml output in game-time order (not alphabetical) (3 hours ago)`
-- `aeaf8f3 docs: Moneyline Board + ml output use alphabetical slate order (no bias) (3 hours ago)`
-- … and 169 more
+- … and 170 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

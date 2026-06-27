@@ -1015,7 +1015,7 @@ class Orchestrator:
         return (
             f"Built it — it's in `{host_path}` ({len(files)} file"
             f"{'' if len(files) == 1 else 's'}). It's in the Builds dock; "
-            f"hit Open and I'll pop it up on your desktop."
+            f"hit Open and just double-click run.bat to launch it — no IDLE needed."
         )
 
     async def _run_core_agent(self, agent_name: str, task_desc: str) -> str:

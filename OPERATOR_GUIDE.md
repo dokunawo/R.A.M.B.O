@@ -112,6 +112,7 @@ Ask RAMBO to spawn a specialist agent; it researches the role, drafts a system p
 ### Standalone builds (RAMBO builds *apps* for you)
 "Build me a calculator" / "build a snake game" → the Engineer builds a fresh standalone project into `builds/<name>/` (each gets its own git repo) and it appears in the **Builds dock** with **Open / Run / Run tests** buttons.
 - **Short folder names:** the folder is named from a **summarized title** — "build me a calculator app from scratch" → `calculator`, "build a snake game simulator" → `snake-game` (no more `build-a-calculator-app-from-scratch-and-place-it`). Names are LLM-summarized with a heuristic fallback.
+- **Run it without IDLE:** every build gets a **`run.bat`** (and `run.sh`) at its folder root — **double-click `run.bat`** and the app launches in a console window that stays open. No opening IDLE, no typing `python`. (The builder is a Linux container, so it can't emit a true Windows `.exe`; the launcher is the no-hassle equivalent.)
 - **Deleting a build:** click the **✕** on a build's dock card, or just say **"delete the calculator build" / "remove my snake game build" / "get rid of that build"** — RAMBO removes both the folder and the dock entry. (Endpoint: `DELETE /builds/{slug}`.)
 
 ### Hand-off announcements (quieter now)
