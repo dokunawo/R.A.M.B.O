@@ -150,16 +150,25 @@ class MlbRepo:
             return None
 
     def moneyline_slate(self, date: str) -> list[dict]:
-        """Games on `date` with a two-sided moneyline (latest snapshot), incl. team
-        ids/abbrs, probable-pitcher ids, and home/away American prices."""
+        """Games on `date` with a two-sided PREGAME moneyline, incl. team ids/abbrs,
+        probable-pitcher ids, and home/away American prices. Picks the latest price
+        per side from a pregame book — excludes in-game '… Live Odds' books and
+        price=0 rows, whose extreme/suspended numbers would otherwise poison the line."""
         rows = self.conn.execute(
-            """SELECT g.game_pk, g.home_team_id, g.away_team_id,
+            """WITH ml AS (
+                   SELECT game_pk, side, price,
+                          ROW_NUMBER() OVER (PARTITION BY game_pk, side
+                                             ORDER BY captured_at DESC) AS rn
+                   FROM odds_lines
+                   WHERE market='moneyline' AND price <> 0 AND book NOT LIKE '%Live%'
+               )
+               SELECT g.game_pk, g.home_team_id, g.away_team_id,
                       g.home_team_abbr, g.away_team_abbr,
                       g.home_probable_pitcher_id, g.away_probable_pitcher_id,
-                      MAX(CASE WHEN o.side='home' THEN o.price END) AS home_price,
-                      MAX(CASE WHEN o.side='away' THEN o.price END) AS away_price
+                      MAX(CASE WHEN m.side='home' THEN m.price END) AS home_price,
+                      MAX(CASE WHEN m.side='away' THEN m.price END) AS away_price
                FROM games g
-               JOIN v_latest_odds o ON o.game_pk=g.game_pk AND o.market='moneyline'
+               JOIN ml m ON m.game_pk=g.game_pk AND m.rn=1
                WHERE g.official_date=?
                GROUP BY g.game_pk""", (date,)).fetchall()
         return [dict(r) for r in rows

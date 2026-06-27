@@ -93,6 +93,26 @@ def test_moneyline_pitcher_adjusted_flips_favorite(tmp_path):
     assert pk.tags == ["LEAN"] and abs(pk.edge) < 0.12   # market-anchored -> bounded lean
 
 
+def test_moneyline_slate_excludes_live_odds(tmp_path):
+    """In-game 'Live Odds' rows (extreme/suspended) must never override the pregame
+    line, even though they're captured later."""
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (999,'2026-06-26',111,147,'BOS','NYY','2026-06-26T00:00:00Z')")
+    pre = "2026-06-26T18:00Z"
+    live = "2026-06-26T21:00Z"   # later — would win a naive 'latest' pick
+    for side, price, book, ts in [
+        ("home", -120, "DraftKings", pre), ("away", 100, "DraftKings", pre),
+        ("home", -730, "DraftKings - Live Odds", live), ("away", 440, "DraftKings - Live Odds", live),
+    ]:
+        conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, captured_at) "
+                     "VALUES (999,?,'moneyline',?,?,?)", (book, side, price, ts))
+    slate = MlbRepo(conn).moneyline_slate("2026-06-26")
+    assert len(slate) == 1
+    assert slate[0]["home_price"] == -120 and slate[0]["away_price"] == 100   # pregame, not live
+
+
 def test_market_anchored_prob_bounds():
     # an absurd model prob is clamped + pulled toward the book -> small, sane lean
     anchored = market_anchored_prob(0.91, 0.62)
