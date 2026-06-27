@@ -33,21 +33,33 @@
   border-radius: 6px;
 }
 .poster::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .8; z-index: 1;
   background:
-    radial-gradient(2px 2px at 9% 26%, rgba(240,207,115,.7), transparent),
-    radial-gradient(1.5px 1.5px at 22% 12%, rgba(240,207,115,.6), transparent),
-    radial-gradient(1.5px 1.5px at 78% 16%, rgba(240,207,115,.6), transparent),
-    radial-gradient(2px 2px at 90% 60%, rgba(240,207,115,.5), transparent),
-    radial-gradient(1.5px 1.5px at 60% 90%, rgba(240,207,115,.5), transparent),
-    linear-gradient(118deg, transparent 0 4%, rgba(214,162,30,.10) 4.4%, transparent 5%),
-    linear-gradient(-122deg, transparent 0 92%, rgba(214,162,30,.10) 92.5%, transparent 93%);
+    radial-gradient(2px 2px at 9% 26%, rgba(240,207,115,.8), transparent),
+    radial-gradient(1.5px 1.5px at 22% 12%, rgba(240,207,115,.7), transparent),
+    radial-gradient(1.5px 1.5px at 78% 16%, rgba(240,207,115,.7), transparent),
+    radial-gradient(2px 2px at 90% 60%, rgba(240,207,115,.6), transparent),
+    radial-gradient(1.5px 1.5px at 60% 90%, rgba(240,207,115,.6), transparent),
+    radial-gradient(1px 1px at 40% 20%, rgba(240,207,115,.7), transparent),
+    radial-gradient(1px 1px at 70% 75%, rgba(240,207,115,.6), transparent);
+}
+/* procedural smoke + gold marbling (SVG feTurbulence), masked to the edges */
+.poster-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.poster > .cmc-logo, .poster > .poster-panel { position: relative; z-index: 2; }
+
+/* metallic gold-foil lettering — gradient sheen + stroke + glow */
+.gold-foil {
+  background: linear-gradient(176deg, #fff6d6 0%, #f3d479 20%, #d6a21e 44%, #855f0c 58%, #eccd6e 70%, #f7e6a8 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  -webkit-text-stroke: 0.6px rgba(70,48,6,.45);
+  filter: drop-shadow(0 0 18px rgba(214,162,30,.6)) drop-shadow(0 2px 1px rgba(0,0,0,.55));
 }
 
 /* ---------- CMC logo header ---------- */
 .cmc-logo { text-align: center; margin-bottom: 14px; }
 .cmc-logo .crown { display: block; margin: 0 auto -6px; filter: drop-shadow(0 0 12px rgba(240,207,115,.8)); }
-.cmc-logo .mark { font-family: 'Metal Mania', cursive; font-size: 66px; line-height: .9; color: #d6a21e; text-shadow: 0 0 24px rgba(214,162,30,.65), 0 3px 0 #6b4d09; letter-spacing: 2px; }
+.cmc-logo .mark { font-family: 'Metal Mania', cursive; font-size: 72px; line-height: .9; letter-spacing: 3px; }
 .cmc-logo .full { font-weight: 600; letter-spacing: 6px; font-size: 14px; margin-top: 2px; color: #f2f2f2; }
 .cmc-logo .full b { color: #d6a21e; font-weight: 600; }
 
@@ -60,7 +72,7 @@
 .br.brr { bottom: -1px; right: -1px; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
 
 .panel-title { display: flex; align-items: baseline; gap: 16px; }
-.panel-title h1 { font-family: 'Metal Mania', cursive; font-weight: 400; font-size: 50px; color: #e7cd86; text-shadow: 0 0 16px rgba(214,162,30,.5); margin: 0; line-height: .9; }
+.panel-title h1 { font-family: 'Metal Mania', cursive; font-weight: 400; font-size: 54px; margin: 0; line-height: .9; }
 .panel-title .cap { font-weight: 600; letter-spacing: 4px; font-size: 14px; color: #b9ad8e; text-transform: uppercase; }
 
 /* ---------- -EV / lean banner ---------- */
@@ -88,8 +100,8 @@
 
 .ptile-stats { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .ptile-edge .num { font-weight: 700; font-size: 34px; line-height: 1; }
-.ptile-edge.pos .num { color: #39ff5a; text-shadow: 0 0 14px rgba(57,255,90,.55); }
-.ptile-edge.neg .num { color: #ff5a5a; text-shadow: 0 0 12px rgba(255,90,90,.45); }
+.ptile-edge.pos .num { color: #6dff86; text-shadow: 0 0 7px #39ff5a, 0 0 18px rgba(57,255,90,.8), 0 0 34px rgba(57,255,90,.45); }
+.ptile-edge.neg .num { color: #ff7a7a; text-shadow: 0 0 7px #ff5a5a, 0 0 18px rgba(255,90,90,.7), 0 0 32px rgba(255,90,90,.4); }
 .ptile-edge .cap { display: block; font-size: 10px; letter-spacing: 2px; color: #8a8167; margin-top: 4px; }
 .ptile-mb { text-align: right; font-size: 13px; color: #9a9078; line-height: 1.55; }
 .ptile-mb b { color: #fff; font-weight: 600; }

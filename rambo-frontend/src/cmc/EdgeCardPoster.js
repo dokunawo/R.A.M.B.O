@@ -15,6 +15,26 @@ const prettyDate = (iso) => {
   catch { return iso; }
 };
 
+function Smoke() {
+  return (
+    <svg className="poster-fx" preserveAspectRatio="none" viewBox="0 0 1140 760" aria-hidden="true">
+      <defs>
+        <filter id="cmcsmoke" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.016" numOctaves="5" seed="11" stitchTiles="stitch" result="n" />
+          <feColorMatrix in="n" type="matrix"
+            values="0 0 0 0 0.84  0 0 0 0 0.63  0 0 0 0 0.12  0 0 0 0.9 0" />
+        </filter>
+        <radialGradient id="cmcedge" cx="50%" cy="32%" r="72%">
+          <stop offset="32%" stopColor="#fff" stopOpacity="0" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="1" />
+        </radialGradient>
+        <mask id="cmcmask"><rect width="1140" height="760" fill="url(#cmcedge)" /></mask>
+      </defs>
+      <rect width="1140" height="760" filter="url(#cmcsmoke)" mask="url(#cmcmask)" opacity="0.5" />
+    </svg>
+  );
+}
+
 function Crown({ w = 56 }) {
   return (
     <svg className="crown" width={w} height={w * 0.62} viewBox="0 0 120 74" fill="none" aria-hidden="true">
@@ -150,16 +170,17 @@ export default function EdgeCardPoster() {
       <div className="poster-hint">High-res landscape card · live data · {prettyDate(date)}</div>
 
       <div className="poster" ref={posterRef}>
+        <Smoke />
         <div className="cmc-logo">
           <Crown w={54} />
-          <div className="mark">CMC</div>
+          <div className="mark gold-foil">CMC</div>
           <div className="full">CHANCES MAKE <b>CHAMPIONS</b></div>
         </div>
 
         <div className="poster-panel">
           <span className="br tl" /><span className="br tr" /><span className="br bl" /><span className="br brr" />
           <div className="panel-title">
-            <h1>{title}</h1>
+            <h1 className="gold-foil">{title}</h1>
             <span className="cap">{CAPS[market] || ""}</span>
           </div>
 

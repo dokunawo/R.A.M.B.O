@@ -85,19 +85,20 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 155 commits:
+Last 14 days — 156 commits:
 
-- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (9 minutes ago)`
-- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (18 minutes ago)`
-- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (32 minutes ago)`
-- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (36 minutes ago)`
-- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (49 minutes ago)`
-- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (57 minutes ago)`
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (59 minutes ago)`
-- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (78 minutes ago)`
-- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (84 minutes ago)`
-- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (87 minutes ago)`
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (89 minutes ago)`
+- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (10 minutes ago)`
+- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (19 minutes ago)`
+- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (28 minutes ago)`
+- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (42 minutes ago)`
+- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (46 minutes ago)`
+- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (59 minutes ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (67 minutes ago)`
+- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (69 minutes ago)`
+- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (88 minutes ago)`
+- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (2 hours ago)`
+- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (2 hours ago)`
+- `5252270 feat(ev): per-slate LLM explainer with templated fallback (2 hours ago)`
 - `6421de7 feat(ev): HR market builds ranked Pick candidates (2 hours ago)`
 - `22cd9d8 feat(ev): HR feature assembly from MlbRepo (2 hours ago)`
 - `588171f feat(ev): repo lookups for game context + pitcher hand (2 hours ago)`
@@ -106,8 +107,7 @@ Last 14 days — 155 commits:
 - `be6fcce feat(ev): HR probability + Pick6 edge math (2 hours ago)`
 - `433bdbb feat(ev): HR park-factor table (2 hours ago)`
 - `b6ba289 docs: EV Brain (home runs) implementation plan (2 hours ago)`
-- `917c2fc docs: lock Pick output shape + card styling to the CMC card (2 hours ago)`
-- … and 135 more
+- … and 136 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
