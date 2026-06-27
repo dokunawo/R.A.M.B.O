@@ -184,7 +184,9 @@ Dev lane: `POST /dev/propose` · `GET /dev/pending` · `GET /dev/change/{id}` ·
 `POST /dev/merge|reject|escalate/{id}`
 Builds: `POST /builds/create` · `GET /builds` · `GET /builds/{slug}` ·
 `POST /builds/{slug}/test|run` · `DELETE /builds/{slug}` (short auto-named folders; deletable by ✕ or voice)
-Git push: `GET /git/status` · `POST /git/push` (operator-approved via Confirm dock or voice "approve the push"; needs `RAMBO_GITHUB_TOKEN`)
+Git: `GET /git/status` · `POST /git/push` · `POST /git/merge` (local branch) ·
+`POST /git/merge-pr` (GitHub PR) — all operator-approved via Confirm dock or voice
+("approve the push/merge"); needs `RAMBO_GITHUB_TOKEN` (PR merge also needs Pull requests: write)
 Betting: `POST /ingest/run` · `POST /betting/prep` · `GET /betting/daily-edge?market=&date=&threshold=` ·
 `GET /betting/slip?market=&date=` · `GET /betting/player-watch?date=` · `GET /betting/moneyline-board?date=`
 

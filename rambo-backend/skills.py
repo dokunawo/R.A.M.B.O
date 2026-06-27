@@ -63,25 +63,77 @@ async def git_push_skill(goal: str, ctx: dict) -> str:
             ". Say \"approve the push\" to send it to GitHub, or \"deny the push\" to cancel.")
 
 
-async def resolve_push_skill(goal: str, ctx: dict) -> str:
-    """Approve or deny the pending git push by voice."""
+_GIT_ACTIONS = ("git_push", "git_merge_local", "git_merge_pr")
+_GIT_VERB = {"git_push": "pushed", "git_merge_local": "merged", "git_merge_pr": "merged the PR"}
+
+
+async def resolve_git_skill(goal: str, ctx: dict) -> str:
+    """Approve or deny the pending git action (push / merge / PR merge) by voice."""
     from dev_agent import git_remote
     from factory import confirmations
-    pend = [c for c in confirmations.list_pending() if c["tool_name"] == "git_push"]
+    pend = [c for c in confirmations.list_pending() if c["tool_name"] in _GIT_ACTIONS]
     if not pend:
-        return "There's no push waiting for approval right now."
+        return "There's nothing waiting for your approval right now."
     rec = pend[-1]
     low = goal.lower()
     if any(w in low for w in ("deny", "cancel", "reject", "don't", "do not", "stop", "abort")):
         confirmations.resolve(rec["id"], "rejected")
-        return "Cancelled — I won't push."
+        return "Cancelled — I won't do it."
     confirmations.resolve(rec["id"], "approved")
     try:
-        res = await git_remote.commit_and_push(
-            message=rec["tool_input"].get("message"), branch=rec["tool_input"].get("branch"))
-        return f"Done — pushed {res.get('branch')} to GitHub."
+        res = await git_remote.execute_git_confirmation(rec)
+        verb = _GIT_VERB.get(rec["tool_name"], "done")
+        where = res.get("branch") or res.get("target") or (f"#{res.get('pr')}" if res.get("pr") else "")
+        return f"Done — {verb} {where}.".replace("  ", " ")
     except Exception as e:
-        return f"The push failed: {e}"
+        return f"That failed: {e}"
+
+
+def _parse_merge(goal: str):
+    """('feature-x','main') from 'merge feature-x into main'; target None if absent."""
+    m = re.search(r"merge\s+(?:branch\s+)?([\w./-]+)(?:\s+into\s+([\w./-]+))?", goal, re.I)
+    if not m:
+        return None, None
+    return m.group(1), m.group(2)
+
+
+async def git_merge_skill(goal: str, ctx: dict) -> str:
+    """Stage a LOCAL branch merge for the operator's approval."""
+    from dev_agent import git_remote
+    from factory import confirmations
+    source, target = _parse_merge(goal)
+    if not source:
+        return "Tell me which branch to merge, e.g. \"merge feature-x into main\"."
+    try:
+        prev = await git_remote.merge_preview(source, target)
+    except Exception as e:
+        return f"I couldn't check that merge: {e}"
+    if not prev["source_exists"]:
+        return f"There's no branch called \"{source}\"."
+    if prev["dirty"]:
+        return ("Your working tree has uncommitted changes — commit or stash them "
+                "first, then I can merge.")
+    confirmations.request_confirmation("git_merge_local",
+                                       {"source": prev["source"], "target": prev["target"]},
+                                       agent_slug="operator")
+    n = prev.get("commits")
+    extra = f" ({n} commit{'s' if n != 1 else ''})" if n else ""
+    return (f"Merge staged — {prev['source']} into {prev['target']}{extra}. "
+            "Say \"approve the merge\" to do it, or \"deny the merge\" to cancel.")
+
+
+async def pr_merge_skill(goal: str, ctx: dict) -> str:
+    """Stage a GitHub PR merge for the operator's approval."""
+    from factory import confirmations
+    m = re.search(r"(?:pr|pull\s*request)\s*#?\s*(\d+)", goal, re.I)
+    if not m:
+        return "Which PR number? e.g. \"merge PR #12\"."
+    number = int(m.group(1))
+    confirmations.request_confirmation("git_merge_pr", {"number": number, "method": "merge"},
+                                       agent_slug="operator")
+    return (f"PR #{number} merge staged. Say \"approve the merge\" to merge it on "
+            "GitHub, or \"deny the merge\" to cancel. (Needs the token's "
+            "'Pull requests: write' permission.)")
 
 
 async def delete_build_skill(goal: str, ctx: dict) -> str:
@@ -296,13 +348,13 @@ SKILLS = [
         "run": system_update_skill,
     },
     {
-        "name": "resolve_push",
+        "name": "resolve_git",
         "agent": "seeker",
-        "desc": "approve or deny a pending git push by voice (\"approve the push\", \"deny the push\", \"cancel the push\")",
-        "match": lambda g: "push" in g.lower() and any(w in g.lower() for w in (
-            "approve", "confirm", "deny", "cancel", "reject", "go ahead", "do it",
-            "send it", "yes", "abort")),
-        "run": resolve_push_skill,
+        "desc": "approve or deny a pending git action by voice — push OR merge (\"approve the push\", \"approve the merge\", \"deny the merge\", \"cancel it\")",
+        "match": lambda g: any(k in g.lower() for k in ("push", "merge")) and any(
+            w in g.lower() for w in ("approve", "confirm", "deny", "cancel", "reject",
+                                     "go ahead", "do it", "send it", "yes", "abort")),
+        "run": resolve_git_skill,
     },
     {
         "name": "git_push",
@@ -313,6 +365,22 @@ SKILLS = [
             "push my changes", "push the changes", "commit and push", "save to github",
             "upload to github", "push everything", "push to origin", "push to remote")),
         "run": git_push_skill,
+    },
+    {
+        "name": "pr_merge",
+        "agent": "seeker",
+        "desc": "merge a GitHub Pull Request (STAGES for operator approval) — \"merge PR #12\", \"merge pull request 7\"",
+        "match": lambda g: ("merge" in g.lower()) and bool(
+            __import__("re").search(r"(?:pr|pull\s*request)\s*#?\s*\d+", g, __import__("re").I)),
+        "run": pr_merge_skill,
+    },
+    {
+        "name": "git_merge",
+        "agent": "seeker",
+        "desc": "merge one LOCAL branch into another (STAGES for operator approval) — \"merge feature-x into main\"",
+        "match": lambda g: ("merge" in g.lower()) and ("into" in g.lower() or "branch" in g.lower())
+                 and not any(w in g.lower() for w in ("approve", "deny", "cancel", "reject")),
+        "run": git_merge_skill,
     },
     {
         "name": "delete_build",

@@ -373,6 +373,10 @@ npm start          # serves on http://localhost:3000
 | `POST` | `/builds/create` | `{ "name": "...", "goal": "..." }` | Build a standalone app (short auto-named folder) |
 | `GET` | `/builds` | — | List builds in the dock |
 | `DELETE` | `/builds/{slug}` | — | Delete a build (folder + dock record) |
+| `GET` | `/git/status` | — | Repo push preview (branch, commits ahead, tracked changes) |
+| `POST` | `/git/push` | `{ "message"? }` | Stage a commit+push for approval (Confirm dock or voice) |
+| `POST` | `/git/merge` | `{ "source", "target"? }` | Stage a local branch merge for approval |
+| `POST` | `/git/merge-pr` | `{ "number", "method"? }` | Stage a GitHub PR merge for approval |
 | `GET` | `/google/status` | — | Google OAuth auth state |
 | `POST` | `/factory/spawn` | `{ "name_hint": "...", "role_description": "...", "special_requirements": "" }` | Stage a new sub-agent build |
 | `GET` | `/factory/pending` | — | All tasks awaiting approval (page-load hydration) |
@@ -470,6 +474,9 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-27 — Operator-approved merges (local branch + GitHub PR)
+- **[Merge]** Same gated, voice-approvable pattern as push. **Local branch merge** ("merge feature-x into main" → `git_merge` skill / `POST /git/merge`): `--no-ff`, requires a clean tree, aborts cleanly on conflict. **GitHub PR merge** ("merge PR #12" → `pr_merge` skill / `POST /git/merge-pr`): via the GitHub API; needs the PAT's `Pull requests: write`. Approve/deny either with "approve the merge" / "deny the merge" (generalized `resolve_git` skill + router rule). Shared `git_remote.execute_git_confirmation` dispatch; 9 more guardrail tests (conflict abort, dirty refuse, PR 403/405 handling, owner/repo parsing).
 
 ### 2026-06-27 — Operator-approved GitHub push
 - **[Git push]** RAMBO can commit + push its own repo, **gated behind per-push approval** (Confirm dock or voice: "approve the push" / "deny the push"). New `dev_agent/git_remote.py` (never force-pushes, commits only tracked changes, **secret-scans** the diff, https-github-only, token scrubbed from output); `GET /git/status`, `POST /git/push` (stages a confirmation); `git_push` + `resolve_push` skills + router rule. Needs a fine-grained `RAMBO_GITHUB_TOKEN` (repo-scoped, Contents: read/write); disabled until set. 6 guardrail tests.

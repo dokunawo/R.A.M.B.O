@@ -122,6 +122,11 @@ RAMBO can **commit + push its own repo** — but never on its own. Every push wa
 - **Guardrails:** never force-pushes; commits only **tracked** changes and **secret-scans** the diff first (refuses if it sees anything like a key); pushes the **current branch** over HTTPS to GitHub only; the token is never logged.
 - **One-time setup:** create a **fine-grained GitHub PAT** scoped to *only this repo* with **Contents: read/write**, and put it in `rambo-backend/.env` as `RAMBO_GITHUB_TOKEN=…`, then restart the backend. Until then, RAMBO will tell you it can't push. (Endpoints: `GET /git/status`, `POST /git/push`.)
 
+**Merging (also operator-approved):**
+- **Local branch merge:** "merge feature-x into main" → RAMBO stages it (clean-tree required; aborts on conflicts and leaves the target untouched) → "approve the merge" → done. Then push if you want it on GitHub. (`POST /git/merge`.)
+- **GitHub PR merge:** "merge PR #12" → stages it → "approve the merge" → merges the PR on GitHub via the API. **Needs the PAT to also have `Pull requests: write`** (add that permission to the same fine-grained token). (`POST /git/merge-pr`.)
+- **One word approves either:** "approve the merge" / "deny the merge" (or use the Confirm dock). RAMBO's self-code changes still merge through the Code Review dock (`/dev/merge`) as before.
+
 > Note: inside a Claude Code session, the assistant already commits/pushes for you with your host credentials — this is for when you're driving **RAMBO directly** (voice/console).
 
 ### Hand-off announcements (quieter now)

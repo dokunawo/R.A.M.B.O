@@ -17,7 +17,7 @@ import os
 import re
 
 from dev_agent.git_workspace import (
-    _git, _git_ok, _IDENT, resolve_repo_root, current_branch, GitWorkspaceError,
+    _git, _git_ok, _IDENT, resolve_repo_root, current_branch, is_dirty, GitWorkspaceError,
 )
 
 # Obvious credential shapes — refuse to commit a diff that contains any of these.
@@ -123,3 +123,94 @@ async def commit_and_push(repo_root=None, message: str = "Update via R.A.M.B.O",
     committed = await commit_tracked(root, message)
     pushed = await push(root, branch)
     return {**pushed, "commit": committed}
+
+
+# ── local branch merge (operator-confirmed) ─────────────────────────────────
+async def merge_preview(source: str, target: str | None = None, repo_root=None) -> dict:
+    root = resolve_repo_root(repo_root)
+    target = target or await current_branch(root)
+    rc, _ = await _git(root, "rev-parse", "--verify", source)
+    exists = rc == 0
+    dirty = await is_dirty(root)
+    commits = None
+    if exists:
+        rc, cnt = await _git(root, "rev-list", "--count", f"{target}..{source}")
+        if rc == 0 and cnt.strip().isdigit():
+            commits = int(cnt.strip())
+    return {"source": source, "target": target, "source_exists": exists,
+            "dirty": dirty, "commits": commits}
+
+
+async def local_merge(source: str, target: str | None = None,
+                      message: str | None = None, repo_root=None) -> dict:
+    """Merge `source` into `target` (default current branch), --no-ff. Refuses on a
+    dirty tree or a missing branch; aborts cleanly on conflict."""
+    root = resolve_repo_root(repo_root)
+    if await is_dirty(root):
+        raise GitWorkspaceError("working tree has uncommitted changes — commit or stash first")
+    rc, _ = await _git(root, "rev-parse", "--verify", source)
+    if rc != 0:
+        raise GitWorkspaceError(f"branch not found: {source}")
+    target = target or await current_branch(root)
+    rc, out = await _git(root, "checkout", target)
+    if rc != 0:
+        raise GitWorkspaceError(f"couldn't switch to {target}: {out.strip()[-200:]}")
+    msg = message or f"Merge {source} into {target}"
+    rc, out = await _git(root, *_IDENT, "merge", "--no-ff", "--no-verify", "-m", msg, source)
+    if rc != 0:
+        await _git(root, "merge", "--abort")
+        raise GitWorkspaceError(
+            f"merge had conflicts and was aborted — {target} is unchanged. "
+            f"Resolve {source} vs {target} by hand. ({out.strip()[-200:]})")
+    return {"merged": True, "source": source, "target": target}
+
+
+# ── GitHub PR merge (operator-confirmed; needs Pull requests: write) ─────────
+def _owner_repo(origin: str) -> tuple[str | None, str | None]:
+    m = re.search(r"github\.com[/:]([^/]+)/([^/]+?)(?:\.git)?/?$", origin or "")
+    return (m.group(1), m.group(2)) if m else (None, None)
+
+
+async def merge_pr(number: int, method: str = "merge", repo_root=None) -> dict:
+    token = _token()
+    if not token:
+        raise GitWorkspaceError("no RAMBO_GITHUB_TOKEN configured — can't merge a PR")
+    root = resolve_repo_root(repo_root)
+    _, origin = await _git(root, "remote", "get-url", "origin")
+    owner, repo = _owner_repo(origin.strip())
+    if not owner:
+        raise GitWorkspaceError(f"can't parse a GitHub owner/repo from origin: {origin.strip()}")
+    import httpx
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}/merge"
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.put(url, headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }, json={"merge_method": method})
+    if r.status_code == 200:
+        return {"merged": True, "pr": number, "repo": f"{owner}/{repo}",
+                "message": (r.json() or {}).get("message", "merged")}
+    if r.status_code == 403:
+        raise GitWorkspaceError("GitHub refused (403) — your token likely lacks the "
+                                "'Pull requests: write' permission. Add it to the PAT.")
+    if r.status_code == 404:
+        raise GitWorkspaceError(f"PR #{number} not found (or the token can't see it).")
+    if r.status_code in (405, 409):
+        raise GitWorkspaceError(f"PR #{number} isn't mergeable right now "
+                                "(conflicts, failing checks, or branch protection).")
+    raise GitWorkspaceError(f"GitHub merge failed ({r.status_code}): {r.text[:200]}")
+
+
+async def execute_git_confirmation(rec: dict) -> dict:
+    """Run an approved git action recorded in the confirmation queue. Shared by the
+    HTTP approve endpoint and the voice resolver so the dispatch lives in one place."""
+    inp = rec.get("tool_input") or {}
+    name = rec.get("tool_name")
+    if name == "git_push":
+        return await commit_and_push(message=inp.get("message"), branch=inp.get("branch"))
+    if name == "git_merge_local":
+        return await local_merge(inp["source"], inp.get("target"), inp.get("message"))
+    if name == "git_merge_pr":
+        return await merge_pr(int(inp["number"]), inp.get("method", "merge"))
+    raise GitWorkspaceError(f"unknown git action: {name}")

@@ -997,20 +997,17 @@ async def approve_confirmation(confirmation_id: str):
     rec = _confirmations.get(confirmation_id)
     if rec is None or rec["status"] != "pending":
         return {"error": "not found or already resolved"}
-    # Git push is gated through this same confirmation queue but isn't a
-    # spawned-agent tool — execute it directly on approval.
-    if rec["tool_name"] == "git_push":
+    # Git actions (push / local merge / PR merge) are gated through this same
+    # confirmation queue but aren't spawned-agent tools — execute directly.
+    if rec["tool_name"].startswith("git_"):
         from dev_agent import git_remote
         _confirmations.resolve(confirmation_id, "approved")
         try:
-            inp = rec["tool_input"]
-            res = await git_remote.commit_and_push(
-                message=inp.get("message") or "Update via R.A.M.B.O",
-                branch=inp.get("branch"))
-            await manager.broadcast(f"[R.A.M.B.O] Pushed {res.get('branch')} to GitHub.")
-            return {"status": "pushed", "result": res}
+            res = await git_remote.execute_git_confirmation(rec)
+            await manager.broadcast(f"[R.A.M.B.O] {rec['tool_name']} approved.")
+            return {"status": "done", "action": rec["tool_name"], "result": res}
         except Exception as e:
-            return {"status": "error", "error": str(e)}
+            return {"status": "error", "action": rec["tool_name"], "error": str(e)}
     tool = _tool_registry.get(rec["tool_name"])
     if tool is None:
         return {"error": f"tool '{rec['tool_name']}' no longer registered"}
@@ -1062,6 +1059,42 @@ async def git_push_request(req: GitPushRequest):
     entry = _confirmations.request_confirmation(
         "git_push", {"branch": preview["branch"], "message": msg}, agent_slug="operator")
     return {"status": "confirmation_required", "id": entry["id"], "preview": preview}
+
+
+class GitMergeRequest(BaseModel):
+    source: str
+    target: str | None = None
+
+
+@app.post("/git/merge")
+async def git_merge_request(req: GitMergeRequest):
+    """Stage a LOCAL branch merge for approval (does NOT merge yet)."""
+    from dev_agent import git_remote
+    try:
+        preview = await git_remote.merge_preview(req.source, req.target)
+    except Exception as e:
+        return {"error": str(e)}
+    if not preview["source_exists"]:
+        return {"error": f"branch not found: {req.source}"}
+    entry = _confirmations.request_confirmation(
+        "git_merge_local", {"source": preview["source"], "target": preview["target"]},
+        agent_slug="operator")
+    return {"status": "confirmation_required", "id": entry["id"], "preview": preview}
+
+
+class GitMergePRRequest(BaseModel):
+    number: int
+    method: str | None = "merge"
+
+
+@app.post("/git/merge-pr")
+async def git_merge_pr_request(req: GitMergePRRequest):
+    """Stage a GitHub PR merge for approval (does NOT merge yet)."""
+    entry = _confirmations.request_confirmation(
+        "git_merge_pr", {"number": req.number, "method": req.method or "merge"},
+        agent_slug="operator")
+    return {"status": "confirmation_required", "id": entry["id"],
+            "preview": {"pr": req.number, "method": req.method or "merge"}}
 
 
 # ── Tier 5: handoff system (propose, don't chain) ────────────────

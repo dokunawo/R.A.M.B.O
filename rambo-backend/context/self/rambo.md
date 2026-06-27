@@ -32,8 +32,10 @@ open-ended research.
 | weather | seeker | match, weather, temperature, forecast, how hot, how cold |
 | web_search | seeker | match, search the web, web search, search online, look online, look up… |
 | system_update | seeker | match, give me an update, an update, catch me up, system status, status report… |
-| resolve_push | seeker | match, push, approve, confirm, deny, cancel… |
+| resolve_git | seeker | match, push, merge, approve, confirm, deny… |
 | git_push | seeker | match, push to github, push to git, push the repo, push the code, push my changes… |
+| pr_merge | seeker | match, merge, re, (?:pr|pull\s*request)\s*#?\s*\d+, re |
+| git_merge | seeker | match, merge, into, branch |
 | delete_build | seeker | match, build, delete, remove, get rid of, throw away… |
 | codebase | seeker | match, what changed, what did we change, what did we just, recent changes, recent commits… |
 | notify | echo | match, email me, notify me, send me an email, send an email, email this… |
@@ -89,17 +91,18 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 191 commits:
+Last 14 days — 192 commits:
 
-- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (12 minutes ago)`
-- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (23 minutes ago)`
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (25 minutes ago)`
-- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (49 minutes ago)`
-- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (51 minutes ago)`
+- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (29 minutes ago)`
+- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (41 minutes ago)`
+- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (52 minutes ago)`
+- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (54 minutes ago)`
+- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (78 minutes ago)`
+- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (79 minutes ago)`
 - `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (2 hours ago)`
-- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (2 hours ago)`
-- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (2 hours ago)`
-- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (2 hours ago)`
+- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (3 hours ago)`
+- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (3 hours ago)`
+- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (3 hours ago)`
 - `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (3 hours ago)`
 - `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (3 hours ago)`
 - `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (3 hours ago)`
@@ -108,10 +111,9 @@ Last 14 days — 191 commits:
 - `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (3 hours ago)`
 - `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (3 hours ago)`
 - `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (3 hours ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (3 hours ago)`
-- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (3 hours ago)`
-- `3bffa8b docs: implementation plan for Player Watch + Moneyline Board (3 hours ago)`
-- … and 171 more
+- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (4 hours ago)`
+- `1f4032e feat(ev): capture games.game_datetime + order moneyline slate by first pitch (4 hours ago)`
+- … and 172 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
