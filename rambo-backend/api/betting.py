@@ -10,6 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from brains.ev.engine import daily_edge
 from brains.ev.market import REGISTRY
+from brains.ev.slip import build_slip
 
 router = APIRouter(prefix="/betting", tags=["betting"])
 
@@ -31,3 +32,22 @@ def get_daily_edge(market: str = "hr", date: Optional[str] = None,
         raise HTTPException(status_code=502, detail=f"daily_edge failed: {e}") from e
     return {"market": market, "date": d, "count": len(picks),
             "picks": [asdict(p) for p in picks]}
+
+
+@router.get("/slip")
+def get_slip(market: str = "hr", date: Optional[str] = None,
+             count: Optional[int] = None) -> dict:
+    """Fixed-size slip roster + a ready-to-paste ChatGPT prompt for one market.
+    Pulls all candidates (incl. −EV so props fill), ranks for the slip (props by
+    hit-probability, moneyline by lean), takes the top N (per-market default, or
+    `count`), and reports any shortfall when the market is thin."""
+    if market not in REGISTRY:
+        raise HTTPException(status_code=404,
+                            detail=f"unknown market '{market}' (valid: {sorted(REGISTRY)})")
+    d = date or datetime.date.today().isoformat()
+    try:
+        picks = daily_edge(d, market, threshold=-1.0)
+        slip = build_slip(picks, market, count=count)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"slip failed: {e}") from e
+    return {"market": market, "date": d, **slip}

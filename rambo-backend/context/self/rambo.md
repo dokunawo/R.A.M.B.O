@@ -85,29 +85,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 159 commits:
+Last 14 days — 160 commits:
 
-- `a12a63f feat(cmc): poster texture system + branded-plate slot (7 hours ago)`
-- `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (7 hours ago)`
-- `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (7 hours ago)`
-- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (7 hours ago)`
-- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (8 hours ago)`
-- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (8 hours ago)`
-- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (8 hours ago)`
-- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (8 hours ago)`
-- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (8 hours ago)`
-- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (8 hours ago)`
-- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (8 hours ago)`
-- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (9 hours ago)`
-- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (9 hours ago)`
-- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (9 hours ago)`
-- `5252270 feat(ev): per-slate LLM explainer with templated fallback (9 hours ago)`
-- `6421de7 feat(ev): HR market builds ranked Pick candidates (9 hours ago)`
-- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (9 hours ago)`
-- `588171f feat(ev): repo lookups for game context + pitcher hand (9 hours ago)`
-- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (9 hours ago)`
-- `487e92c feat(ev): Pick + HRFeatures types (card contract) (9 hours ago)`
-- … and 139 more
+- `307e3c1 docs: consolidate all roadmaps into one ROADMAP.md; refresh README (6 hours ago)`
+- `a12a63f feat(cmc): poster texture system + branded-plate slot (13 hours ago)`
+- `f70b4c1 feat(cmc): cinematic poster redesign — brush fonts, black/gold, tall cards (14 hours ago)`
+- `c1310b3 feat(cmc): metallic gold-foil text, SVG smoke/gold texture, stronger neon glow (14 hours ago)`
+- `2a87814 feat(cmc): landscape poster with real headshots, CMC logo header + banner (14 hours ago)`
+- `5b6b44c feat(cmc): downloadable Daily Edge poster (/card/:market) via html-to-image (14 hours ago)`
+- `7d728c3 feat(cmc): Daily Edge card — moneyline leans lead, props as honest -EV skips (14 hours ago)`
+- `fba6e87 feat(ev): market-anchor moneyline to de-vigged book (honest bounded leans) (14 hours ago)`
+- `4dba1d4 feat(ev): pitcher-adjusted moneyline model (starter ERA -> expected runs) (15 hours ago)`
+- `f895223 feat(ev): Moneyline market (Pythagorean team model + team-stats ingestion) (15 hours ago)`
+- `35f68cf feat(ev): Strikeouts market (pitcher K, group=pitching, Poisson per-start) (15 hours ago)`
+- `27bedcd feat(ev): H+R+RBI and Stolen Bases markets (Poisson count model) (15 hours ago)`
+- `0f506ec fix(ev): skip null-multiplier props; lock split keys; deterministic DH; cleanup (15 hours ago)`
+- `ffd106a feat(ev): /betting/daily-edge endpoint + mount (15 hours ago)`
+- `2f4eff7 feat(ev): daily_edge orchestrator (rank + explain) (15 hours ago)`
+- `5252270 feat(ev): per-slate LLM explainer with templated fallback (15 hours ago)`
+- `6421de7 feat(ev): HR market builds ranked Pick candidates (15 hours ago)`
+- `22cd9d8 feat(ev): HR feature assembly from MlbRepo (15 hours ago)`
+- `588171f feat(ev): repo lookups for game context + pitcher hand (16 hours ago)`
+- `6900a65 feat(ev): migration 003 — probable pitchers + team abbrs on games (16 hours ago)`
+- … and 140 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
