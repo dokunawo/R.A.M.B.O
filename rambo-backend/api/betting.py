@@ -136,6 +136,27 @@ def get_hits_tb_watch(date: Optional[str] = None) -> dict:
     return {"date": d, **board, "provenance": prov}
 
 
+@router.get("/line-shop")
+def get_line_shop(date: Optional[str] = None) -> dict:
+    """Best moneyline price per side across ALL books + each book's no-vig
+    consensus and the line-shopping value of the best number. Multi-book by
+    construction (The Odds API REGIONS=us). Read-only, with provenance."""
+    from db.migrate import get_connection
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.line_shop import line_shop_slate
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, _, _ = _provenance("ml")
+        conn = get_connection(_DB)
+        try:
+            games = line_shop_slate(MlbRepo(conn), d)
+        finally:
+            conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"line_shop failed: {e}") from e
+    return {"date": d, "games": games, "provenance": prov}
+
+
 @router.post("/prep")
 def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
     """Pull + normalize the full multi-source board for `date` (schedule, The Odds API,
