@@ -94,14 +94,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 218 commits:
+Last 14 days — 219 commits:
 
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (6 minutes ago)`
-- `d339260 Fix pitcher_era_asof season filter leak (11 minutes ago)`
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (16 minutes ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (22 minutes ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (27 minutes ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (36 minutes ago)`
+- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (5 minutes ago)`
+- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (11 minutes ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (16 minutes ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (20 minutes ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (27 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (32 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (41 minutes ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (5 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 218 commits:
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (9 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (9 hours ago)`
-- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (9 hours ago)`
-- … and 198 more
+- … and 199 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
