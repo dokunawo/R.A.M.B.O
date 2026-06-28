@@ -34,6 +34,16 @@ class MlbRepo:
             "SELECT * FROM games WHERE game_pk=?", (game_pk,)).fetchone()
         return dict(row) if row else None
 
+    def final_games(self, start: str, end: str) -> list[dict]:
+        """Completed games (both final scores present) in [start, end] inclusive —
+        the outcomes a moneyline backtest grades against."""
+        return _dicts(self.conn.execute(
+            "SELECT game_pk, official_date, home_team_id, away_team_id, "
+            "home_team_abbr, away_team_abbr, home_score, away_score FROM games "
+            "WHERE official_date BETWEEN ? AND ? "
+            "AND home_score IS NOT NULL AND away_score IS NOT NULL "
+            "ORDER BY official_date, game_pk", (start, end)))
+
     # -- odds (latest snapshot via the view) ---------------------------------
 
     def odds_history(self, game_pk: int, market: str = "moneyline") -> list[dict]:

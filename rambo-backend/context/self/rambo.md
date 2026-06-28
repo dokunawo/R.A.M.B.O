@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 205 commits:
+Last 14 days — 206 commits:
 
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 minutes ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (34 minutes ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (52 minutes ago)`
-- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (65 minutes ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (35 minutes ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (41 minutes ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (70 minutes ago)`
+- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (88 minutes ago)`
+- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (2 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (3 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (3 hours ago)`
-- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (3 hours ago)`
-- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (3 hours ago)`
-- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (6 hours ago)`
+- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (4 hours ago)`
+- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (4 hours ago)`
+- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (7 hours ago)`
 - `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (7 hours ago)`
-- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (7 hours ago)`
+- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (8 hours ago)`
 - `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (14 hours ago)`
 - `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (18 hours ago)`
-- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (18 hours ago)`
-- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (18 hours ago)`
+- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (19 hours ago)`
+- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (19 hours ago)`
 - `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (19 hours ago)`
 - `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (19 hours ago)`
-- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (19 hours ago)`
-- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (19 hours ago)`
-- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (20 hours ago)`
-- … and 185 more
+- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (20 hours ago)`
+- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (20 hours ago)`
+- … and 186 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

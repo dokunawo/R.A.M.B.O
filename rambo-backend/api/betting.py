@@ -194,6 +194,21 @@ def get_clv(date: Optional[str] = None) -> dict:
     return {"date": d, "games": games, "summary": summary, "provenance": prov}
 
 
+@router.post("/backfill-results")
+def post_backfill_results(start: str, end: str) -> dict:
+    """Backfill final scores for past games (free statsapi schedule) over a date
+    range, so the backtest harness has outcomes to grade. Idempotent."""
+    from db.migrate import get_connection
+    from ingestion.backfill import backfill_results
+    conn = get_connection(_DB)
+    try:
+        return backfill_results(conn, start, end)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"backfill failed: {e}") from e
+    finally:
+        conn.close()
+
+
 @router.post("/prep")
 def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
     """Pull + normalize the full multi-source board for `date` (schedule, The Odds API,
