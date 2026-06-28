@@ -195,6 +195,28 @@ class MlbRepo:
         return self.conn.execute(
             "SELECT COUNT(*) FROM game_lineups WHERE game_pk=?", (game_pk,)).fetchone()[0] > 0
 
+    def probable_starters(self, date: str) -> list[dict]:
+        """Each game's probable starting pitchers on `date` (both sides) with
+        mlb_id, name, team abbr, opponent abbr — the pool for Strikeout Watch."""
+        rows = self.conn.execute(
+            """SELECT game_pk, home_team_abbr, away_team_abbr,
+                      home_probable_pitcher_id, away_probable_pitcher_id
+               FROM games WHERE official_date=?""", (date,)).fetchall()
+        out: list[dict] = []
+        for r in rows:
+            for pid, team, opp in (
+                (r["home_probable_pitcher_id"], r["home_team_abbr"], r["away_team_abbr"]),
+                (r["away_probable_pitcher_id"], r["away_team_abbr"], r["home_team_abbr"]),
+            ):
+                if pid is None:
+                    continue
+                nm = self.conn.execute(
+                    "SELECT full_name FROM players WHERE mlb_id=?", (pid,)).fetchone()
+                out.append({"mlb_id": pid, "name": nm["full_name"] if nm else "",
+                            "team_abbr": team or "", "opponent_abbr": opp or "",
+                            "game_pk": r["game_pk"]})
+        return out
+
     def lineup_batters(self, date: str) -> list[dict]:
         """Every hitter in a confirmed lineup on `date` (distinct mlb_id + name) —
         the candidate pool for the slate-wide Player Watch board."""

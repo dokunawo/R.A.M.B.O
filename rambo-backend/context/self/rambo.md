@@ -32,6 +32,7 @@ open-ended research.
 | weather | seeker | match, weather, temperature, forecast, how hot, how cold |
 | web_search | seeker | match, search the web, web search, search online, look online, look up… |
 | system_update | seeker | match, give me an update, an update, catch me up, system status, status report… |
+| strikeout_watch | seeker | match, strikeout watch, strikeout board, strikeout parlay, strikeout pick, strikeout candidate… |
 | resolve_git | seeker | match, push, merge, approve, confirm, deny… |
 | git_push | seeker | match, push to github, push to git, push the repo, push the code, push my changes… |
 | pr_merge | seeker | match, merge, re, (?:pr|pull\s*request)\s*#?\s*\d+, re |
@@ -91,29 +92,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 193 commits:
+Last 14 days — 194 commits:
 
-- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (4 hours ago)`
-- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (4 hours ago)`
-- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (4 hours ago)`
-- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (5 hours ago)`
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (5 hours ago)`
-- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (5 hours ago)`
-- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (5 hours ago)`
-- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (6 hours ago)`
-- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (6 hours ago)`
-- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (7 hours ago)`
-- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (7 hours ago)`
-- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (7 hours ago)`
-- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (7 hours ago)`
-- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (7 hours ago)`
-- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (7 hours ago)`
-- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (7 hours ago)`
-- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (7 hours ago)`
-- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (7 hours ago)`
-- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (7 hours ago)`
-- `c860d9b feat(ev): shared evaluate_game + Pick game_pk/game_datetime (7 hours ago)`
-- … and 173 more
+- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (7 hours ago)`
+- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (11 hours ago)`
+- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (11 hours ago)`
+- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (11 hours ago)`
+- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (11 hours ago)`
+- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (12 hours ago)`
+- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (12 hours ago)`
+- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (12 hours ago)`
+- `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (13 hours ago)`
+- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (13 hours ago)`
+- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (13 hours ago)`
+- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (14 hours ago)`
+- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (14 hours ago)`
+- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (14 hours ago)`
+- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (14 hours ago)`
+- `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (14 hours ago)`
+- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (14 hours ago)`
+- `ed64a57 feat(ev): MlbRepo player_bats + player_name getters (14 hours ago)`
+- `e522c67 docs(ev): clarify build_slip docstring + ml sort-sentinel comments (14 hours ago)`
+- `b2d1f38 feat(ev): ml daily-edge + slip ordered by game time (14 hours ago)`
+- … and 174 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

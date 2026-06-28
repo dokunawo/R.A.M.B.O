@@ -35,6 +35,21 @@ async def system_update_skill(goal: str, ctx: dict) -> str:
     return await compose_briefing(None, ctx, mode="concise")
 
 
+async def strikeout_watch_skill(goal: str, ctx: dict) -> str:
+    """Top probable starters for alt-strikeout parlays — spoken summary of the board."""
+    import datetime as _dt
+    from brains.ev.watch import strikeout_watch
+    out = strikeout_watch(_dt.date.today().isoformat())
+    rows = out.get("rows") or []
+    if not rows:
+        return ("No strikeout board yet — I need the day's probable starters pulled "
+                "first. Run a slate prep, then ask me for the strikeout watch again.")
+    top = rows[:5]
+    bits = "; ".join(f"{r['name']} {r['p9']}% for 9-plus" for r in top)
+    return (f"Top strikeout arms today — {bits}. "
+            f"{len(rows)} on the board; open Strikeout Watch for all of them and their 8-, 9- and 10-plus odds.")
+
+
 async def git_push_skill(goal: str, ctx: dict) -> str:
     """Stage a commit+push of RAMBO's repo for the operator's approval. Never pushes
     on its own — it queues a confirmation the operator approves (dock or voice)."""
@@ -346,6 +361,16 @@ SKILLS = [
             "bring me up to speed", "sitrep",
         )),
         "run": system_update_skill,
+    },
+    {
+        "name": "strikeout_watch",
+        "agent": "seeker",
+        "desc": "rank the day's probable starters by P(8+/9+/10+ strikeouts) for alt-K parlays (\"strikeout watch\", \"strikeout board\", \"who's striking out\", \"strikeout parlay\")",
+        "match": lambda g: any(p in g.lower() for p in (
+            "strikeout watch", "strikeout board", "strikeout parlay", "strikeout pick",
+            "strikeout candidate", "who's striking out", "whos striking out",
+            "who is striking out", "best strikeout", "k watch", "punchout")),
+        "run": strikeout_watch_skill,
     },
     {
         "name": "resolve_git",

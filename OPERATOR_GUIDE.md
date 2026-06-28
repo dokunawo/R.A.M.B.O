@@ -217,6 +217,12 @@ prompt to the console, and (3) writes a readable **Word doc** to the repo root:
 - **Moneyline Board** — **every** game in **game-time order** with both book odds,
   our model win % for each side, and our lean (or "no lean") — so you can mix-and-match
   your own moneyline alongside ours.
+- **Strikeout Watch** — the day's **top 11 probable starters** ranked by
+  **P(9+ strikeouts)**, each showing P(8+), P(9+), P(10+) and a projected K total.
+  Built for alt-strikeout parlays: pick the high-floor arms and avoid coin-flip legs.
+  Say **"strikeout watch"** / "who's striking out", or `GET /betting/strikeout-watch`.
+  (Poisson on each starter's per-start K rate + last-15; openers/relievers filtered
+  out, projections sanity-capped.)
 
 ### 6.3 Where to read / use the picks
 - **Dashboard:** `http://localhost:3000/edge` (moneyline leans lead; props shown as

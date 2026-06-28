@@ -164,6 +164,10 @@ local branch merge).
   - "merge PR #12", "merge pull request 7" → "pr_merge" (STAGES a GitHub PR merge).
   - approving/denying ANY of the above — "approve the push", "approve the merge", \
 "deny the merge", "cancel it" — → "resolve_git".
+18c. STRIKEOUT WATCH: "strikeout watch", "strikeout board", "who's striking out", \
+"best strikeouts", "strikeout parlay" → the "strikeout_watch" skill (ranks the \
+day's probable starters by P(8+/9+/10+ Ks) for alt-strikeout parlays). This is the \
+pitcher-K board, distinct from the betting "daily-edge" Pick6 markets.
 18. DELETE A BUILD: removing/deleting an EXISTING build the operator already made \
 ("delete the calculator build", "remove my snake game build", "get rid of that \
 build", "trash that build") → the "delete_build" skill. This is the opposite of \

@@ -86,6 +86,7 @@ foreach ($m in $markets.Keys) {
 # Boards (read already-pulled data; free under -SkipPrep)
 $playerWatch    = Get-Json "$Base/betting/player-watch?date=$Date"
 $moneylineBoard = Get-Json "$Base/betting/moneyline-board?date=$Date"
+$strikeoutWatch = Get-Json "$Base/betting/strikeout-watch?date=$Date"
 
 # 3) Print to console ----------------------------------------------------------
 foreach ($r in $results) {
@@ -119,6 +120,9 @@ Write-Host $playerWatch.prompt
 Write-Host ""
 Write-Host "##### MONEYLINE BOARD #####" -ForegroundColor Magenta
 Write-Host $moneylineBoard.prompt
+Write-Host ""
+Write-Host "##### STRIKEOUT WATCH #####" -ForegroundColor Magenta
+Write-Host $strikeoutWatch.prompt
 
 # 4) Export to a Word document -------------------------------------------------
 $outPath = Join-Path $Repo ("CMC_Daily_{0}.docx" -f $Date)
@@ -181,6 +185,10 @@ foreach ($line in ($playerWatch.prompt -split "`n")) { Add-Line $line }
 Add-Line ""
 Add-Line ("MONEYLINE BOARD — {0} games" -f $moneylineBoard.count) $true
 foreach ($line in ($moneylineBoard.prompt -split "`n")) { Add-Line $line }
+
+Add-Line ""
+Add-Line ("STRIKEOUT WATCH — top {0} starters" -f $strikeoutWatch.count) $true
+foreach ($line in ($strikeoutWatch.prompt -split "`n")) { Add-Line $line }
 
 # wdFormatDocumentDefault = 16  (.docx). SaveAs2 takes plain args (avoids the
 # PS 5.1 [ref] PSObject-cast bug).

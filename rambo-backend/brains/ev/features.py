@@ -151,11 +151,23 @@ def build_count_features(repo, date: str, prop: dict, *, stat_keys: list[str],
                          label: str, group: str = "hitting",
                          games_key: str = "gamesPlayed",
                          use_splits: bool = True) -> Optional[CountFeatures]:
-    """Per-game counting-prop features (H+R+RBI, SB, K). For batter props
+    """Per-game counting-prop features for a DK Pick6 prop (carries line/multiplier)."""
+    return build_count_features_core(
+        repo, date, prop["mlb_id"], prop["player_name_raw"],
+        stat_keys=stat_keys, label=label, group=group, games_key=games_key,
+        use_splits=use_splits, line=prop["line"], multiplier=prop["multiplier"])
+
+
+def build_count_features_core(repo, date: str, mlb_id: int, name: str, *,
+                              stat_keys: list[str], label: str, group: str = "hitting",
+                              games_key: str = "gamesPlayed", use_splits: bool = True,
+                              line: float = 0.0, multiplier: float = 0.0
+                              ) -> Optional[CountFeatures]:
+    """Per-game counting-prop features for ANY player from their mlb_id (no prop
+    required) — powers slate-wide boards like Strikeout Watch. For batter props
     (`use_splits=True`) it picks the vs-hand split mean when the opposing pitcher's
-    hand is known. For pitcher props (K, `use_splits=False`) the opposing-pitcher
-    hand is irrelevant, so it uses the overall per-start mean. No park factor."""
-    mlb_id = prop["mlb_id"]
+    hand is known. For pitcher props (K, `use_splits=False`) it uses the overall
+    per-start mean. No park factor."""
     season = int(date[:4])
     rows = repo.player_season(mlb_id, season, group)
     if not rows:
@@ -187,8 +199,8 @@ def build_count_features(repo, date: str, prop: dict, *, stat_keys: list[str],
     window = "L15" if recent_mean is not None else "season"
 
     return CountFeatures(
-        mlb_id=mlb_id, name=prop["player_name_raw"], team_abbr=team_abbr,
+        mlb_id=mlb_id, name=name, team_abbr=team_abbr,
         opponent_abbr=opp_abbr, pitcher_hand=hand, per_game_mean=mean,
-        line=prop["line"], multiplier=prop["multiplier"],
+        line=line, multiplier=multiplier,
         support=f"{shown:.1f} {label}/gm {window}",
     )
