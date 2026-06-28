@@ -94,10 +94,11 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 214 commits:
+Last 14 days — 215 commits:
 
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (5 minutes ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (14 minutes ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (6 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (12 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (21 minutes ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (5 hours ago)`
@@ -110,13 +111,12 @@ Last 14 days — 214 commits:
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (7 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (8 hours ago)`
-- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (8 hours ago)`
+- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (9 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (9 hours ago)`
 - `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (9 hours ago)`
 - `c59b003 feat(ui): /boards page — all four parlay boards on one screen (12 hours ago)`
-- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (12 hours ago)`
-- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (13 hours ago)`
-- … and 194 more
+- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (13 hours ago)`
+- … and 195 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
