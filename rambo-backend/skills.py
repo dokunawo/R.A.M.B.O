@@ -26,6 +26,7 @@ except ImportError:
 
 from chief_of_staff import chief_of_staff_skill as _cos_skill
 from codebase_skill import codebase_skill as _codebase_skill
+from code_review_skill import code_review_skill as _code_review_skill, match_code_review as _match_code_review
 
 
 async def system_update_skill(goal: str, ctx: dict) -> str:
@@ -438,6 +439,13 @@ SKILLS = [
         "match": lambda g: ("build" in g.lower()) and any(
             w in g.lower() for w in ("delete", "remove", "get rid of", "throw away", "trash")),
         "run": delete_build_skill,
+    },
+    {
+        "name": "code_review",
+        "agent": "engineer",
+        "desc": "review the operator's OPEN (uncommitted) changes by voice, scoped to a module/file or all of them (\"review the auth module\", \"review my changes\", \"review orchestrator.py\")",
+        "match": lambda g: _match_code_review(g),
+        "run": _code_review_skill,
     },
     {
         "name": "codebase",
