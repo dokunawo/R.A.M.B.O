@@ -389,11 +389,19 @@ def map_odds_api(conn, item, scraped_at) -> bool:
     return True
 
 
+def _is_mlb_prop(item) -> bool:
+    """DK Pick6 scrapes every sport; keep only MLB. Accepts the abbreviation or
+    the full league name, case-insensitively. A missing/blank league is treated
+    as NOT MLB (we only ingest confirmed-MLB props)."""
+    league = (_first(item, "league", "sport", default="") or "").strip().upper()
+    return league in ("MLB", "MAJOR LEAGUE BASEBALL", "BASEBALL")
+
+
 def map_props(conn, item, scraped_at) -> bool:
     """DK Pick6 prop -> prop_lines (verified shape: player_name, line, stat_abbr,
     over/under_multiplier). mlb_id stays NULL until the ID resolver links it (Step 4).
     Non-MLB rows are intentionally skipped (watermark set)."""
-    if (_first(item, "league", default="") or "").upper() != "MLB":
+    if not _is_mlb_prop(item):
         return True  # handled: not our sport, don't reprocess
     market = _first(item, "stat_abbr", "stat", "market")
     line = _as_float(_first(item, "line", "value"))
