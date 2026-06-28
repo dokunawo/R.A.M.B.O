@@ -147,10 +147,16 @@ Make Champions" (CMC); ~$10 flat units; data-only (Sentinel boundary — no bet 
 
 ## Forward plan
 
+### Shipped 06/28
+- Voice/self-review — "Operator, review the auth module" → dev agent reviews open changes.
+- Full-suite `run_tests` gate before a dev-lane merge.
+- Boot briefing now flows naturally (spoken version trimmed of card-header/roadmap cruft, weather errors skipped).
+- Shutdown/standby sequence + tabbed task-history dock.
+- Push-approval feedback (CONFIRM dock + voice → "Pushed ✓").
+- Betting: prop→game link + team confirmation, Pick6 MLB-only filter, moneyline + player-prop line shopping, CLV tracking, backtest groundwork (results backfill + metrics harness).
+
 ### Short term
-- Voice/self-review polish — "Operator, review the auth module" points the dev agent at open changes.
-- Full-suite `run_tests` option before a dev-lane merge.
-- Operator greeting **+ boot briefing DONE** (`/briefing/boot` card + spoken; "catch me up" skill); shutdown/logout sequence + task-history panel still open.
+- Backtested predictive moneyline model — point-in-time feature store + walk-forward validation (harness shipped; the model itself is the remaining edge research).
 - Echo channels (push/SMS via Twilio); Keeper recall injected into prompt context.
 - Retire remaining stub `execute()` agents or give them real handlers.
 

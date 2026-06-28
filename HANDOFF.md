@@ -39,9 +39,11 @@ Data-only +EV MLB tool integrated into the RAMBO backend. Brand "CMC"; ~$10 flat
 - **Spotify integration** — not built. Requires separate OAuth app at developer.spotify.com.
 
 ### Next action
-**Active thread: MLB betting edge engine (CMC)** — see §2a and `ROADMAP.md`. Next betting steps: prop→game link + team confirmation, Pick6 MLB-only filter on paid pulls, line shopping across books + CLV tracking, and a genuinely backtested predictive moneyline model (the only path to validated edge). Wait for Daniel's direction.
+**Active thread: a backtested predictive moneyline model** — the betting cluster shipped 06/28 (prop→game link + team confirmation, Pick6 MLB-only filter, moneyline + player-prop line shopping, CLV tracking, and the backtest harness: results backfill + metrics). The model itself + point-in-time features + walk-forward validation is the remaining edge research. Awaiting Daniel's direction.
 
-Already-shipped initiatives now in maintenance: **self-coding lane** (`rambo-backend/dev_agent/` — drafts changes on an isolated git worktree → TDD red→green → impact report → lands on `main` only on explicit operator merge; endpoints `/dev/*`); **Factory** sub-agent spawner; **morning brief** scheduler; cost tracking + `/usage` dashboard. Test suite: **320 core + 37 EV pass**.
+Also shipped 06/28 (now live): voice self-review (`/betting` aside — "Operator, review the auth module"), dev-lane full-suite test gate, natural-flow spoken briefing, shutdown/standby + task-history dock, push-approval feedback. `cmc-daily.ps1` drives line-shop, prop-shop, and CLV.
+
+Already-shipped initiatives in maintenance: **self-coding lane** (`rambo-backend/dev_agent/` — drafts changes on an isolated git worktree → TDD red→green → impact report → lands on `main` only on explicit operator merge; endpoints `/dev/*`); **Factory** sub-agent spawner; **morning brief** scheduler; cost tracking + `/usage` dashboard. Test suite: **557 pass**.
 
 Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar/drive skills through the voice interface.
 

@@ -31,6 +31,9 @@ ENV/
 *.sqlite3
 *.db
 
+# Runtime data dir — SQLite stores, boot_state.json, escalations (never commit)
+rambo-backend/data/
+
 # ───────────────────────────── Docker ──────────────────────────────────────
 *.pid
 
