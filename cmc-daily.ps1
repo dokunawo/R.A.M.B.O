@@ -87,6 +87,7 @@ foreach ($m in $markets.Keys) {
 $playerWatch    = Get-Json "$Base/betting/player-watch?date=$Date"
 $moneylineBoard = Get-Json "$Base/betting/moneyline-board?date=$Date"
 $strikeoutWatch = Get-Json "$Base/betting/strikeout-watch?date=$Date"
+$hitsTbWatch    = Get-Json "$Base/betting/hits-tb-watch?date=$Date"
 
 # 3) Print to console ----------------------------------------------------------
 foreach ($r in $results) {
@@ -123,6 +124,9 @@ Write-Host $moneylineBoard.prompt
 Write-Host ""
 Write-Host "##### STRIKEOUT WATCH #####" -ForegroundColor Magenta
 Write-Host $strikeoutWatch.prompt
+Write-Host ""
+Write-Host "##### HITS & TOTAL BASES #####" -ForegroundColor Magenta
+Write-Host $hitsTbWatch.prompt
 
 # 4) Export to a Word document -------------------------------------------------
 $outPath = Join-Path $Repo ("CMC_Daily_{0}.docx" -f $Date)
@@ -189,6 +193,10 @@ foreach ($line in ($moneylineBoard.prompt -split "`n")) { Add-Line $line }
 Add-Line ""
 Add-Line ("STRIKEOUT WATCH — top {0} starters" -f $strikeoutWatch.count) $true
 foreach ($line in ($strikeoutWatch.prompt -split "`n")) { Add-Line $line }
+
+Add-Line ""
+Add-Line ("HITS & TOTAL BASES — top {0} hitters" -f $hitsTbWatch.count) $true
+foreach ($line in ($hitsTbWatch.prompt -split "`n")) { Add-Line $line }
 
 # wdFormatDocumentDefault = 16  (.docx). SaveAs2 takes plain args (avoids the
 # PS 5.1 [ref] PSObject-cast bug).

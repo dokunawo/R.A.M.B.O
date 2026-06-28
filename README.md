@@ -390,6 +390,7 @@ npm start          # serves on http://localhost:3000
 | `GET` | `/betting/player-watch` | `?date=` | Top-11 HR board (our leans pinned) + prompt |
 | `GET` | `/betting/moneyline-board` | `?date=` | Every game in game-time order (book odds + model %) + prompt |
 | `GET` | `/betting/strikeout-watch` | `?date=` | Top-11 probable starters by P(8+/9+/10+ K) + prompt |
+| `GET` | `/betting/hits-tb-watch` | `?date=` | Top-11 hitters by P(2+ TB) / P(1+ hit) + prompt |
 | `WS` | `/ws/activity` | — | Live activity + `STATUS:<agent>:<state>` feed |
 
 **Example — run a goal:**
@@ -475,6 +476,9 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-28 — Hits & Total Bases Watch (hits/TB parlay board)
+- **[Hits & TB Watch]** New `GET /betting/hits-tb-watch` + `hits_tb_watch` skill ("hits and total bases", "total bases board", "hits parlay") — ranks the day's lineup hitters by **P(2+ total bases)**, each also showing **P(1+ hit)** and projected hits/TB, for hits/total-base SGPs. Same Poisson engine (`build_count_features_core`, group=hitting, vs-hand split + last-15) over `MlbRepo.lineup_batters`. Wired into `cmc-daily.ps1`. 2 tests. Completes the parlay-board set: **Player Watch** (HR), **Strikeout Watch** (K), **Hits & Total Bases** (hits/TB).
 
 ### 2026-06-28 — Strikeout Watch (alt-K parlay board)
 - **[Strikeout Watch]** New `GET /betting/strikeout-watch` + `strikeout_watch` skill ("strikeout watch", "who's striking out", "strikeout parlay") — ranks the day's **top 11 probable starters by P(9+ strikeouts)**, each with P(8+/9+/10+) and a projected K total, for building alt-strikeout parlays. Poisson on per-start K rate + last-15 (`build_count_features_core` prop-less path, `MlbRepo.probable_starters`); openers/relievers filtered (`RAMBO_K_MIN_STARTS`, default 5) and projections clamped so a low-start reliever can't post a fake 30-K line. Wired into `cmc-daily.ps1`. 2 tests.

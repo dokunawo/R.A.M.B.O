@@ -249,6 +249,87 @@ def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
             conn.close()
 
 
+# ── Hits & Total Bases Watch (P(1+ hit) / P(2+ TB) per hitter) ──────────────
+HITS_TB_WATCH_SIZE = 11
+
+
+def _ht_row(rank: int, feat, hit_mean: float, tb_mean: float) -> dict:
+    return {
+        "rank": rank, "name": (feat.name or "").upper(), "team": feat.team_abbr,
+        "opponent": feat.opponent_abbr,
+        "p_hit": round(poisson_prob_over(hit_mean, 1) * 100),    # P(1+ hit)
+        "p_tb2": round(poisson_prob_over(tb_mean, 2) * 100),     # P(2+ total bases)
+        "hit_mean": round(hit_mean, 2), "tb_mean": round(tb_mean, 2),
+        "form": feat.support,
+    }
+
+
+def _ht_line(r: dict) -> str:
+    head = f"{r['rank']}. {r['name']}"
+    if r["team"] or r["opponent"]:
+        head += f" ({r['team']} vs {r['opponent']})"
+    return " — ".join([head, f"1+ hit {r['p_hit']}% · 2+ TB {r['p_tb2']}%",
+                       f"proj {r['hit_mean']} H / {r['tb_mean']} TB", r["form"]])
+
+
+def _ht_prompt(rows: list[dict], as_of, book) -> str:
+    stamp = " · ".join(x for x in ("Hits/TB model",
+                                   f"as of {as_of}" if as_of else None, book) if x)
+    banner = f"[{stamp}]\n\n" if stamp else ""
+    body = "\n".join(_ht_line(r) for r in rows) or "(no lineups available yet)"
+    return banner + (
+        'Create a premium sports-betting "hits & total bases" graphic for the brand '
+        '"Chances Make Champions" (CMC).\n\n'
+        "STYLE: cinematic, black background with gold and amber smoke, floating gold "
+        "dust, a gold crown, gritty brush/graffiti lettering, neon-gold accents. "
+        'Big brush title at the top: "HITS & TOTAL BASES". Moody, high-end, premium.\n\n'
+        f"LAYOUT: a clean numbered list of {len(rows)} hitters. Each row shows the "
+        "hitter (team vs opponent), the probability of 1+ hit and of 2+ total bases, "
+        "the projected hits and total bases, and recent form. Even spacing.\n\n"
+        "KEY: 1+ hit % and 2+ TB % = our model's probabilities (Poisson on the "
+        "hitter's per-game rate, vs-hand split where known, blended with last-15). "
+        "Use 1+ hit as your floor legs and 2+ total bases as the power legs. These "
+        "are probabilities, NOT guarantees. Figures are model-based.\n\n"
+        "CRITICAL: reproduce ALL text below EXACTLY as written — do not change, "
+        "abbreviate, reorder, add, or invent any name, team, number, %, or stat.\n\n"
+        f"HITTERS:\n{body}"
+    )
+
+
+def hits_tb_watch(date: str, repo=None, *, count: int = HITS_TB_WATCH_SIZE,
+                  as_of: str | None = None, book: str | None = None) -> dict:
+    """Top-`count` hitters by P(2+ total bases), each also showing P(1+ hit) — the
+    board for hits / total-bases parlays. Poisson on per-game hit and total-base
+    rates (vs-hand split + last-15) over the day's confirmed lineups."""
+    repo, conn = _open(repo)
+    try:
+        scored, seen = [], set()
+        for b in repo.lineup_batters(date):
+            mid = b["mlb_id"]
+            if mid is None or mid in seen:
+                continue
+            seen.add(mid)
+            feat_h = build_count_features_core(
+                repo, date, mid, b.get("name") or "", stat_keys=["hits"],
+                label="H", group="hitting", games_key="gamesPlayed", use_splits=True)
+            if feat_h is None or feat_h.per_game_mean <= 0:
+                continue
+            feat_tb = build_count_features_core(
+                repo, date, mid, b.get("name") or "", stat_keys=["totalBases"],
+                label="TB", group="hitting", games_key="gamesPlayed", use_splits=True)
+            tb_mean = feat_tb.per_game_mean if feat_tb else 0.0
+            feat_h.team_abbr = feat_h.team_abbr or b.get("team_abbr", "")
+            scored.append((feat_h, feat_h.per_game_mean, tb_mean))
+        scored.sort(key=lambda t: poisson_prob_over(t[2], 2), reverse=True)
+        rows = [_ht_row(i + 1, f, h, tb) for i, (f, h, tb) in enumerate(scored[:count])]
+        return {"title": "HITS & TOTAL BASES", "product": "Hits/TB model",
+                "count": len(rows), "rows": rows,
+                "prompt": _ht_prompt(rows, as_of, book)}
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 def _mb_row(rank: int, ev: dict) -> dict:
     diff_pct = round(ev["diff"] * 100, 1)
     if diff_pct == 0.0:

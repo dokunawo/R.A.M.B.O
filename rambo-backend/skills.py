@@ -35,6 +35,21 @@ async def system_update_skill(goal: str, ctx: dict) -> str:
     return await compose_briefing(None, ctx, mode="concise")
 
 
+async def hits_tb_watch_skill(goal: str, ctx: dict) -> str:
+    """Top hitters for hits / total-bases parlays — spoken summary of the board."""
+    import datetime as _dt
+    from brains.ev.watch import hits_tb_watch
+    out = hits_tb_watch(_dt.date.today().isoformat())
+    rows = out.get("rows") or []
+    if not rows:
+        return ("No hits/total-bases board yet — I need the day's lineups pulled "
+                "first. Run a slate prep, then ask again.")
+    top = rows[:5]
+    bits = "; ".join(f"{r['name']} {r['p_tb2']}% for 2-plus bases" for r in top)
+    return (f"Top hits and total-base bats — {bits}. "
+            f"{len(rows)} on the board; open Hits & Total Bases for their 1-plus-hit and 2-plus-base odds.")
+
+
 async def strikeout_watch_skill(goal: str, ctx: dict) -> str:
     """Top probable starters for alt-strikeout parlays — spoken summary of the board."""
     import datetime as _dt
@@ -371,6 +386,15 @@ SKILLS = [
             "strikeout candidate", "who's striking out", "whos striking out",
             "who is striking out", "best strikeout", "k watch", "punchout")),
         "run": strikeout_watch_skill,
+    },
+    {
+        "name": "hits_tb_watch",
+        "agent": "seeker",
+        "desc": "rank hitters by P(1+ hit) and P(2+ total bases) for hits/total-base parlays (\"hits watch\", \"total bases board\", \"hits and total bases\", \"hits parlay\")",
+        "match": lambda g: any(p in g.lower() for p in (
+            "hits watch", "total bases", "total base", "hits and total", "hits board",
+            "hits parlay", "hits and runs board", "best hits", "hit parlay")),
+        "run": hits_tb_watch_skill,
     },
     {
         "name": "resolve_git",

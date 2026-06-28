@@ -168,6 +168,9 @@ local branch merge).
 "best strikeouts", "strikeout parlay" → the "strikeout_watch" skill (ranks the \
 day's probable starters by P(8+/9+/10+ Ks) for alt-strikeout parlays). This is the \
 pitcher-K board, distinct from the betting "daily-edge" Pick6 markets.
+18d. HITS & TOTAL BASES: "hits watch", "total bases board", "hits and total bases", \
+"hits parlay" → the "hits_tb_watch" skill (ranks hitters by P(1+ hit) and P(2+ \
+total bases) for hits/total-base parlays).
 18. DELETE A BUILD: removing/deleting an EXISTING build the operator already made \
 ("delete the calculator build", "remove my snake game build", "get rid of that \
 build", "trash that build") → the "delete_build" skill. This is the opposite of \

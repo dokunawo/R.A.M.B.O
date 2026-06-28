@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException
 from brains.ev.engine import daily_edge
 from brains.ev.market import REGISTRY
 from brains.ev.slip import build_slip, PRODUCT
-from brains.ev.watch import player_watch, moneyline_board, strikeout_watch
+from brains.ev.watch import player_watch, moneyline_board, strikeout_watch, hits_tb_watch
 
 router = APIRouter(prefix="/betting", tags=["betting"])
 
@@ -121,6 +121,18 @@ def get_strikeout_watch(date: Optional[str] = None) -> dict:
         board = strikeout_watch(d, as_of=as_of, book=None)
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"strikeout_watch failed: {e}") from e
+    return {"date": d, **board, "provenance": prov}
+
+
+@router.get("/hits-tb-watch")
+def get_hits_tb_watch(date: Optional[str] = None) -> dict:
+    """Top-11 hitters by P(2+ total bases) (+ P(1+ hit)) for hits/TB parlays."""
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, as_of, _ = _provenance("hrr")
+        board = hits_tb_watch(d, as_of=as_of, book=None)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"hits_tb_watch failed: {e}") from e
     return {"date": d, **board, "provenance": prov}
 
 

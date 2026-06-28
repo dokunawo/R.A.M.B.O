@@ -223,6 +223,10 @@ prompt to the console, and (3) writes a readable **Word doc** to the repo root:
   Say **"strikeout watch"** / "who's striking out", or `GET /betting/strikeout-watch`.
   (Poisson on each starter's per-start K rate + last-15; openers/relievers filtered
   out, projections sanity-capped.)
+- **Hits & Total Bases** — the day's **top 11 hitters** by **P(2+ total bases)**, each
+  also showing **P(1+ hit)** + projected hits/TB. For hits / total-base parlays: use
+  1+ hit as floor legs, 2+ TB as power legs. Say **"hits and total bases"** / "hits
+  watch" / "total bases board", or `GET /betting/hits-tb-watch`.
 
 ### 6.3 Where to read / use the picks
 - **Dashboard:** `http://localhost:3000/edge` (moneyline leans lead; props shown as
