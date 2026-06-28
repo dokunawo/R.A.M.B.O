@@ -280,26 +280,91 @@ def render_full(data: dict) -> str:
     return "\n".join(L)
 
 
+def _spoken_weather(w: str | None) -> str:
+    """Flatten the multi-line weather block into one spoken clause.
+    "Weather — Detroit, MI (US)\\n  partly cloudy\\n  64°F …" →
+    "Weather in Detroit, MI (US): partly cloudy, 64°F, …"."""
+    if not w:
+        return ""
+    lines = [ln.strip() for ln in str(w).splitlines() if ln.strip()]
+    if not lines:
+        return ""
+    place = re.sub(r"^weather\s*[—\-:]\s*", "", lines[0], flags=re.IGNORECASE).strip()
+    rest = ", ".join(lines[1:]).replace("·", ",")
+    rest = re.sub(r"\s*,\s*(?:,\s*)*", ", ", rest)   # tidy spacing + drop doubled commas
+    rest = re.sub(r"\s{2,}", " ", rest).strip().strip(",").strip()
+    if place and rest:
+        return f"Weather in {place}: {rest}."
+    return f"Weather: {rest or place}." if (rest or place) else ""
+
+
+def _shorten(t: str, n: int = 120) -> str:
+    return (t[:n].rsplit(" ", 1)[0] + "…") if len(t) > n else t
+
+
 def render_concise(data: dict) -> str:
-    """Short spoken update — a few plain sentences, no markdown."""
+    """Spoken briefing — natural sentences covering every available section
+    (greeting + date/time, changes, weather, ALL suggested targets, calendar,
+    pending, uncommitted, north star, system). Plain text, single line, no
+    markdown. Each section is omitted when its data is missing."""
     out: list[str] = []
+
+    # Greeting + date/time (gathered together; gate on greet so a degenerate
+    # fixture without it stays silent here rather than speaking placeholders).
+    greet, name = data.get("greet"), data.get("name")
+    if greet and name:
+        out.append(f"{greet}, {name}.")
+        if data.get("time") and data.get("date"):
+            out.append(f"It's {data['time']} on {data['date']}.")
+
     changes = data.get("changes") or []
     if changes:
         out.append(f"Since you were last here, {len(changes)} change"
                    f"{'s' if len(changes) != 1 else ''} landed — latest: {changes[0]}.")
     else:
         out.append("No code changes since your last session.")
+
+    weather = _spoken_weather(data.get("weather"))
+    if weather:
+        out.append(weather)
+
     tasks = data.get("tasks") or []
     if tasks:
-        t = tasks[0]
-        if len(t) > 90:
-            t = t[:90].rsplit(" ", 1)[0] + "…"
-        out.append(f"Suggested next: {t}.")
+        if len(tasks) == 1:
+            out.append(f"Suggested next: {_shorten(tasks[0])}.")
+        else:
+            out.append("Suggested next targets: "
+                       + "; ".join(_shorten(t) for t in tasks) + ".")
+
+    cal = data.get("calendar") or []
+    if cal:
+        evs = [f"{e.get('summary', 'an event')} in {e.get('minutes_until', '?')} minutes"
+               for e in cal[:4]]
+        out.append("On your calendar today: " + "; ".join(evs) + ".")
+
     pending = data.get("pending") or []
     if pending:
         out.append(f"Waiting on you: {', '.join(pending)}.")
-    if data.get("uncommitted"):
-        out.append(f"Heads up — {data['uncommitted']} uncommitted file(s).")
+
+    unc = data.get("uncommitted")
+    if unc:
+        out.append(f"Heads up — {unc} uncommitted file{'s' if unc != 1 else ''} in the repo.")
+
+    doc = data.get("doctrine")
+    if doc and doc.get("target"):
+        out.append(f"Your north star: {doc['target']}.")
+
+    h, c = data.get("health"), data.get("cost")
+    sysbits = []
+    if h:
+        sysbits.append(f"CPU {h['cpu']:.0f} percent, RAM {h['ram']:.0f} percent, "
+                       f"disk {h['disk']:.0f} percent")
+    if c:
+        sysbits.append(f"API spend today {c.get('cost_usd', 0):.2f} dollars "
+                       f"across {c.get('call_count', 0)} calls")
+    if sysbits:
+        out.append("System: " + "; ".join(sysbits) + ".")
+
     return " ".join(out)
 
 

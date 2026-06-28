@@ -127,10 +127,24 @@ def test_render_sparse_omits_empty_and_says_nothing_new():
     assert "No code changes" in concise and "\n" not in concise and "None" not in concise
 
 
-def test_render_concise_is_short_plain_text():
+def test_render_concise_speaks_every_section():
     concise = sb.render_concise(_full_data())
-    assert concise.startswith("Since you were last here, 2 changes")
-    assert "**" not in concise and "#" not in concise
+    # greeting + date/time
+    assert "Good afternoon, Daniel." in concise
+    assert "12:00 PM" in concise and "Saturday, June 27, 2026" in concise
+    # changes + weather
+    assert "2 changes landed" in concise and "abc feat: boards (1h)" in concise
+    assert "Weather in Detroit" in concise
+    # ALL suggested targets are voiced, not just the first
+    assert "Ship X" in concise and "Wire Y" in concise
+    # calendar, pending, uncommitted, north star, system
+    assert "Shoot" in concise
+    assert "2 code reviews" in concise
+    assert "uncommitted file" in concise
+    assert "north star" in concise.lower() and "$10K by Q4" in concise
+    assert "CPU 12 percent" in concise
+    # plain text, single line, no markdown
+    assert "**" not in concise and "#" not in concise and "\n" not in concise
 
 
 # ── gather best-effort + orchestrator degradation ───────────────────────────
