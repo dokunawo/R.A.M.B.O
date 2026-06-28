@@ -686,35 +686,71 @@ async function openOnDesktop(hostPath) {
   } catch {}
 }
 
+// Human-readable success line per staged action (so approving a push reads
+// "Pushed ✓", not a silent disappearance).
+function _approveLabel(tool, ok, err) {
+  if (!ok) return `⚠ ${err || "failed"}`;
+  if (tool === "git_push") return "Pushed ✓";
+  if (tool === "git_merge_local") return "Merged ✓";
+  if (tool === "git_merge_pr") return "PR merged ✓";
+  return "Approved ✓";
+}
+
 export function ConfirmationDock() {
   const { items, refresh } = usePolledQueue("/confirmations");
   const [open, toggle] = useDockOpen("confirm");
   const { hidden, hideAll } = useHidden("confirm");
+  const [done, setDone] = useState({});   // id -> { msg, card } transient result
   const visible = items.filter(c => !hidden.has(c.id));
+
+  // Approve, then keep the card up showing the outcome ("Pushed ✓") for a beat
+  // before it removes itself — instead of vanishing the instant it's approved.
+  const approve = async (c) => {
+    let label;
+    try {
+      const r = await fetch(`${API}/confirmations/${c.id}/approve`, { method: "POST" });
+      const j = await r.json();
+      const ok = j && (j.status === "done" || j.status === "executed");
+      label = _approveLabel(c.tool_name, ok, j && j.error);
+    } catch { label = "⚠ request failed"; }
+    setDone(prev => ({ ...prev, [c.id]: { msg: label, card: c } }));
+    setTimeout(() => {
+      setDone(prev => { const n = { ...prev }; delete n[c.id]; return n; });
+      refresh();
+    }, 3500);
+  };
+
+  const pending = visible.filter(c => !done[c.id]);
+  // Render pending cards plus any still showing a transient result.
+  const liveIds = new Set(visible.map(c => c.id));
+  const extra = Object.values(done).map(d => d.card).filter(c => !liveIds.has(c.id));
+  const cards = [...visible, ...extra];
 
   return (
     <div className="hud-confirm-wrap">
       <div className="hud-factory-face" onClick={toggle}>
         <span className="hud-confirm-tag">CONFIRM</span>
-        <span className={`hud-factory-count ${visible.length ? "hud-count-hot" : ""}`}>{visible.length}</span>
+        <span className={`hud-factory-count ${pending.length ? "hud-count-hot" : ""}`}>{pending.length}</span>
       </div>
       {open && (
         <div className="hud-factory-panel">
           <DockPanelHeader title="◆ ACTIONS AWAITING APPROVAL" basePath="/confirmations"
-            ids={visible.map(c => c.id)} onHide={hideAll} onRefresh={refresh} />
-          {visible.length === 0
+            ids={pending.map(c => c.id)} onHide={hideAll} onRefresh={refresh} />
+          {cards.length === 0
             ? <div className="hud-factory-empty">{"// no actions awaiting approval"}</div>
-            : visible.map(c => (
+            : cards.map(c => (
                 <div key={c.id} className="hud-factory-card">
                   <div className="hud-factory-card-head">
                     <span className="hud-factory-name">{c.tool_name}</span>
                     {c.agent_slug && <span className="hud-factory-slug">{c.agent_slug}</span>}
                   </div>
                   <div className="hud-factory-prompt">{JSON.stringify(c.tool_input)}</div>
-                  <div className="hud-factory-actions">
-                    <button className="hud-factory-approve" onClick={() => _post(`/confirmations/${c.id}/approve`, refresh)}>APPROVE</button>
-                    <button className="hud-factory-reject" onClick={() => _post(`/confirmations/${c.id}/reject`, refresh)}>REJECT</button>
-                  </div>
+                  {done[c.id]
+                    ? <div className="hud-factory-iter">{done[c.id].msg}</div>
+                    : <div className="hud-factory-actions">
+                        <button className="hud-factory-approve" onClick={() => approve(c)}>APPROVE</button>
+                        <button className="hud-factory-reject" onClick={() => _post(`/confirmations/${c.id}/reject`, refresh)}>REJECT</button>
+                      </div>}
                 </div>
               ))}
         </div>
@@ -979,23 +1015,56 @@ export function GitDock() {
   const [pr, setPr] = useState("");
   const [msg, setMsg] = useState("");
 
+  const [watch, setWatch] = useState(null);   // { id, done, cancel } staged action
+
   const refresh = useCallback(async () => {
     try { const r = await fetch(`${API}/git/status`); if (r.ok) setSt(await r.json()); } catch {}
   }, []);
   useEffect(() => { refresh(); const id = setInterval(refresh, 15000); return () => clearInterval(id); }, [refresh]);
 
-  const stage = async (path, body) => {
-    setMsg("");
+  const stage = async (path, body, feedback) => {
+    setMsg(""); setWatch(null);
     try {
       const r = await fetch(`${API}${path}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body || {}),
       });
       const j = await r.json();
-      setMsg(j.error ? `⚠ ${j.error}` : "Staged — approve it in CONFIRM ↑");
+      if (j.error) { setMsg(`⚠ ${j.error}`); }
+      else {
+        setMsg("Staged — approve it in CONFIRM ↑");
+        if (j.id && feedback) setWatch({ id: j.id, ...feedback });   // resolve once approved
+      }
     } catch { setMsg("⚠ request failed"); }
     refresh();
   };
+
+  // Watch the staged confirmation: once the operator approves (or rejects) it in
+  // the CONFIRM dock, swap "Staged…" for the outcome, then clear after a beat.
+  useEffect(() => {
+    if (!watch) return;
+    let alive = true, ticks = 0, clearTimer;
+    const finish = (text) => {
+      if (!alive) return;
+      if (text) setMsg(text);
+      setWatch(null);
+      refresh();
+      clearTimer = setTimeout(() => { if (alive) setMsg(""); }, 4000);
+    };
+    const poll = setInterval(async () => {
+      ticks += 1;
+      if (ticks > 150) { clearInterval(poll); setWatch(null); return; }   // give up after ~5 min
+      try {
+        const r = await fetch(`${API}/confirmations/${watch.id}`);
+        const j = await r.json();
+        if (!alive) return;
+        if (j.status === "approved") { clearInterval(poll); finish(watch.done); }
+        else if (j.status === "rejected") { clearInterval(poll); finish(watch.cancel); }
+        else if (j.error) { clearInterval(poll); finish(null); }   // gone/cleared
+      } catch {}
+    }, 2000);
+    return () => { alive = false; clearInterval(poll); clearTimeout(clearTimer); };
+  }, [watch, refresh]);
 
   const ahead = st && st.ahead, nchg = (st && st.tracked_changes ? st.tracked_changes.length : 0);
   return (
@@ -1011,19 +1080,23 @@ export function GitDock() {
               {!st.token_configured && " · ⚠ no token"}</> : "…"}
           </div>
           <div className="hud-factory-actions">
-            <button className="hud-factory-approve" onClick={() => stage("/git/push")}>PUSH</button>
+            <button className="hud-factory-approve"
+              onClick={() => stage("/git/push", null,
+                { done: "Pushed ✓ — up to date", cancel: "Push cancelled" })}>PUSH</button>
           </div>
           <div className="hud-git-row">
             <input className="hud-git-input" placeholder="branch to merge → current"
               value={branch} onChange={e => setBranch(e.target.value)} />
             <button className="hud-factory-cancel" disabled={!branch.trim()}
-              onClick={() => stage("/git/merge", { source: branch.trim() })}>MERGE</button>
+              onClick={() => stage("/git/merge", { source: branch.trim() },
+                { done: "Merged ✓", cancel: "Merge cancelled" })}>MERGE</button>
           </div>
           <div className="hud-git-row">
             <input className="hud-git-input" placeholder="PR #" value={pr}
               onChange={e => setPr(e.target.value)} />
             <button className="hud-factory-cancel" disabled={!pr.trim()}
-              onClick={() => stage("/git/merge-pr", { number: Number(pr.trim()) })}>MERGE PR</button>
+              onClick={() => stage("/git/merge-pr", { number: Number(pr.trim()) },
+                { done: "PR merged ✓", cancel: "PR merge cancelled" })}>MERGE PR</button>
           </div>
           {msg && <div className="hud-factory-iter">{msg}</div>}
           <div className="hud-builds-path">Staged actions wait for your approval in the CONFIRM dock.</div>
