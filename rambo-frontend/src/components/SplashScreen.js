@@ -255,6 +255,7 @@ const CHAR_SPEED    = 20;   // ms per character (still slower than the original 
 const ITEM_GAP      = 70;   // ms between items within a section
 const SECTION_GAP   = 340;  // ms between sections
 const INITIAL_DELAY = 1100; // ms — let glitch-in settle (~1s) before typing starts
+const LEAD_BUFFER   = 800;  // ms — beat after the cascade finishes before the voice starts
 
 function buildReveal({ brandText, clockText, headline, agentNames, paramKeys, centerLines }) {
   let t = INITIAL_DELAY;
@@ -278,6 +279,10 @@ function buildReveal({ brandText, clockText, headline, agentNames, paramKeys, ce
     agentsAt:   roster.slice(1),
     paramsAt:   params,
     centerAt:   center,
+    // When the whole cascade has finished typing (t has advanced past the last
+    // center line's characters, plus a trailing ITEM_GAP cushion). The boot
+    // greeting/briefing waits for this so the voice doesn't talk over the reveal.
+    doneAt:     t,
   };
 }
 
@@ -1126,29 +1131,6 @@ export default function SplashScreen({
     }
   }, [phase, startMic]);
 
-  // Operator greeting on boot — fetch the situational greeting and speak it once
-  // (ElevenLabs via speakResponse). Best-effort; silent if audio is still locked.
-  // Then fetch the system briefing: it renders an Architect card (via the backend
-  // _response broadcast) and we speak its short summary AFTER the greeting so the
-  // two don't overlap.
-  useEffect(() => {
-    if (phase !== "main" || bootGreeted) return;
-    bootGreeted = true;   // once per boot, across route remounts
-    setTimeout(() => {
-      fetch(`${API}/greeting`)
-        .then(r => r.json())
-        .then(j => { if (j && j.greeting && speakRef.current) speakRef.current(j.greeting, false); })
-        .catch(() => {});
-    }, 2000);
-    // Boot briefing — card appears automatically; speak the summary a beat later.
-    setTimeout(() => {
-      fetch(`${API}/briefing/boot`)
-        .then(r => r.json())
-        .then(j => { if (j && j.spoken && speakRef.current) speakRef.current(j.spoken, false); })
-        .catch(() => {});
-    }, 7000);
-  }, [phase]);
-
   const handleVoiceExecuted = useCallback((responseText) => {
     setVoiceText("");
     segmentArrivedRef.current = false;
@@ -1282,7 +1264,7 @@ export default function SplashScreen({
   const reveal = skipIntro
     ? { speed: 0, brandAt: 0, clockAt: 0, headlineAt: 0,
         agentsAt: AGENT_ROSTER.map(() => 0), paramsAt: PARAM_KEYS.map(() => 0),
-        centerAt: [0, 0, 0] }
+        centerAt: [0, 0, 0], doneAt: 0 }
     : buildReveal({
         brandText,
         clockText: "00:00:00 AM",
@@ -1291,6 +1273,29 @@ export default function SplashScreen({
         paramKeys: PARAM_KEYS,
         centerLines: [projectLabel, agentName, CENTER_SUBTITLE],
       });
+
+  // Operator greeting + boot briefing — fires once per boot, AFTER the Phase 2
+  // typewriter cascade has finished (reveal.doneAt + a beat) so the voice never
+  // talks over the reveal. The greeting and the briefing summary are spoken as a
+  // single continuous utterance ("Good morning sir ... <briefing>") — one
+  // ElevenLabs segment, no dead gap. /briefing/boot still renders its Architect
+  // card backend-side; we only fold its `spoken` field into the one utterance.
+  // Declared after `reveal` so reveal.doneAt is in scope (no temporal dead zone).
+  useEffect(() => {
+    if (phase !== "main" || bootGreeted) return;
+    bootGreeted = true;   // once per boot, across route remounts
+    setTimeout(() => {
+      Promise.all([
+        fetch(`${API}/greeting`).then(r => r.json()).catch(() => null),
+        fetch(`${API}/briefing/boot`).then(r => r.json()).catch(() => null),
+      ]).then(([g, b]) => {
+        const greeting = g && g.greeting ? g.greeting : "";
+        const spoken   = b && b.spoken ? b.spoken : "";
+        const combined = [greeting, spoken].filter(Boolean).join(" ... ");
+        if (combined && speakRef.current) speakRef.current(combined, false);
+      });
+    }, reveal.doneAt + LEAD_BUFFER);
+  }, [phase, reveal.doneAt]);
 
   return (
     <div className={`splash-root${fading ? " phase-fading" : ""}`}>
