@@ -136,6 +136,64 @@ def get_hits_tb_watch(date: Optional[str] = None) -> dict:
     return {"date": d, **board, "provenance": prov}
 
 
+@router.get("/line-shop")
+def get_line_shop(date: Optional[str] = None) -> dict:
+    """Best moneyline price per side across ALL books + each book's no-vig
+    consensus and the line-shopping value of the best number. Multi-book by
+    construction (The Odds API REGIONS=us). Read-only, with provenance."""
+    from db.migrate import get_connection
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.line_shop import line_shop_slate
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, _, _ = _provenance("ml")
+        conn = get_connection(_DB)
+        try:
+            games = line_shop_slate(MlbRepo(conn), d)
+        finally:
+            conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"line_shop failed: {e}") from e
+    return {"date": d, "games": games, "provenance": prov}
+
+
+@router.get("/clv")
+def get_clv(date: Optional[str] = None) -> dict:
+    """Closing Line Value for RAMBO's moneyline leans: per game the opening vs
+    closing reference-book line and whether the close moved toward the lean, plus
+    a beat-the-close summary. Read-only, from the odds_lines history."""
+    from db.migrate import get_connection
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.clv import clv_slate
+    from brains.ev.moneyline_model import evaluate_game
+    d = date or datetime.date.today().isoformat()
+    season = int(d[:4])
+    try:
+        prov, _, _ = _provenance("ml")
+        conn = get_connection(_DB)
+        try:
+            repo = MlbRepo(conn)
+            leans = {}
+            for g in repo.moneyline_slate(d):
+                ev = evaluate_game(repo, season, g)
+                if ev:
+                    leans[g["game_pk"]] = "home" if ev["diff"] > 0 else "away"
+            games = clv_slate(repo, d, leans)
+        finally:
+            conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"clv failed: {e}") from e
+    graded = [g for g in games if g.get("clv_pts") is not None]
+    beat = sum(1 for g in graded if g["beat_close"])
+    summary = {
+        "graded": len(graded),
+        "beat_close": beat,
+        "beat_close_rate": round(beat / len(graded), 3) if graded else None,
+        "avg_clv_pts": round(sum(g["clv_pts"] for g in graded) / len(graded), 4) if graded else None,
+    }
+    return {"date": d, "games": games, "summary": summary, "provenance": prov}
+
+
 @router.post("/prep")
 def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
     """Pull + normalize the full multi-source board for `date` (schedule, The Odds API,
