@@ -20,6 +20,65 @@ def _now_iso() -> str:
     return _dt.datetime.now(_dt.timezone.utc).isoformat()
 
 
+def fetch_events(*, client: Optional[httpx.Client] = None) -> list[dict]:
+    """List upcoming MLB events (id + teams + commence_time). FREE — the events
+    endpoint doesn't count against quota."""
+    key = cfg.api_key()
+    if not key:
+        raise RuntimeError("THE_ODDS_API_KEY not set in .env")
+    own = client is None
+    client = client or httpx.Client(timeout=DEFAULT_TIMEOUT)
+    try:
+        resp = client.get(f"{cfg.BASE}/sports/{cfg.SPORT}/events", params={"apiKey": key})
+        resp.raise_for_status()
+        return resp.json() or []
+    finally:
+        if own:
+            client.close()
+
+
+def fetch_props(date: Optional[str] = None, *, max_events: Optional[int] = None,
+                client: Optional[httpx.Client] = None) -> RunResult:
+    """Per-event player props across US books. Lists events (free), then pulls each
+    event's odds for PROP_MARKETS — cost = events × markets credits. `max_events`
+    caps the spend (use 1 for a ~len(markets)-credit smoke test). Each event is one
+    raw item carrying its bookmakers; the normalizer expands them to prop_lines."""
+    key = cfg.api_key()
+    if not key:
+        raise RuntimeError("THE_ODDS_API_KEY not set in .env")
+    own = client is None
+    client = client or httpx.Client(timeout=DEFAULT_TIMEOUT)
+    try:
+        events = fetch_events(client=client)
+        if date:                                    # keep events whose ET-ish day matches
+            events = [e for e in events if (e.get("commence_time") or "")[:10] == date] or events
+        if max_events is not None:
+            events = events[:max_events]
+        markets = ",".join(cfg.prop_markets())
+        captured = _now_iso()
+        items, remaining = [], None
+        for e in events:
+            try:
+                r = client.get(f"{cfg.BASE}/sports/{cfg.SPORT}/events/{e['id']}/odds",
+                               params={"apiKey": key, "regions": cfg.REGIONS,
+                                       "markets": markets, "oddsFormat": cfg.ODDS_FORMAT})
+                r.raise_for_status()
+            except Exception as exc:                # one bad event shouldn't abort the slate
+                logger.warning("the-odds-api props failed for %s: %s", e.get("id"), exc)
+                continue
+            remaining = r.headers.get("x-requests-remaining", remaining)
+            ev = r.json() or {}
+            ev["_captured_at"] = captured
+            items.append(ev)
+        logger.info("the-odds-api props: %d events (requests remaining: %s)", len(items), remaining)
+        run_id = f"{cfg.PROPS_SOURCE_ID}:{captured}"
+        return RunResult(actor_id=cfg.PROPS_SOURCE_ID, run_id=run_id, dataset_id=run_id,
+                         items=items, item_count=len(items), estimated_cost_usd=0.0)
+    finally:
+        if own:
+            client.close()
+
+
 def fetch_moneyline(date: Optional[str] = None, *,
                     client: Optional[httpx.Client] = None) -> RunResult:
     """Pull current MLB moneylines (all games, all US books). `date` is accepted for

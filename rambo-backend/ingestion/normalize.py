@@ -32,7 +32,9 @@ from typing import Any, Callable, Optional
 
 from config.statsapi import (SOURCE_ROSTER, SOURCE_SCHEDULE, SOURCE_STATS, SOURCE_TEAMS,
                              SOURCE_RECENT, SOURCE_LINEUPS, SOURCE_WEATHER)
-from config.the_odds_api import SOURCE_ID as ODDS_API_SOURCE
+from config.the_odds_api import (SOURCE_ID as ODDS_API_SOURCE,
+                                 PROPS_SOURCE_ID as ODDS_PROPS_SOURCE,
+                                 PROP_MARKET_MAP)
 from config.savant import SOURCE_ID as SAVANT_SOURCE
 
 logger = logging.getLogger("rambo.ingestion.normalize")
@@ -423,6 +425,52 @@ def map_props(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_props_book(conn, item, scraped_at) -> bool:
+    """The Odds API per-event player props -> prop_lines (sportsbook side). One
+    event expands to many rows (book × market × player). Over/Under outcomes are
+    grouped into one row's over_price/under_price; multiplier stays NULL (these
+    are real book prices, not Pick6). mlb_id is resolved downstream; game_pk is
+    linked by team names (with the day-before fallback for late-ET UTC dates)."""
+    home_name, away_name = item.get("home_team"), item.get("away_team")
+    commence = item.get("commence_time") or ""
+    game_pk = None
+    if home_name and away_name and len(commence) >= 10:
+        import datetime as _d
+        d0 = commence[:10]
+        game_pk = _match_game_pk(conn, d0, home_name, away_name)
+        if game_pk is None:
+            try:
+                d1 = (_d.date.fromisoformat(d0) - _d.timedelta(days=1)).isoformat()
+                game_pk = _match_game_pk(conn, d1, home_name, away_name)
+            except ValueError:
+                pass
+    captured = item.get("_captured_at") or scraped_at
+    for bk in item.get("bookmakers") or []:
+        book = bk.get("title") or bk.get("key")
+        for mkt in bk.get("markets") or []:
+            market = PROP_MARKET_MAP.get(mkt.get("key"))
+            if not market:
+                continue                            # market we don't track
+            grouped: dict = {}                      # (player, line) -> {over, under}
+            for oc in mkt.get("outcomes") or []:
+                player = oc.get("description")
+                line = _as_float(oc.get("point"))
+                price = _as_int(oc.get("price"))
+                side = (oc.get("name") or "").lower()
+                if not player or line is None or price is None or side not in ("over", "under"):
+                    continue
+                grouped.setdefault((player, line), {})[side] = price
+            for (player, line), sides in grouped.items():
+                _insert_prop(conn, {
+                    "game_pk": game_pk, "mlb_id": None, "book": book,
+                    "market": market, "line": line,
+                    "over_price": sides.get("over"), "under_price": sides.get("under"),
+                    "multiplier": None, "player_name_raw": player,
+                    "captured_at": mkt.get("last_update") or captured,
+                })
+    return True
+
+
 def map_team_stats(conn, item, scraped_at) -> bool:
     """statsapi team stats item {team_id, season, runs_scored, runs_allowed, ...}
     -> team_season_stats (UPSERT). Feeds the moneyline Pythagorean model."""
@@ -524,6 +572,7 @@ DISPATCH: dict[str, Callable] = {
     SOURCE_LINEUPS: map_lineups,
     SOURCE_WEATHER: map_weather,
     ODDS_API_SOURCE: map_odds_api,
+    ODDS_PROPS_SOURCE: map_props_book,
     SAVANT_SOURCE: map_statcast,
     "seemuapps/sports-odds-scraper": map_odds,
     "zen-studio/draftkings-pick6-player-props": map_props,

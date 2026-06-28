@@ -94,12 +94,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 206 commits:
+Last 14 days — 207 commits:
 
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (35 minutes ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (41 minutes ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (70 minutes ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (88 minutes ago)`
+- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (27 minutes ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (37 minutes ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (43 minutes ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (72 minutes ago)`
+- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (2 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (2 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (3 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (3 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 206 commits:
 - `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (19 hours ago)`
 - `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (19 hours ago)`
 - `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (20 hours ago)`
-- `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (20 hours ago)`
-- … and 186 more
+- … and 187 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -209,6 +209,55 @@ def post_backfill_results(start: str, end: str) -> dict:
         conn.close()
 
 
+@router.post("/pull-book-props")
+def post_pull_book_props(date: Optional[str] = None,
+                         max_events: Optional[int] = None) -> dict:
+    """Pull sportsbook player props (The Odds API per-event) and normalize them
+    into prop_lines, then resolve player ids. COSTS CREDITS: events × markets
+    (us region). Pass max_events=1 for a ~len(markets)-credit smoke test."""
+    from db.migrate import get_connection
+    from ingestion.sources import pull_source
+    from ingestion.normalize import normalize_pending
+    conn = get_connection(_DB)
+    try:
+        landed = pull_source(conn, "odds_props",
+                             {"date": date, "max_events": max_events})
+        normalize_pending(conn)
+        try:
+            from brains.id_resolver import IdResolver
+            resolved = IdResolver(conn).run_unresolved_props()
+        except Exception:
+            resolved = None
+        return {"pulled": landed.get("items"), "resolved": resolved}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"pull-book-props failed: {e}") from e
+    finally:
+        conn.close()
+
+
+@router.get("/prop-shop")
+def get_prop_shop(date: Optional[str] = None, market: Optional[str] = None) -> dict:
+    """Grade Pick6 legs against the sportsbook market: per leg, the Pick6 breakeven
+    vs the de-vigged book consensus fair line, the best book/price, and whether the
+    leg is +EV. Read-only; needs sportsbook props pulled first (pull-book-props)."""
+    from db.migrate import get_connection
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.prop_shop import prop_shop_slate
+    d = date or datetime.date.today().isoformat()
+    try:
+        prov, _, _ = _provenance("hr")
+        conn = get_connection(_DB)
+        try:
+            rows = prop_shop_slate(MlbRepo(conn), d, market=market)
+        finally:
+            conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"prop_shop failed: {e}") from e
+    plus = sum(1 for r in rows if r["value"] > 0)
+    return {"date": d, "legs": rows,
+            "summary": {"compared": len(rows), "plus_ev": plus}, "provenance": prov}
+
+
 @router.post("/prep")
 def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
     """Pull + normalize the full multi-source board for `date` (schedule, The Odds API,
