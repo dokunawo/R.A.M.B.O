@@ -94,12 +94,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 216 commits:
+Last 14 days — 217 commits:
 
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (5 minutes ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (11 minutes ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (16 minutes ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (25 minutes ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (5 minutes ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (10 minutes ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (16 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (21 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (30 minutes ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (5 hours ago)`
@@ -108,15 +109,14 @@ Last 14 days — 216 commits:
 - `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (6 hours ago)`
 - `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 hours ago)`
 - `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (6 hours ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (6 hours ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (7 hours ago)`
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (7 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (9 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (9 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (9 hours ago)`
 - `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (9 hours ago)`
-- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (12 hours ago)`
-- … and 196 more
+- … and 197 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
