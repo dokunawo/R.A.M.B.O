@@ -298,49 +298,81 @@ def _spoken_weather(w: str | None) -> str:
     return f"Weather: {rest or place}." if (rest or place) else ""
 
 
-def _shorten(t: str, n: int = 120) -> str:
-    return (t[:n].rsplit(" ", 1)[0] + "…") if len(t) > n else t
+def _ordinal(n: int) -> str:
+    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _today_phrase(date: str | None) -> str:
+    """'Sunday, June 28, 2026' -> 'Today is Sunday, June 28th.' (drop the year,
+    ordinalize the day — reads naturally aloud)."""
+    if not date:
+        return ""
+    d = re.sub(r",?\s*\d{4}\s*$", "", date).strip()              # drop the year
+    m = re.search(r"\b(\d{1,2})\b", d)
+    if m:
+        d = d[:m.start()] + _ordinal(int(m.group(1))) + d[m.end():]
+    return f"Today is {d}." if d else ""
+
+
+def _clean_task(t: str) -> str:
+    """Reduce a roadmap/HANDOFF target to a short spoken phrase — drop the
+    '(HANDOFF)' tag, doc/section references (§2a, ROADMAP.md), and keep only the
+    first clause so it doesn't read like a paragraph."""
+    t = re.sub(r"^\(HANDOFF\)\s*", "", t)
+    t = re.split(r"\s+[—–-]\s+|(?<=[a-z])\.\s", t)[0]            # first clause/sentence
+    t = re.sub(r"\bsee\s+§?\s*\w[\w.\s]*", "", t, flags=re.IGNORECASE)
+    t = re.sub(r"§\s*\w+|\bROADMAP(?:\.md)?\b|\bHANDOFF\.md\b", "", t, flags=re.IGNORECASE)
+    t = re.sub(r"^(active thread|next action|next)\s*[:\-]\s*", "", t, flags=re.IGNORECASE)
+    t = re.sub(r"\s{2,}", " ", t).strip(" .,:;—–-")
+    return (t[:70].rsplit(" ", 1)[0] + "…") if len(t) > 70 else t
+
+
+def _weather_ok(w: str | None) -> bool:
+    """True only for a real reading — skip error/placeholder strings so the voice
+    never reads 'I couldn't resolve a location…'."""
+    if not w:
+        return False
+    low = str(w).lower()
+    return not any(s in low for s in ("couldn't", "could not", "try \"weather", "allow location"))
 
 
 def render_concise(data: dict) -> str:
-    """Spoken briefing — natural sentences covering every available section
-    (greeting + date/time, changes, weather, ALL suggested targets, calendar,
-    pending, uncommitted, north star, system). Plain text, single line, no
-    markdown. Each section is omitted when its data is missing."""
+    """Spoken briefing — short, natural, flowing. Greeting + 'Today is …', what
+    changed, weather (only if real), the single top focus (cleaned of roadmap
+    cruft), calendar, what's waiting, and an uncommitted nudge. Deliberately
+    omits the card header, the noisy system metrics, and the static north-star
+    recitation — those live on the on-screen card, not in the spoken update."""
     out: list[str] = []
 
-    # Greeting + date/time (gathered together; gate on greet so a degenerate
-    # fixture without it stays silent here rather than speaking placeholders).
     greet, name = data.get("greet"), data.get("name")
     if greet and name:
-        out.append(f"{greet}, {name}.")
-        if data.get("time") and data.get("date"):
-            out.append(f"It's {data['time']} on {data['date']}.")
+        today = _today_phrase(data.get("date"))
+        out.append(f"{greet}, {name}." + (f" {today}" if today else ""))
 
     changes = data.get("changes") or []
     if changes:
-        out.append(f"Since you were last here, {len(changes)} change"
-                   f"{'s' if len(changes) != 1 else ''} landed — latest: {changes[0]}.")
+        n = len(changes)
+        out.append(f"{n} change{'s' if n != 1 else ''} landed since you were last "
+                   f"here. The latest is {changes[0]}.")
     else:
-        out.append("No code changes since your last session.")
+        out.append("Nothing new since you were last here.")
 
-    weather = _spoken_weather(data.get("weather"))
-    if weather:
-        out.append(weather)
+    if _weather_ok(data.get("weather")):
+        out.append(_spoken_weather(data.get("weather")))
 
-    tasks = data.get("tasks") or []
-    if tasks:
-        if len(tasks) == 1:
-            out.append(f"Suggested next: {_shorten(tasks[0])}.")
-        else:
-            out.append("Suggested next targets: "
-                       + "; ".join(_shorten(t) for t in tasks) + ".")
+    # Just the single top target, cleaned — not the whole roadmap list.
+    for t in (data.get("tasks") or []):
+        focus = _clean_task(t)
+        if focus:
+            out.append(f"Your main focus: {focus}.")
+            break
 
     cal = data.get("calendar") or []
     if cal:
         evs = [f"{e.get('summary', 'an event')} in {e.get('minutes_until', '?')} minutes"
-               for e in cal[:4]]
-        out.append("On your calendar today: " + "; ".join(evs) + ".")
+               for e in cal[:3]]
+        out.append("On your calendar: " + ", ".join(evs) + ".")
 
     pending = data.get("pending") or []
     if pending:
@@ -348,22 +380,8 @@ def render_concise(data: dict) -> str:
 
     unc = data.get("uncommitted")
     if unc:
-        out.append(f"Heads up — {unc} uncommitted file{'s' if unc != 1 else ''} in the repo.")
-
-    doc = data.get("doctrine")
-    if doc and doc.get("target"):
-        out.append(f"Your north star: {doc['target']}.")
-
-    h, c = data.get("health"), data.get("cost")
-    sysbits = []
-    if h:
-        sysbits.append(f"CPU {h['cpu']:.0f} percent, RAM {h['ram']:.0f} percent, "
-                       f"disk {h['disk']:.0f} percent")
-    if c:
-        sysbits.append(f"API spend today {c.get('cost_usd', 0):.2f} dollars "
-                       f"across {c.get('call_count', 0)} calls")
-    if sysbits:
-        out.append("System: " + "; ".join(sysbits) + ".")
+        out.append(f"And there {'is' if unc == 1 else 'are'} {unc} uncommitted "
+                   f"file{'s' if unc != 1 else ''} in the repo.")
 
     return " ".join(out)
 

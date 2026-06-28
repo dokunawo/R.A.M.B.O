@@ -124,27 +124,43 @@ def test_render_sparse_omits_empty_and_says_nothing_new():
     assert "Weather" not in full and "Waiting on you" not in full
     assert "None" not in full
     concise = sb.render_concise(data)
-    assert "No code changes" in concise and "\n" not in concise and "None" not in concise
+    assert "Nothing new since you were last here." in concise
+    assert "\n" not in concise and "None" not in concise
 
 
-def test_render_concise_speaks_every_section():
+def test_render_concise_flows_naturally():
     concise = sb.render_concise(_full_data())
-    # greeting + date/time
+    # greeting + natural "Today is" date (no year, ordinal day), no robotic header
     assert "Good afternoon, Daniel." in concise
-    assert "12:00 PM" in concise and "Saturday, June 27, 2026" in concise
-    # changes + weather
+    assert "Today is Saturday, June 27th." in concise
+    assert "2026" not in concise and "System Briefing" not in concise
+    # changes + weather + the SINGLE top focus (not the whole list)
     assert "2 changes landed" in concise and "abc feat: boards (1h)" in concise
     assert "Weather in Detroit" in concise
-    # ALL suggested targets are voiced, not just the first
-    assert "Ship X" in concise and "Wire Y" in concise
-    # calendar, pending, uncommitted, north star, system
-    assert "Shoot" in concise
-    assert "2 code reviews" in concise
+    assert "Your main focus: Ship X." in concise and "Wire Y" not in concise
+    # calendar + pending + uncommitted
+    assert "Shoot" in concise and "2 code reviews" in concise
     assert "uncommitted file" in concise
-    assert "north star" in concise.lower() and "$10K by Q4" in concise
-    assert "CPU 12 percent" in concise
-    # plain text, single line, no markdown
+    # noisy/static sections are NOT spoken (they stay on the card)
+    assert "north star" not in concise.lower() and "CPU" not in concise
+    # plain text, single line
     assert "**" not in concise and "#" not in concise and "\n" not in concise
+
+
+def test_render_concise_cleans_roadmap_cruft_and_skips_weather_errors():
+    data = {"greet": "Good morning", "name": "Daniel", "date": "Sunday, June 28, 2026",
+            "changes": [], "calendar": [], "pending": [], "uncommitted": 1,
+            "weather": "I couldn't resolve a location. Try \"weather in <city>\".",
+            "tasks": ["(HANDOFF) Active thread: MLB betting edge engine (CMC) — "
+                      "see §2a and ROADMAP.md. Next betting steps: prop link"]}
+    concise = sb.render_concise(data)
+    # roadmap tag / section / doc refs stripped, first clause only
+    assert "Your main focus: MLB betting edge engine" in concise
+    assert "(HANDOFF)" not in concise and "§2a" not in concise
+    assert "ROADMAP" not in concise and "see " not in concise
+    # the weather error is omitted entirely
+    assert "couldn't" not in concise.lower()
+    assert "1 uncommitted file" in concise
 
 
 # ── gather best-effort + orchestrator degradation ───────────────────────────
