@@ -1,4 +1,3 @@
-import json
 from db.migrate import get_connection, apply_migrations
 from repositories.mlb_repo import MlbRepo
 from brains.ev.moneyline_model import evaluate_game_asof

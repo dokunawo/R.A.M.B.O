@@ -1,4 +1,3 @@
-import httpx
 from ingestion import the_odds_api_client as toa
 
 

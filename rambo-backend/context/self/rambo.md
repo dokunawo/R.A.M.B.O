@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 222 commits:
+Last 14 days — 223 commits:
 
-- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (7 minutes ago)`
-- `ece5335 feat(betting): walk-forward moneyline backtest harness (12 minutes ago)`
-- `177ec49 feat(betting): two-snapshot historical odds backfill (16 minutes ago)`
-- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (21 minutes ago)`
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (26 minutes ago)`
-- `d339260 Fix pitcher_era_asof season filter leak (31 minutes ago)`
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (36 minutes ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (43 minutes ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (48 minutes ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (57 minutes ago)`
-- `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
+- `872843d Fix The Odds API historical endpoint timestamp normalization (11 minutes ago)`
+- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (18 minutes ago)`
+- `ece5335 feat(betting): walk-forward moneyline backtest harness (22 minutes ago)`
+- `177ec49 feat(betting): two-snapshot historical odds backfill (27 minutes ago)`
+- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (31 minutes ago)`
+- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (37 minutes ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (42 minutes ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (47 minutes ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (53 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (59 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (68 minutes ago)`
+- `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (5 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (5 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (6 hours ago)`
 - `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (6 hours ago)`
 - `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (6 hours ago)`
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (6 hours ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (7 hours ago)`
 - `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (7 hours ago)`
 - `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (7 hours ago)`
 - `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (7 hours ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (7 hours ago)`
-- … and 202 more
+- … and 203 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -67,10 +67,11 @@ def run(repo, start: str, end: str) -> dict:
             continue
         t = _dt.datetime.fromisoformat(dt)
         early = _prices_at(conn, g["game_pk"],
-                           (t - _dt.timedelta(hours=6)).isoformat(),
-                           (t - _dt.timedelta(hours=2)).isoformat())
+                           (t - _dt.timedelta(hours=6)).isoformat().replace("+00:00", "Z"),
+                           (t - _dt.timedelta(hours=2)).isoformat().replace("+00:00", "Z"))
         close = _prices_at(conn, g["game_pk"],
-                           (t - _dt.timedelta(minutes=30)).isoformat(), t.isoformat())
+                           (t - _dt.timedelta(minutes=30)).isoformat().replace("+00:00", "Z"),
+                           t.isoformat().replace("+00:00", "Z"))
         if not early or not close:
             skipped_odds += 1
             continue

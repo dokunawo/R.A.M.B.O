@@ -1,5 +1,6 @@
 # tests/test_walkforward.py
-from brains.ev.walkforward import pick_record
+from brains.ev.walkforward import pick_record, _prices_at
+from db.migrate import get_connection, apply_migrations
 
 
 def _ev(model_home, book_home, gpk=1):
@@ -42,3 +43,37 @@ def test_pick_record_none_when_price_missing():
     assert pick_record(ev, win_home=True,
                        early={"home": None, "away": 100},
                        close={"home": -120, "away": 100}) is None
+
+
+def test_prices_at_includes_boundary_z_form(tmp_path):
+    """_prices_at should include prices captured exactly at the window boundary
+    when the timestamp uses Z form (as stored in DB)."""
+    conn = get_connection(str(tmp_path / "t.db"))
+    apply_migrations(conn, "db/migrations")
+
+    game_pk = 999
+    boundary_ts = "2026-05-01T23:05:00Z"
+    now = "2026-05-01T00:00:00Z"
+
+    # Create game record (required for foreign key)
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (?, '2026-05-01', 1, 2, 'A', 'B', ?)",
+                 (game_pk, now))
+
+    # Insert moneyline prices at the exact boundary timestamp (Z form)
+    conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, captured_at) "
+                 "VALUES (?, 'DK', 'moneyline', 'home', -120, ?)",
+                 (game_pk, boundary_ts))
+    conn.execute("INSERT INTO odds_lines (game_pk, book, market, side, price, captured_at) "
+                 "VALUES (?, 'DK', 'moneyline', 'away', 100, ?)",
+                 (game_pk, boundary_ts))
+    conn.commit()
+
+    # Query with Z-form bounds that include the boundary
+    result = _prices_at(conn, game_pk, "2026-05-01T22:35:00Z", "2026-05-01T23:05:00Z")
+
+    # Both prices should be found at the boundary
+    assert result is not None
+    assert result["home"] == -120
+    assert result["away"] == 100
