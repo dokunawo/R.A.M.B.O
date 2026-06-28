@@ -229,6 +229,9 @@ prompt to the console, and (3) writes a readable **Word doc** to the repo root:
   watch" / "total bases board", or `GET /betting/hits-tb-watch`.
 
 ### 6.3 Where to read / use the picks
+- **Parlay Boards page:** `http://localhost:3000/boards` — all four parlay boards on
+  one screen (Player Watch HR, Strikeout Watch, Hits & Total Bases, Moneyline Board),
+  ranked, with the headline probability highlighted. Best place to build a slip.
 - **Dashboard:** `http://localhost:3000/edge` (moneyline leans lead; props shown as
   honest −EV skips).
 - **Posters:** `http://localhost:3000/card/<market>` (e.g. `/card/hr`) — a downloadable

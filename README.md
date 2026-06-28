@@ -477,6 +477,9 @@ dated `ROADMAP_*` files). Highlights:
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
 
+### 2026-06-28 — Parlay Boards page (`/boards`)
+- **[UI]** New `/boards` page (`cmc/ParlayBoards.js` + `parlay.css`, CMC brand) showing all four parlay boards on one screen — Player Watch (HR), Strikeout Watch, Hits & Total Bases, Moneyline Board — as ranked tables with the headline probability highlighted. Fetches the `/betting/*-watch` + `/betting/moneyline-board` endpoints; refresh + links to Daily Edge / Console. Routed in `index.js`.
+
 ### 2026-06-28 — Hits & Total Bases Watch (hits/TB parlay board)
 - **[Hits & TB Watch]** New `GET /betting/hits-tb-watch` + `hits_tb_watch` skill ("hits and total bases", "total bases board", "hits parlay") — ranks the day's lineup hitters by **P(2+ total bases)**, each also showing **P(1+ hit)** and projected hits/TB, for hits/total-base SGPs. Same Poisson engine (`build_count_features_core`, group=hitting, vs-hand split + last-15) over `MlbRepo.lineup_batters`. Wired into `cmc-daily.ps1`. 2 tests. Completes the parlay-board set: **Player Watch** (HR), **Strikeout Watch** (K), **Hits & Total Bases** (hits/TB).
 

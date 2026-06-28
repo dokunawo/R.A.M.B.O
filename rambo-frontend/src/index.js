@@ -8,6 +8,7 @@ import RoundTable from "./components/RoundTable";
 import HistoryPage from "./components/HistoryPage";
 import ChancesMakeChampions from "./cmc/ChancesMakeChampions";
 import EdgeCardPoster from "./cmc/EdgeCardPoster";
+import ParlayBoards from "./cmc/ParlayBoards";
 import { armAutoStart } from "./components/screenVision";
 import "./App.css";
 
@@ -38,6 +39,7 @@ root.render(
         <Route path="/council" element={<RoundTable />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/edge" element={<ChancesMakeChampions />} />
+        <Route path="/boards" element={<ParlayBoards />} />
         <Route path="/card" element={<EdgeCardPoster />} />
         <Route path="/card/:market" element={<EdgeCardPoster />} />
       </Routes>

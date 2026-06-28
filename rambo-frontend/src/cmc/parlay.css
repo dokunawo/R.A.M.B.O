@@ -1,0 +1,60 @@
+/* Parlay Boards page — reuses cmc.css brand tokens (gold/green/dark). */
+.pb-root { padding: 28px 22px 56px; }
+
+.pb-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+  border-bottom: 1px solid var(--cmc-line); padding-bottom: 14px;
+}
+.pb-title {
+  font-family: 'Metal Mania', cursive; color: var(--cmc-gold);
+  font-size: 40px; margin: 0; letter-spacing: 1px;
+  text-shadow: 0 0 18px rgba(214, 162, 30, 0.45);
+}
+.pb-date { color: var(--cmc-white); opacity: 0.7; font-size: 12px; letter-spacing: 1.5px; }
+.pb-nav { display: flex; gap: 8px; }
+.pb-btn {
+  background: var(--cmc-tile); color: var(--cmc-gold);
+  border: 1px solid var(--cmc-line); border-radius: 6px;
+  padding: 7px 12px; font-size: 12px; font-family: 'Oswald', sans-serif;
+  letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: background .12s;
+}
+.pb-btn:hover { background: var(--cmc-tile-hi); }
+
+.pb-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 16px;
+}
+.pb-panel {
+  background: var(--cmc-tile); border: 1px solid var(--cmc-line);
+  border-radius: 10px; overflow: hidden;
+}
+.pb-panel-head {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 12px 14px; border-bottom: 1px solid var(--cmc-line);
+  background: linear-gradient(180deg, rgba(214,162,30,0.10), transparent);
+}
+.pb-panel-title {
+  font-family: 'Metal Mania', cursive; color: var(--cmc-gold); font-size: 22px; letter-spacing: 1px;
+}
+.pb-panel-sub { color: var(--cmc-white); opacity: 0.55; font-size: 11px; letter-spacing: 1px; }
+
+.pb-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pb-table th {
+  text-align: left; color: var(--cmc-gold); opacity: 0.8; font-weight: 600;
+  padding: 7px 10px; border-bottom: 1px solid var(--cmc-line);
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+}
+.pb-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+.pb-table tr:last-child td { border-bottom: none; }
+.pb-table tr:hover td { background: rgba(255,255,255,0.03); }
+.pb-name { color: var(--cmc-white); font-weight: 600; white-space: nowrap; }
+.pb-lead {
+  color: var(--cmc-green); font-weight: 700; font-size: 14px; white-space: nowrap;
+  text-shadow: 0 0 10px rgba(57, 255, 90, 0.35);
+}
+
+.pb-empty { padding: 18px 14px; color: var(--cmc-white); opacity: 0.55; font-size: 12px; }
+.pb-foot {
+  margin-top: 22px; color: var(--cmc-white); opacity: 0.45;
+  font-size: 11px; letter-spacing: 0.5px; text-align: center;
+}
