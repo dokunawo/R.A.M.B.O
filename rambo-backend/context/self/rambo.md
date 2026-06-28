@@ -94,8 +94,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 199 commits:
+Last 14 days — 200 commits:
 
+- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (2 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (2 hours ago)`
 - `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (3 hours ago)`
 - `c59b003 feat(ui): /boards page — all four parlay boards on one screen (6 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 199 commits:
 - `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (20 hours ago)`
 - `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (20 hours ago)`
 - `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (20 hours ago)`
-- `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (20 hours ago)`
-- … and 179 more
+- … and 180 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

@@ -863,10 +863,15 @@ async def dev_change(change_id: str):
 
 
 @app.post("/dev/merge/{change_id}")
-async def dev_merge(change_id: str):
-    result = await dev_session.merge_change(_dev_repo, change_id)
+async def dev_merge(change_id: str, run_tests: bool = True):
+    """Merge a reviewed self-change. By default the FULL test suite runs in the
+    change's worktree first and a red suite blocks the merge; pass
+    ?run_tests=false to skip the gate."""
+    result = await dev_session.merge_change(_dev_repo, change_id, run_full_tests=run_tests)
     if result.get("status") == "merged":
         await manager.broadcast(f"[R.A.M.B.O] Merged self-change {change_id}. Restart to take it live.")
+    elif "test gate failed" in (result.get("error") or ""):
+        await manager.broadcast(f"[R.A.M.B.O] Merge of {change_id} BLOCKED — the full test suite is red.")
     return result
 
 
