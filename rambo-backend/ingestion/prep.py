@@ -62,8 +62,12 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     normalize_pending(conn)
     summary["lineups"] = lineups
 
-    # resolve prop player names, then top up the per-player stats the models need
+    # resolve prop player names, then link each prop to its scheduled game (and
+    # confirm the player's team is actually playing today), then top up the
+    # per-player stats the models need
     summary["resolved"] = IdResolver(conn).run_unresolved_props()
+    from ingestion.link import link_prop_games
+    summary["linked"] = link_prop_games(conn, d)
     batters = [r[0] for r in conn.execute(
         f"SELECT DISTINCT mlb_id FROM prop_lines WHERE mlb_id IS NOT NULL "
         f"AND market IN ({','.join('?' * len(_BATTER_MARKETS))})", _BATTER_MARKETS)]
