@@ -272,3 +272,17 @@ def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
         raise HTTPException(status_code=502, detail=f"prep failed: {e}") from e
     finally:
         conn.close()
+
+
+@router.get("/backtest")
+def backtest_endpoint(start: str, end: str) -> dict:
+    """Walk-forward moneyline backtest over [start,end]: calibration + ROI/CLV at the
+    early and closing line. Data-only; grades historical picks, never places bets."""
+    from db.migrate import get_connection
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.walkforward import run
+    conn = get_connection(_DB)
+    try:
+        return run(MlbRepo(conn), start, end)
+    finally:
+        conn.close()

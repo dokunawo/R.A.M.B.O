@@ -94,16 +94,17 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 220 commits:
+Last 14 days — 221 commits:
 
-- `177ec49 feat(betting): two-snapshot historical odds backfill (4 minutes ago)`
-- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (9 minutes ago)`
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (15 minutes ago)`
-- `d339260 Fix pitcher_era_asof season filter leak (20 minutes ago)`
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (25 minutes ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (31 minutes ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (36 minutes ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (45 minutes ago)`
+- `ece5335 feat(betting): walk-forward moneyline backtest harness (5 minutes ago)`
+- `177ec49 feat(betting): two-snapshot historical odds backfill (9 minutes ago)`
+- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (14 minutes ago)`
+- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (20 minutes ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (25 minutes ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (29 minutes ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (36 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (41 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (50 minutes ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (6 hours ago)`
@@ -111,12 +112,11 @@ Last 14 days — 220 commits:
 - `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (6 hours ago)`
 - `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (6 hours ago)`
 - `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 hours ago)`
-- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (6 hours ago)`
+- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (7 hours ago)`
 - `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (7 hours ago)`
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (7 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
-- `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (9 hours ago)`
-- … and 200 more
+- … and 201 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
