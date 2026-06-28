@@ -109,6 +109,18 @@ class DevRepo:
     async def list_pending(self) -> list[dict]:
         return await self._list_status("pending_review")
 
+    async def list_recent(self, limit: int = 50) -> list[dict]:
+        """All self-changes across every status, newest first — for the task-
+        history panel's 'Changes' tab."""
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cur = await db.execute(
+                "SELECT * FROM code_changes ORDER BY updated_at DESC LIMIT ?",
+                (limit,),
+            )
+            rows = await cur.fetchall()
+        return [_hydrate(r) for r in rows]
+
     async def _list_status(self, status: str) -> list[dict]:
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row

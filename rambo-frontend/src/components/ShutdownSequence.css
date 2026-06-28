@@ -1,0 +1,103 @@
+/* Shutdown / standby overlay — sits above the whole console (.ss- prefix). */
+.ss-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(8, 9, 11, 0.86) 0%, rgba(4, 5, 7, 0.98) 70%);
+  backdrop-filter: blur(6px);
+  animation: ss-fade-in 700ms var(--ease-smooth, ease-out) both;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  color: var(--text-hi, #fff);
+  text-align: center;
+  cursor: default;
+}
+
+@keyframes ss-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Collapsing ring that stands in for the orb powering down. */
+.ss-orb-collapse {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 1px solid var(--accent, #e8b15a);
+  box-shadow: 0 0 60px rgba(232, 177, 90, 0.35), inset 0 0 40px rgba(232, 177, 90, 0.2);
+  opacity: 0.5;
+}
+.ss-powering .ss-orb-collapse {
+  animation: ss-collapse 4000ms var(--ease-smooth, ease-in) forwards;
+}
+@keyframes ss-collapse {
+  0%   { transform: scale(1);    opacity: 0.5; }
+  70%  { transform: scale(0.18); opacity: 0.9; }
+  100% { transform: scale(0.02); opacity: 0; }
+}
+.ss-standby .ss-orb-collapse {
+  width: 2px; height: 2px; opacity: 0;
+}
+
+.ss-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: ss-rise 600ms var(--ease-smooth, ease-out) both;
+}
+@keyframes ss-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ss-title {
+  font-size: 2.2rem;
+  letter-spacing: 0.5em;
+  font-weight: 600;
+  color: var(--accent-glow, #ffd98a);
+  text-shadow: 0 0 24px rgba(232, 177, 90, 0.5);
+  padding-left: 0.5em; /* offset the trailing letter-spacing */
+}
+
+.ss-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  color: var(--text-dim, #7a7a7a);
+  text-transform: uppercase;
+}
+
+.ss-mark {
+  font-size: 3rem;
+  color: var(--accent, #e8b15a);
+  text-shadow: 0 0 30px rgba(232, 177, 90, 0.6);
+  animation: ss-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ss-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+.ss-wake {
+  margin-top: 18px;
+  padding: 10px 34px;
+  background: transparent;
+  border: 1px solid var(--accent, #e8b15a);
+  color: var(--accent-glow, #ffd98a);
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.35em;
+  padding-left: calc(34px + 0.35em);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 200ms ease, box-shadow 200ms ease;
+}
+.ss-wake:hover {
+  background: rgba(232, 177, 90, 0.12);
+  box-shadow: 0 0 24px rgba(232, 177, 90, 0.4);
+}

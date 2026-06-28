@@ -108,3 +108,15 @@ def add_learning(text, source="System", category="General"):
 
 def get_learnings():
     return list(_learnings)
+
+
+def get_all_recent(limit=50):
+    """Recent tasks across ALL agents (newest first), each tagged with its agent.
+    Powers the task-history panel. Times are HH:MM:SS strings, so ordering is
+    within-day; that's fine for a rolling recent-activity view."""
+    items = []
+    for agent_key, acts in _activity.items():
+        for a in acts:
+            items.append({**a, "agent": agent_key})
+    items.sort(key=lambda a: a.get("time", ""), reverse=True)
+    return items[:limit]

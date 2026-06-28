@@ -293,6 +293,22 @@ async def operator_greeting():
     return {"greeting": await generate_greeting(rambo)}
 
 
+@app.get("/farewell")
+async def operator_farewell():
+    """Spoken sign-off for the shutdown sequence (cinematic only — no process is
+    stopped). The frontend fetches this when the operator powers down to standby."""
+    from greeting import generate_farewell
+    return {"farewell": await generate_farewell(rambo)}
+
+
+@app.get("/tasks/history")
+async def tasks_history(limit: int = 50):
+    """Task-history panel feed: dispatched tasks (agent_tracker, in-memory) +
+    dev-lane self-changes across all statuses (DevRepo)."""
+    return {"tasks": agent_tracker.get_all_recent(limit),
+            "changes": await _dev_repo.list_recent(limit)}
+
+
 @app.get("/briefing/boot")
 async def briefing_boot():
     """Boot briefing: a full on-screen card (recent changes, suggested targets,

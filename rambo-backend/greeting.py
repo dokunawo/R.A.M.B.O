@@ -119,3 +119,50 @@ async def generate_greeting(orchestrator) -> str:
     if bits:
         return base + " " + " ".join(b[0].upper() + b[1:] + "." for b in bits)
     return base + " All quiet — standing by."
+
+
+async def generate_farewell(orchestrator) -> str:
+    """Spoken sign-off for the shutdown sequence — mirrors generate_greeting but
+    closes the session. Nothing is actually killed; this is the cinematic farewell
+    before the console drops to standby."""
+    name = _operator_name()
+    hour = _now_local().hour
+    sign = "Good night" if (hour >= 21 or hour < 5) else "Goodbye"
+    facts = await _gather(orchestrator)
+    pending = facts.get("pending") or []
+
+    llm = getattr(orchestrator, "llm", None)
+    if llm:
+        note = ("Still waiting on the operator: " + ", ".join(pending) + "."
+                if pending else "All quiet — nothing outstanding.")
+        prompt = (
+            f"You are R.A.M.B.O signing off as your operator shuts the console down "
+            f"for now. Operator's name: {name}. {note} "
+            "Write a 1-2 sentence SPOKEN farewell in R.A.M.B.O's voice — sharp, "
+            "confident, a little warm. Say goodbye by name, note you'll be on "
+            "standby, and if something's still waiting mention it briefly. Plain "
+            "text only, no markdown."
+        )
+        try:
+            import model_config
+            from usage_capture import record_usage
+            resp = await llm.messages.create(
+                model=model_config.fast_model(), max_tokens=200,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            try:
+                await record_usage(model_config.fast_model(), resp.usage, source="farewell")
+            except Exception:
+                pass
+            text = "".join(b.text for b in resp.content
+                           if getattr(b, "type", None) == "text").strip()
+            if text:
+                return text
+        except Exception:
+            log.exception("farewell synthesis failed")
+
+    # Template fallback.
+    base = f"{sign}, {name}. Powering down to standby."
+    if pending:
+        base += " For when you're back: " + ", ".join(pending) + "."
+    return base
