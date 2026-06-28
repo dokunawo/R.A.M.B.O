@@ -118,6 +118,7 @@ Ask RAMBO to spawn a specialist agent; it researches the role, drafts a system p
 ### Pushing to GitHub (operator-approved)
 RAMBO can **commit + push its own repo** — but never on its own. Every push waits for your approval.
 - **Trigger it:** say/type **"push my changes to GitHub" / "commit and push" / "push the repo."** RAMBO stages it (tells you the branch + how many commits/files) and asks for the go-ahead.
+- **Or use the GIT dock** (left rail): a **PUSH** button, a "branch to merge" box (**MERGE**), and a "PR #" box (**MERGE PR**). Each one *stages* the action — it then shows up in the **CONFIRM** dock to approve. The dock header shows the branch, commits-ahead, and changed-file count.
 - **Approve or deny by voice:** **"approve the push"** sends it; **"deny the push"** / **"cancel the push"** drops it. (You can also approve/reject in the Confirm dock.)
 - **Guardrails:** never force-pushes; commits only **tracked** changes and **secret-scans** the diff first (refuses if it sees anything like a key); pushes the **current branch** over HTTPS to GitHub only; the token is never logged.
 - **One-time setup:** create a **fine-grained GitHub PAT** scoped to *only this repo* with **Contents: read/write**, and put it in `rambo-backend/.env` as `RAMBO_GITHUB_TOKEN=…`, then restart the backend. Until then, RAMBO will tell you it can't push. (Endpoints: `GET /git/status`, `POST /git/push`.)

@@ -971,6 +971,68 @@ export function BuildsDock() {
   );
 }
 
+// ── Git dock: stage push / merge / PR merge (approve in CONFIRM) ──
+export function GitDock() {
+  const [open, toggle] = useDockOpen("git");
+  const [st, setSt] = useState(null);
+  const [branch, setBranch] = useState("");
+  const [pr, setPr] = useState("");
+  const [msg, setMsg] = useState("");
+
+  const refresh = useCallback(async () => {
+    try { const r = await fetch(`${API}/git/status`); if (r.ok) setSt(await r.json()); } catch {}
+  }, []);
+  useEffect(() => { refresh(); const id = setInterval(refresh, 15000); return () => clearInterval(id); }, [refresh]);
+
+  const stage = async (path, body) => {
+    setMsg("");
+    try {
+      const r = await fetch(`${API}${path}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const j = await r.json();
+      setMsg(j.error ? `⚠ ${j.error}` : "Staged — approve it in CONFIRM ↑");
+    } catch { setMsg("⚠ request failed"); }
+    refresh();
+  };
+
+  const ahead = st && st.ahead, nchg = (st && st.tracked_changes ? st.tracked_changes.length : 0);
+  return (
+    <div className="hud-git-wrap">
+      <div className="hud-factory-face" onClick={toggle}>
+        <span className="hud-git-tag">GIT</span>
+        <span className="hud-factory-count">{(st && st.branch) || "—"}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-git-status">
+            {st ? <>{st.branch}{ahead ? ` · ${ahead} ahead` : ""}{nchg ? ` · ${nchg} changed` : ""}
+              {!st.token_configured && " · ⚠ no token"}</> : "…"}
+          </div>
+          <div className="hud-factory-actions">
+            <button className="hud-factory-approve" onClick={() => stage("/git/push")}>PUSH</button>
+          </div>
+          <div className="hud-git-row">
+            <input className="hud-git-input" placeholder="branch to merge → current"
+              value={branch} onChange={e => setBranch(e.target.value)} />
+            <button className="hud-factory-cancel" disabled={!branch.trim()}
+              onClick={() => stage("/git/merge", { source: branch.trim() })}>MERGE</button>
+          </div>
+          <div className="hud-git-row">
+            <input className="hud-git-input" placeholder="PR #" value={pr}
+              onChange={e => setPr(e.target.value)} />
+            <button className="hud-factory-cancel" disabled={!pr.trim()}
+              onClick={() => stage("/git/merge-pr", { number: Number(pr.trim()) })}>MERGE PR</button>
+          </div>
+          {msg && <div className="hud-factory-iter">{msg}</div>}
+          <div className="hud-builds-path">Staged actions wait for your approval in the CONFIRM dock.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Proactive dock: watch topics + deadlines RAMBO is tracking ──
 export function ProactiveDock() {
   const { items: w, refresh: refreshW } = usePolledQueue("/watch", 20000);
