@@ -94,12 +94,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 207 commits:
+Last 14 days — 208 commits:
 
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (27 minutes ago)`
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (37 minutes ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (43 minutes ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (72 minutes ago)`
+- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (11 minutes ago)`
+- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (30 minutes ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (41 minutes ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (46 minutes ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (75 minutes ago)`
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (2 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (2 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (3 hours ago)`
@@ -109,14 +110,13 @@ Last 14 days — 207 commits:
 - `c59b003 feat(ui): /boards page — all four parlay boards on one screen (7 hours ago)`
 - `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (7 hours ago)`
 - `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (8 hours ago)`
-- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (14 hours ago)`
+- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (15 hours ago)`
 - `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (18 hours ago)`
 - `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (19 hours ago)`
 - `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (19 hours ago)`
 - `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (19 hours ago)`
 - `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (19 hours ago)`
-- `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (20 hours ago)`
-- … and 187 more
+- … and 188 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
