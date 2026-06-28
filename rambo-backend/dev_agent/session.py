@@ -84,13 +84,25 @@ async def draft_change(*, llm, repo: DevRepo, change_id: str, goal: str,
                 "affects": [], "risk": "high", "rationale": "Error during drafting."}
 
 
-async def merge_change(repo: DevRepo, change_id: str) -> dict:
+async def merge_change(repo: DevRepo, change_id: str,
+                       run_full_tests: bool = False) -> dict:
     row = await repo.get(change_id)
     if row is None:
         return {"error": "not found"}
     if row["status"] != "pending_review":
         return {"error": f"not in reviewable state (is {row['status']})"}
     ws = _ws_from_row(row)
+
+    # Optional gate: run the WHOLE suite in the worktree first. A red suite
+    # blocks the merge and leaves the change reviewable (status untouched).
+    tests = None
+    if run_full_tests:
+        from dev_agent import test_gate
+        tests = await test_gate.run_full_suite(ws.worktree_path)
+        if not tests.get("passed"):
+            return {"error": "test gate failed — merge blocked",
+                    "id": change_id, "status": row["status"], "tests": tests}
+
     try:
         await gw.merge(ws)
     except gw.GitWorkspaceError as e:
@@ -100,8 +112,11 @@ async def merge_change(repo: DevRepo, change_id: str) -> dict:
         await gw.discard(ws)
     except Exception:
         logger.exception("post-merge worktree cleanup failed for %s", change_id)
-    return {"status": "merged", "id": change_id,
-            "note": "Merged to base branch. Restart the backend to take it live (no auto-reload)."}
+    result = {"status": "merged", "id": change_id,
+              "note": "Merged to base branch. Restart the backend to take it live (no auto-reload)."}
+    if tests is not None:
+        result["tests"] = tests
+    return result
 
 
 async def reject_change(repo: DevRepo, change_id: str) -> dict:

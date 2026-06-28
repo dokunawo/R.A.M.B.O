@@ -93,29 +93,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 197 commits:
+Last 14 days — 198 commits:
 
-- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (3 hours ago)`
+- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (35 minutes ago)`
+- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (4 hours ago)`
 - `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (4 hours ago)`
 - `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (4 hours ago)`
 - `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (11 hours ago)`
-- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (14 hours ago)`
-- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (15 hours ago)`
-- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (15 hours ago)`
-- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (15 hours ago)`
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (15 hours ago)`
+- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (15 hours ago)`
+- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (16 hours ago)`
+- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (16 hours ago)`
+- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (16 hours ago)`
+- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (16 hours ago)`
 - `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (16 hours ago)`
 - `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (16 hours ago)`
 - `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (17 hours ago)`
-- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (17 hours ago)`
-- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (17 hours ago)`
-- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (17 hours ago)`
-- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (17 hours ago)`
-- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (17 hours ago)`
+- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (18 hours ago)`
+- `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (18 hours ago)`
+- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (18 hours ago)`
+- `cfe3eab chore: gitignore generated CMC daily docs + Office temp files (18 hours ago)`
+- `bd9fcaa feat(cmc): add Player Watch + Moneyline Board to the daily script + doc (18 hours ago)`
 - `d2393ca feat(ev): /betting/player-watch + /betting/moneyline-board endpoints (18 hours ago)`
 - `ea16e0b feat(ev): moneyline_board (full slate) builder + prompt (18 hours ago)`
-- `7528670 feat(ev): player_watch (top-11 HR board) builder + prompt (18 hours ago)`
-- … and 177 more
+- … and 178 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
