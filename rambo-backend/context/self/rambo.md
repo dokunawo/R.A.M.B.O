@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 211 commits:
+Last 14 days — 212 commits:
 
-- `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (11 minutes ago)`
-- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (82 minutes ago)`
-- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (2 hours ago)`
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (2 hours ago)`
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (2 hours ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (2 hours ago)`
-- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (2 hours ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (3 hours ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (3 hours ago)`
-- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (3 hours ago)`
-- `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (5 hours ago)`
-- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (5 hours ago)`
-- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (5 hours ago)`
-- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (5 hours ago)`
-- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (9 hours ago)`
-- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (9 hours ago)`
-- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (9 hours ago)`
-- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (16 hours ago)`
-- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (20 hours ago)`
-- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (20 hours ago)`
-- … and 191 more
+- `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (3 hours ago)`
+- `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
+- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (5 hours ago)`
+- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (5 hours ago)`
+- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (5 hours ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (5 hours ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 hours ago)`
+- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (6 hours ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (6 hours ago)`
+- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (6 hours ago)`
+- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
+- `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (8 hours ago)`
+- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (8 hours ago)`
+- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (8 hours ago)`
+- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (9 hours ago)`
+- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (12 hours ago)`
+- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (12 hours ago)`
+- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (12 hours ago)`
+- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (19 hours ago)`
+- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (23 hours ago)`
+- … and 192 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
