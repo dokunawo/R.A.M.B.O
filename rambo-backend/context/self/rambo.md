@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 208 commits:
+Last 14 days — 209 commits:
 
-- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (11 minutes ago)`
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (30 minutes ago)`
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (41 minutes ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (46 minutes ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (75 minutes ago)`
+- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (8 minutes ago)`
+- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (19 minutes ago)`
+- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (38 minutes ago)`
+- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (48 minutes ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (54 minutes ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (83 minutes ago)`
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (2 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (2 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (3 hours ago)`
-- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (3 hours ago)`
+- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (4 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (4 hours ago)`
 - `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (4 hours ago)`
 - `c59b003 feat(ui): /boards page — all four parlay boards on one screen (7 hours ago)`
-- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (7 hours ago)`
+- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (8 hours ago)`
 - `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (8 hours ago)`
 - `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (15 hours ago)`
 - `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (18 hours ago)`
 - `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (19 hours ago)`
 - `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (19 hours ago)`
 - `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (19 hours ago)`
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (19 hours ago)`
-- … and 188 more
+- … and 189 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

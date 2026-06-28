@@ -696,16 +696,36 @@ function _approveLabel(tool, ok, err) {
   return "Approved ✓";
 }
 
+// GitDock watch labels per git tool — single source for both dock-staged and
+// voice-staged ("push to GitHub") actions.
+function _gitFeedback(tool) {
+  if (tool === "git_merge_local") return { done: "Merged ✓", cancel: "Merge cancelled" };
+  if (tool === "git_merge_pr") return { done: "PR merged ✓", cancel: "PR merge cancelled" };
+  return { done: "Pushed ✓ — up to date", cancel: "Push cancelled" };
+}
+
 export function ConfirmationDock() {
-  const { items, refresh } = usePolledQueue("/confirmations");
+  // Poll a bit faster so a push STAGED by voice appears, and one APPROVED by
+  // voice clears, without a long lag.
+  const { items, refresh } = usePolledQueue("/confirmations", 4000);
   const [open, toggle] = useDockOpen("confirm");
   const { hidden, hideAll } = useHidden("confirm");
   const [done, setDone] = useState({});   // id -> { msg, card } transient result
+  const seenRef = useRef(new Set());      // ids whose outcome we've already shown
+  const prevRef = useRef(new Map());      // last poll's pending cards (id -> card)
   const visible = items.filter(c => !hidden.has(c.id));
+
+  const showResult = (id, card, label) => {
+    setDone(prev => ({ ...prev, [id]: { msg: label, card } }));
+    setTimeout(() => {
+      setDone(prev => { const n = { ...prev }; delete n[id]; return n; });
+    }, 3500);
+  };
 
   // Approve, then keep the card up showing the outcome ("Pushed ✓") for a beat
   // before it removes itself — instead of vanishing the instant it's approved.
   const approve = async (c) => {
+    seenRef.current.add(c.id);   // our own outcome — don't double-handle below
     let label;
     try {
       const r = await fetch(`${API}/confirmations/${c.id}/approve`, { method: "POST" });
@@ -713,12 +733,31 @@ export function ConfirmationDock() {
       const ok = j && (j.status === "done" || j.status === "executed");
       label = _approveLabel(c.tool_name, ok, j && j.error);
     } catch { label = "⚠ request failed"; }
-    setDone(prev => ({ ...prev, [c.id]: { msg: label, card: c } }));
-    setTimeout(() => {
-      setDone(prev => { const n = { ...prev }; delete n[c.id]; return n; });
-      refresh();
-    }, 3500);
+    showResult(c.id, c, label);
+    setTimeout(refresh, 3500);
   };
+
+  // Detect confirmations resolved OUTSIDE this dock (e.g. "approve the push" by
+  // voice): a card that was pending last poll and is gone now → check its
+  // outcome and flash the same "Pushed ✓" transient instead of a silent vanish.
+  useEffect(() => {
+    const cur = new Map(items.map(c => [c.id, c]));
+    const prev = prevRef.current;
+    prev.forEach((card, id) => {
+      if (cur.has(id) || seenRef.current.has(id)) return;
+      seenRef.current.add(id);
+      (async () => {
+        try {
+          const r = await fetch(`${API}/confirmations/${id}`);
+          const j = await r.json();
+          if (j && j.status === "approved") {
+            showResult(id, card, _approveLabel(card.tool_name, true));
+          }
+        } catch { /* gone/cleared — leave it removed */ }
+      })();
+    });
+    prevRef.current = cur;
+  }, [items]);
 
   const pending = visible.filter(c => !done[c.id]);
   // Render pending cards plus any still showing a transient result.
@@ -1022,7 +1061,7 @@ export function GitDock() {
   }, []);
   useEffect(() => { refresh(); const id = setInterval(refresh, 15000); return () => clearInterval(id); }, [refresh]);
 
-  const stage = async (path, body, feedback) => {
+  const stage = async (path, body, tool) => {
     setMsg(""); setWatch(null);
     try {
       const r = await fetch(`${API}${path}`, {
@@ -1033,11 +1072,34 @@ export function GitDock() {
       if (j.error) { setMsg(`⚠ ${j.error}`); }
       else {
         setMsg("Staged — approve it in CONFIRM ↑");
-        if (j.id && feedback) setWatch({ id: j.id, ...feedback });   // resolve once approved
+        if (j.id) setWatch({ id: j.id, ..._gitFeedback(tool) });   // resolve once approved
       }
     } catch { setMsg("⚠ request failed"); }
     refresh();
   };
+
+  // Pick up a git action STAGED elsewhere — e.g. "push to GitHub" by voice. When
+  // nothing is being watched, scan for a pending git_* confirmation and start
+  // watching it, so the outcome still lands here as "Pushed ✓".
+  useEffect(() => {
+    if (watch) return;
+    let alive = true;
+    const scan = async () => {
+      try {
+        const r = await fetch(`${API}/confirmations`);
+        const list = await r.json();
+        const git = Array.isArray(list)
+          ? list.find(c => (c.tool_name || "").startsWith("git_")) : null;
+        if (git && alive) {
+          setWatch({ id: git.id, ..._gitFeedback(git.tool_name) });
+          setMsg(m => m || "Staged — approve it in CONFIRM ↑");
+        }
+      } catch {}
+    };
+    scan();
+    const id = setInterval(scan, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [watch]);
 
   // Watch the staged confirmation: once the operator approves (or rejects) it in
   // the CONFIRM dock, swap "Staged…" for the outcome, then clear after a beat.
@@ -1081,22 +1143,19 @@ export function GitDock() {
           </div>
           <div className="hud-factory-actions">
             <button className="hud-factory-approve"
-              onClick={() => stage("/git/push", null,
-                { done: "Pushed ✓ — up to date", cancel: "Push cancelled" })}>PUSH</button>
+              onClick={() => stage("/git/push", null, "git_push")}>PUSH</button>
           </div>
           <div className="hud-git-row">
             <input className="hud-git-input" placeholder="branch to merge → current"
               value={branch} onChange={e => setBranch(e.target.value)} />
             <button className="hud-factory-cancel" disabled={!branch.trim()}
-              onClick={() => stage("/git/merge", { source: branch.trim() },
-                { done: "Merged ✓", cancel: "Merge cancelled" })}>MERGE</button>
+              onClick={() => stage("/git/merge", { source: branch.trim() }, "git_merge_local")}>MERGE</button>
           </div>
           <div className="hud-git-row">
             <input className="hud-git-input" placeholder="PR #" value={pr}
               onChange={e => setPr(e.target.value)} />
             <button className="hud-factory-cancel" disabled={!pr.trim()}
-              onClick={() => stage("/git/merge-pr", { number: Number(pr.trim()) },
-                { done: "PR merged ✓", cancel: "PR merge cancelled" })}>MERGE PR</button>
+              onClick={() => stage("/git/merge-pr", { number: Number(pr.trim()) }, "git_merge_pr")}>MERGE PR</button>
           </div>
           {msg && <div className="hud-factory-iter">{msg}</div>}
           <div className="hud-builds-path">Staged actions wait for your approval in the CONFIRM dock.</div>
