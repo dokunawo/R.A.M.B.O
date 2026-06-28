@@ -121,8 +121,10 @@ def fetch_moneyline_historical(snapshot_iso: str, *,
     client = client or httpx.Client(timeout=DEFAULT_TIMEOUT)
     try:
         url = f"{cfg.BASE}/historical/sports/{cfg.SPORT}/odds"
+        # Normalize +00:00 UTC offset to Z form for The Odds API compatibility
+        date_param = snapshot_iso.replace("+00:00", "Z")
         params = {"apiKey": key, "regions": cfg.REGIONS, "markets": cfg.MARKETS,
-                  "oddsFormat": cfg.ODDS_FORMAT, "date": snapshot_iso}
+                  "oddsFormat": cfg.ODDS_FORMAT, "date": date_param}
         resp = client.get(url, params=params)
         resp.raise_for_status()
         body = resp.json() or {}

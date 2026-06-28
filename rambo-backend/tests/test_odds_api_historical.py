@@ -44,3 +44,37 @@ def test_fetch_historical_unwraps_data_and_stamps_timestamp(monkeypatch):
     assert run.item_count == 1
     assert run.actor_id == toa.cfg.SOURCE_ID          # routes through existing normalizer
     assert run.items[0]["_captured_at"] == "2026-05-01T16:00:00Z"
+
+
+def test_fetch_historical_normalizes_plus_offset_to_z(monkeypatch):
+    """Regression: The Odds API rejects +00:00 UTC offset form, requires Z."""
+    monkeypatch.setenv("THE_ODDS_API_KEY", "k")
+    payload = {
+        "timestamp": "2026-05-01T19:05:00Z",
+        "data": [
+            {"id": "abc", "home_team": "New York Yankees",
+             "away_team": "Boston Red Sox", "commence_time": "2026-05-01T23:05:00Z",
+             "bookmakers": []},
+        ],
+    }
+    client = _FakeClient(payload)
+    run = toa.fetch_moneyline_historical("2026-05-01T19:05:00+00:00", client=client)
+    assert client.last_params["date"] == "2026-05-01T19:05:00Z"
+    assert run.item_count == 1
+
+
+def test_fetch_historical_z_passthrough_unchanged(monkeypatch):
+    """If input already uses Z, pass it through unchanged."""
+    monkeypatch.setenv("THE_ODDS_API_KEY", "k")
+    payload = {
+        "timestamp": "2026-05-01T19:05:00Z",
+        "data": [
+            {"id": "abc", "home_team": "New York Yankees",
+             "away_team": "Boston Red Sox", "commence_time": "2026-05-01T23:05:00Z",
+             "bookmakers": []},
+        ],
+    }
+    client = _FakeClient(payload)
+    run = toa.fetch_moneyline_historical("2026-05-01T19:05:00Z", client=client)
+    assert client.last_params["date"] == "2026-05-01T19:05:00Z"
+    assert run.item_count == 1
