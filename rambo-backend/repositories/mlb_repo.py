@@ -36,6 +36,13 @@ class MlbRepo:
 
     # -- odds (latest snapshot via the view) ---------------------------------
 
+    def odds_history(self, game_pk: int, market: str = "moneyline") -> list[dict]:
+        """All odds snapshots for a game/market, oldest→newest. Powers CLV
+        (opening vs closing line) — latest_odds only gives the newest snapshot."""
+        return _dicts(self.conn.execute(
+            "SELECT book, market, side, price, captured_at FROM odds_lines "
+            "WHERE game_pk=? AND market=? ORDER BY captured_at", (game_pk, market)))
+
     def latest_odds(self, game_pk: Optional[int] = None,
                     market: Optional[str] = None) -> list[dict]:
         q = "SELECT * FROM v_latest_odds WHERE 1=1"

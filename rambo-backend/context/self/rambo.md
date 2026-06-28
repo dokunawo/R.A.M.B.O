@@ -94,11 +94,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 204 commits:
+Last 14 days — 205 commits:
 
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (28 minutes ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (46 minutes ago)`
-- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (59 minutes ago)`
+- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 minutes ago)`
+- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (34 minutes ago)`
+- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (52 minutes ago)`
+- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (65 minutes ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (3 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (3 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (3 hours ago)`
@@ -110,13 +111,12 @@ Last 14 days — 204 commits:
 - `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (18 hours ago)`
 - `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (18 hours ago)`
 - `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (18 hours ago)`
-- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (18 hours ago)`
-- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (18 hours ago)`
+- `e1f3a1a docs: build naming, build deletion, quieter hand-offs (guide/README/roadmap) (19 hours ago)`
+- `66a571d feat(builds): short build names, delete capability, Engineer-only handoff mentions (19 hours ago)`
 - `305ed00 docs: boot briefing + "catch me up" in operator guide, README, roadmap (19 hours ago)`
 - `102d999 feat(briefing): boot briefing card + on-demand "catch me up" update (19 hours ago)`
 - `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (20 hours ago)`
-- `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (20 hours ago)`
-- … and 184 more
+- … and 185 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
