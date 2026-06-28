@@ -207,7 +207,8 @@ class MlbRepo:
         import json
         rows = self.conn.execute(
             "SELECT stats FROM player_game_logs WHERE mlb_id=? AND stat_group='pitching' "
-            "AND game_date < ?", (mlb_id, before_date)).fetchall()
+            "AND game_date < ? AND CAST(strftime('%Y', game_date) AS INTEGER)=?",
+            (mlb_id, before_date, season)).fetchall()
         er_total = 0.0
         outs_total = 0
         for r in rows:

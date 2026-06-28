@@ -67,3 +67,34 @@ def test_pitcher_era_asof_none_paths(tmp_path):
     conn = _conn(tmp_path)
     assert MlbRepo(conn).pitcher_era_asof(None, 2026, "2026-06-03") is None
     assert MlbRepo(conn).pitcher_era_asof(500, 2026, "2026-06-03") is None
+
+
+def test_pitcher_era_asof_excludes_prior_seasons(tmp_path):
+    """Pitcher logs from prior seasons must NOT leak into the ERA calculation."""
+    conn = _conn(tmp_path)
+    # Prior season (2025-09-01) with 1 ER / 3 IP (ERA 3.00)
+    _plog(conn, 500, "2025-09-01", 1, 9)
+    # Current season (2026-06-01) with 2 ER / 6 IP (ERA 3.00)
+    _plog(conn, 500, "2026-06-01", 2, 18)
+    # If prior season leaks in: (1+2) ER / 9 IP = 3 ER / 9 IP = 3.00 ERA
+    # If prior season excluded: 2 ER / 6 IP = 3 ER / 9 IP = 3.00 ERA (same by coincidence)
+    # Use different values to expose leakage: prior season 0 ER / 9 IP
+    conn.execute(
+        "INSERT OR IGNORE INTO players (mlb_id, full_name, updated_at) VALUES (?,?,?)",
+        (501, "Player 501", "2026-06-28T00:00:00Z"))
+    stats_prior = json.dumps({"stat": {"earnedRuns": 0, "outs": 9, "inningsPitched": "3.0"}})
+    conn.execute(
+        "INSERT INTO player_game_logs (mlb_id, game_pk, game_date, stat_group, "
+        "stats, source, scraped_at) VALUES (?,?,?,?,?,?,?)",
+        (501, None, "2025-09-01", "pitching", stats_prior, "mlb/statsapi:stats", "2026-06-28T00:00:00Z"))
+    stats_curr = json.dumps({"stat": {"earnedRuns": 3, "outs": 18, "inningsPitched": "6.0"}})
+    conn.execute(
+        "INSERT INTO player_game_logs (mlb_id, game_pk, game_date, stat_group, "
+        "stats, source, scraped_at) VALUES (?,?,?,?,?,?,?)",
+        (501, None, "2026-06-01", "pitching", stats_curr, "mlb/statsapi:stats", "2026-06-28T00:00:00Z"))
+    repo = MlbRepo(conn)
+    # Query for 2026 season before 2026-06-03
+    # If bug present: (0+3) ER / 9 IP = 3.00 ERA (leaks prior season)
+    # If bug fixed: 3 ER / 6 IP = 4.50 ERA (only current season)
+    era = repo.pitcher_era_asof(501, 2026, "2026-06-03")
+    assert abs(era - (9 * 3 / 6.0)) < 1e-9  # 4.50 (only 2026 counts)
