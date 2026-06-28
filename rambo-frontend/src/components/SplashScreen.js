@@ -11,7 +11,8 @@ import ProcessingHelix from "./ProcessingHelix";
 import usePerformanceMode from "./usePerformanceMode";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled } from "./useVoiceReactivity";
 import { VoiceControls } from "./VoiceControls";
-import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, GitDock, ProactiveDock, HistoryDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
+import { StatBars, CostIndicator, useCostDashboard, VoiceCostIndicator, useElevenLabsUsage, EmbedCostIndicator, useVoyageUsage, FactoryDock, useFactoryPending, ConfirmationDock, HandoffDock, CodeReviewDock, BuildsDock, GitDock, ProactiveDock, HistoryDock, TaskHistoryDock, ActiveTaskBar, SoundGate, SettingsPanel } from "./SharedHUD";
+import ShutdownSequence from "./ShutdownSequence";
 import {
   resumeAudio, audioRunning,
   loadIntro, playKeyClick,
@@ -1044,9 +1045,18 @@ export default function SplashScreen({
   const clearAllRef = useRef(null);
   const commandCenterRef = useRef(null);
   const setFollowUpRef = useRef(null);
+  const shutdownRef = useRef(null);
   const handleFinalTranscript = useCallback((text) => {
     setVoiceText(text);
     const t = (text || "").toLowerCase().replace(/[.,!?]+$/g, "").trim();
+    // Cinematic sign-off: "shut down" / "power down" / "log out" → standby
+    // overlay (no process is stopped). Checked before the hard-stop so "power
+    // down" doesn't get read as a mic-off command.
+    if (/(shut down|shutdown|power down|powerdown|log out|logout|sign off|signing off|go (?:to|into) standby|standby mode)/.test(t)) {
+      if (shutdownRef.current) shutdownRef.current();
+      if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
+      return;
+    }
     // Hard stop: "stop listening" / "pause" turns the mic fully off and keeps it
     // off across refreshes so it stops picking up ambient audio.
     if (/(stop listening|pause listening|stop the mic|mute the mic|mic off|go to sleep|stop the microphone|pause the mic)/.test(t)) {
@@ -1174,6 +1184,10 @@ export default function SplashScreen({
   }, [clearResponses]);
   clearAllRef.current = clearAll;
   commandCenterRef.current = () => nav("/console");
+  // Cinematic shutdown/standby overlay (no process kill). Triggered by voice
+  // ("shut down") or the power button; "WAKE" clears it.
+  const [shuttingDown, setShuttingDown] = useState(false);
+  shutdownRef.current = () => setShuttingDown(true);
   const perf = usePerformanceMode();
   const costData = useCostDashboard();
   const voiceUsage = useElevenLabsUsage();
@@ -1355,11 +1369,15 @@ export default function SplashScreen({
             <GitDock />
             <ProactiveDock />
             <HistoryDock />
+            <TaskHistoryDock />
           </div>
           <ActiveTaskBar />
           <SoundGate />
           <SettingsPanel />
           <SpotifyWidget />
+
+          <button className="hud-power-btn" onClick={() => setShuttingDown(true)}
+            title='Shut down to standby (or say "shut down")'>⏻</button>
 
           {(Object.keys(responses).length > 0 || result) && (
             <button className="hud-clear-btn" onClick={clearAll}
@@ -1394,6 +1412,11 @@ export default function SplashScreen({
               onClose={() => setResult(null)} />
           )}
         </>
+      )}
+
+      {shuttingDown && (
+        <ShutdownSequence speak={speakRef.current}
+          onWake={() => setShuttingDown(false)} />
       )}
     </div>
   );

@@ -1168,6 +1168,61 @@ export function HistoryDock() {
   );
 }
 
+// Task history — two tabs: dispatched tasks (agent_tracker, in-memory) and
+// dev-lane self-changes (DevRepo, all statuses). Same accordion-dock shape as
+// the others; backed by GET /tasks/history → { tasks, changes }.
+export function TaskHistoryDock() {
+  const { items } = usePolledQueue("/tasks/history", 8000);
+  const [open, toggle] = useDockOpen("tasks");
+  const [tab, setTab] = useState("tasks");
+  const tasks = Array.isArray(items?.tasks) ? items.tasks : [];
+  const changes = Array.isArray(items?.changes) ? items.changes : [];
+  const total = tasks.length + changes.length;
+
+  return (
+    <div className="hud-builds-wrap">
+      <div className="hud-factory-face" onClick={toggle}>
+        <span className="hud-builds-tag">TASKS</span>
+        <span className={`hud-factory-count ${total ? "hud-count-hot" : ""}`}>{total}</span>
+      </div>
+      {open && (
+        <div className="hud-factory-panel">
+          <div className="hud-factory-panel-header hud-dock-header">
+            <span>◆ TASK HISTORY</span>
+            <span className="th-tabs">
+              <button className={`th-tab ${tab === "tasks" ? "th-tab-on" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setTab("tasks"); }}>DISPATCHED</button>
+              <button className={`th-tab ${tab === "changes" ? "th-tab-on" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setTab("changes"); }}>CHANGES</button>
+            </span>
+          </div>
+          {tab === "tasks" ? (
+            tasks.length === 0
+              ? <div className="hud-factory-empty">{"// no dispatched tasks yet"}</div>
+              : tasks.map((t, i) => (
+                  <div key={i} className="th-row">
+                    <span className={`th-dot th-${t.status || "pending"}`} />
+                    <span className="th-agent">{t.agent}</span>
+                    <span className="th-text">{(t.text || "").slice(0, 80)}</span>
+                    <span className="th-time">{t.time}</span>
+                  </div>
+                ))
+          ) : (
+            changes.length === 0
+              ? <div className="hud-factory-empty">{"// no self-changes yet"}</div>
+              : changes.map((c) => (
+                  <div key={c.id} className="th-row">
+                    <span className={`th-badge th-st-${c.status}`}>{c.status}</span>
+                    <span className="th-text">{(c.goal || "").slice(0, 80)}</span>
+                  </div>
+                ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Fallback for when the browser blocked autoplay (e.g. the tab opened without a
 // gesture, or Chrome was already running so the --autoplay-policy flag didn't
 // apply). Shows a pill while audio is locked; one click unlocks it and it hides.
