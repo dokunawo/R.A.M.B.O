@@ -94,19 +94,20 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 213 commits:
+Last 14 days — 214 commits:
 
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (9 minutes ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (5 minutes ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (14 minutes ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (4 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (4 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (5 hours ago)`
 - `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (5 hours ago)`
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (5 hours ago)`
+- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (6 hours ago)`
 - `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (6 hours ago)`
 - `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (6 hours ago)`
 - `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (6 hours ago)`
 - `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (6 hours ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (6 hours ago)`
+- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (7 hours ago)`
 - `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (7 hours ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (8 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (8 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 213 commits:
 - `c59b003 feat(ui): /boards page — all four parlay boards on one screen (12 hours ago)`
 - `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (12 hours ago)`
 - `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (13 hours ago)`
-- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (19 hours ago)`
-- … and 193 more
+- … and 194 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
