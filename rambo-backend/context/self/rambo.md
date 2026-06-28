@@ -94,9 +94,10 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 202 commits:
+Last 14 days — 203 commits:
 
 - `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (22 minutes ago)`
+- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (35 minutes ago)`
 - `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (2 hours ago)`
 - `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (2 hours ago)`
 - `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (2 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 202 commits:
 - `93589ae docs: operator guide + README + roadmap for Player Watch, Moneyline Board, daily run, startup lock (19 hours ago)`
 - `b44e708 feat(ev): Player Watch is slate-wide with our leans pinned at top (20 hours ago)`
 - `1d67c70 fix(startup): single-instance lock so RAMBO never opens two Chrome windows (20 hours ago)`
-- `a2d0d6b test(ev): honesty omit-when-absent coverage + import cleanup (20 hours ago)`
-- … and 182 more
+- … and 183 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

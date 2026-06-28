@@ -1013,6 +1013,17 @@ async def list_confirmations():
     return _confirmations.list_pending()
 
 
+@app.get("/confirmations/{confirmation_id}")
+async def get_confirmation(confirmation_id: str):
+    """Status of a single confirmation (pending|approved|rejected) so a dock can
+    show the outcome of an action it staged (e.g. GitDock → 'Pushed ✓'). Returns
+    {error} if the id is unknown."""
+    rec = _confirmations.get(confirmation_id)
+    if rec is None:
+        return {"error": "not found"}
+    return {"id": rec["id"], "tool_name": rec["tool_name"], "status": rec["status"]}
+
+
 @app.post("/confirmations/{confirmation_id}/approve")
 async def approve_confirmation(confirmation_id: str):
     rec = _confirmations.get(confirmation_id)
