@@ -94,11 +94,12 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 227 commits:
+Last 14 days — 228 commits:
 
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (5 minutes ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (9 minutes ago)`
-- `5343cf4 docs(betting): spec learned moneyline model (13 minutes ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (5 minutes ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (10 minutes ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (13 minutes ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (18 minutes ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (10 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (10 hours ago)`
 - `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (10 hours ago)`
@@ -108,15 +109,14 @@ Last 14 days — 227 commits:
 - `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (10 hours ago)`
 - `d339260 Fix pitcher_era_asof season filter leak (10 hours ago)`
 - `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (10 hours ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (10 hours ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (11 hours ago)`
 - `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (11 hours ago)`
 - `25769b2 docs(betting): spec walk-forward moneyline backtest (11 hours ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (14 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (14 hours ago)`
-- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (15 hours ago)`
+- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (16 hours ago)`
 - `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (16 hours ago)`
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (16 hours ago)`
-- … and 207 more
+- … and 208 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
