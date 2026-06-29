@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 232 commits:
+Last 14 days — 242 commits:
 
-- `070e6e2 chore(betting): record learned-model May backtest vs baseline (3 hours ago)`
-- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (3 hours ago)`
-- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (3 hours ago)`
-- `99e03ee feat(betting): Anchored + LogReg predictors (3 hours ago)`
-- `1db8f5c feat(betting): point-in-time features + training-set builder (3 hours ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (3 hours ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (3 hours ago)`
-- `5343cf4 docs(betting): spec learned moneyline model (3 hours ago)`
-- `6478758 Fix walkforward boundary string normalization and remove unused imports (12 hours ago)`
-- `872843d Fix The Odds API historical endpoint timestamp normalization (13 hours ago)`
-- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (13 hours ago)`
-- `ece5335 feat(betting): walk-forward moneyline backtest harness (13 hours ago)`
-- `177ec49 feat(betting): two-snapshot historical odds backfill (13 hours ago)`
-- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (13 hours ago)`
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (13 hours ago)`
-- `d339260 Fix pitcher_era_asof season filter leak (13 hours ago)`
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (13 hours ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (13 hours ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (13 hours ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (14 hours ago)`
-- … and 212 more
+- `42fceec chore(betting): record alt-K calibration backtest result (6 minutes ago)`
+- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (9 minutes ago)`
+- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (15 minutes ago)`
+- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (22 minutes ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (31 minutes ago)`
+- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (37 minutes ago)`
+- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (44 minutes ago)`
+- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (47 minutes ago)`
+- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (51 minutes ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (75 minutes ago)`
+- `070e6e2 chore(betting): record learned-model May backtest vs baseline (4 hours ago)`
+- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (4 hours ago)`
+- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (4 hours ago)`
+- `99e03ee feat(betting): Anchored + LogReg predictors (4 hours ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (4 hours ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (4 hours ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (4 hours ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (4 hours ago)`
+- `6478758 Fix walkforward boundary string normalization and remove unused imports (14 hours ago)`
+- `872843d Fix The Odds API historical endpoint timestamp normalization (14 hours ago)`
+- … and 222 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
