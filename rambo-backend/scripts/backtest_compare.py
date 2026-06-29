@@ -16,7 +16,7 @@ from brains.ev.ml.predictor import AnchoredPredictor, LogRegPredictor
 
 
 def _verdict(base: dict, learned: dict) -> str:
-    b, l = base["early"], learned["early"]
+    b, l = base.get("early", {}), learned.get("early", {})
     parts = []
     for k in ("roi", "brier", "log_loss"):
         bv, lv = b.get(k), l.get(k)

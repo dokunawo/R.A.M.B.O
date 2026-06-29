@@ -58,6 +58,7 @@ def test_logreg_predictor_none_when_unfit(tmp_path):
     repo = MlbRepo(conn)            # no history -> empty training set -> unfit
     p = LogRegPredictor()
     p.prepare(repo, 2026, "2026-04-01")
+    assert p.last_fit_date is None
     game = {"home_team_id": 1, "away_team_id": 2,
             "home_probable_pitcher_id": None, "away_probable_pitcher_id": None}
     assert p.model is None

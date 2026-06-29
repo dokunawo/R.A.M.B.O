@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 231 commits:
+Last 14 days — 232 commits:
 
-- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (9 minutes ago)`
-- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (14 minutes ago)`
-- `99e03ee feat(betting): Anchored + LogReg predictors (18 minutes ago)`
-- `1db8f5c feat(betting): point-in-time features + training-set builder (23 minutes ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (28 minutes ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (32 minutes ago)`
-- `5343cf4 docs(betting): spec learned moneyline model (36 minutes ago)`
-- `6478758 Fix walkforward boundary string normalization and remove unused imports (10 hours ago)`
-- `872843d Fix The Odds API historical endpoint timestamp normalization (10 hours ago)`
-- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (10 hours ago)`
-- `ece5335 feat(betting): walk-forward moneyline backtest harness (10 hours ago)`
-- `177ec49 feat(betting): two-snapshot historical odds backfill (10 hours ago)`
-- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (10 hours ago)`
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (11 hours ago)`
-- `d339260 Fix pitcher_era_asof season filter leak (11 hours ago)`
-- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (11 hours ago)`
-- `b8f6964 docs(betting): implementation plan for walk-forward backtest (11 hours ago)`
-- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (11 hours ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (11 hours ago)`
-- `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (14 hours ago)`
-- … and 211 more
+- `070e6e2 chore(betting): record learned-model May backtest vs baseline (3 hours ago)`
+- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (3 hours ago)`
+- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (3 hours ago)`
+- `99e03ee feat(betting): Anchored + LogReg predictors (3 hours ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (3 hours ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (3 hours ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (3 hours ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (3 hours ago)`
+- `6478758 Fix walkforward boundary string normalization and remove unused imports (12 hours ago)`
+- `872843d Fix The Odds API historical endpoint timestamp normalization (13 hours ago)`
+- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (13 hours ago)`
+- `ece5335 feat(betting): walk-forward moneyline backtest harness (13 hours ago)`
+- `177ec49 feat(betting): two-snapshot historical odds backfill (13 hours ago)`
+- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (13 hours ago)`
+- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (13 hours ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (13 hours ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (13 hours ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (13 hours ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (13 hours ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (14 hours ago)`
+- … and 212 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

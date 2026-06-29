@@ -31,6 +31,8 @@ class LogisticRegression:
         return [(x[j] - self.mean[j]) / self.std[j] for j in range(len(x))]
 
     def fit(self, X: list[list[float]], y: list[int]) -> "LogisticRegression":
+        if not X:
+            return self
         n = len(X)
         d = len(X[0]) if n else 0
         # per-feature mean/std (population); zero variance -> std 1 (no-op scale)
@@ -62,6 +64,9 @@ class LogisticRegression:
         return min(1.0 - 1e-6, max(1e-6, _sigmoid(z)))
 
     def coefficients(self) -> dict[str, float]:
+        """Return fitted weights (intercept + per-feature). Weights are on the STANDARDIZED
+        feature scale; magnitudes are not directly comparable to raw-feature units, but signs
+        are meaningful for direction."""
         names = self.feature_names or [f"x{j}" for j in range(len(self.w))]
         out = {names[j]: self.w[j] for j in range(len(self.w))}
         out["intercept"] = self.b

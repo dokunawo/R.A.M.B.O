@@ -39,7 +39,6 @@ def test_backtest_endpoint_logreg_model_empty_ok(tmp_path, monkeypatch):
     from fastapi import FastAPI
     app = FastAPI()
     app.include_router(betting.router)
-    from fastapi.testclient import TestClient
     client = TestClient(app)
     r = client.get("/betting/backtest",
                    params={"start": "2026-05-01", "end": "2026-05-02", "model": "logreg"})

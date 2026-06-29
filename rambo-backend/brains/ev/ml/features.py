@@ -24,9 +24,13 @@ def game_feature_vector(repo, season: int, game: dict,
     run_diff = ((hr["runs_scored"] - hr["runs_allowed"]) / hg
                 - (ar["runs_scored"] - ar["runs_allowed"]) / ag)
     home_era = repo.pitcher_era_asof(game["home_probable_pitcher_id"], season,
-                                     before_date) or LG_ERA
+                                     before_date)
+    if home_era is None:
+        home_era = LG_ERA
     away_era = repo.pitcher_era_asof(game["away_probable_pitcher_id"], season,
-                                     before_date) or LG_ERA
+                                     before_date)
+    if away_era is None:
+        away_era = LG_ERA
     era_diff = away_era - home_era
     pythag_diff = (pythag_winpct(hr["runs_scored"], hr["runs_allowed"])
                    - pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
