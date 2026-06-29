@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import sqlite3
 
-from brains.ev.moneyline_model import evaluate_game_asof
 from brains.ev import backtest
 
 
@@ -42,10 +41,15 @@ def _prices_at(conn: sqlite3.Connection, game_pk: int,
     return out if "home" in out and "away" in out else None
 
 
-def run(repo, start: str, end: str) -> dict:
-    """Grade every final game in [start,end]. Returns side-by-side early/close
-    metrics plus coverage counters."""
+def run(repo, start: str, end: str, predictor=None) -> dict:
+    """Grade every final game in [start,end] using `predictor` (default: the
+    closed-form AnchoredPredictor). Returns side-by-side early/close metrics plus
+    coverage counters."""
     import datetime as _dt
+    from brains.ev.moneyline_model import devig_two_way
+    from brains.ev.ml.predictor import AnchoredPredictor
+    if predictor is None:
+        predictor = AnchoredPredictor()
     conn = repo.conn
     records: list[dict] = []
     skipped_features = skipped_odds = 0
@@ -57,10 +61,14 @@ def run(repo, start: str, end: str) -> dict:
         if not s:
             skipped_odds += 1
             continue
-        ev = evaluate_game_asof(repo, season, s, date)
-        if ev is None:
+        predictor.prepare(repo, season, date)
+        p_home = predictor.predict_home(repo, season, s, date)
+        if p_home is None:
             skipped_features += 1
             continue
+        book_home, book_away = devig_two_way(s["home_price"], s["away_price"])
+        ev = {"model_home": p_home, "model_away": 1.0 - p_home,
+              "book_home": book_home, "book_away": book_away}
         dt = s.get("game_datetime")
         if not dt:
             skipped_odds += 1

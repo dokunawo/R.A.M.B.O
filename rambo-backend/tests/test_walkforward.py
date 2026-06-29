@@ -77,3 +77,16 @@ def test_prices_at_includes_boundary_z_form(tmp_path):
     assert result is not None
     assert result["home"] == -120
     assert result["away"] == 100
+
+
+def test_run_accepts_explicit_predictor(tmp_path):
+    from repositories.mlb_repo import MlbRepo
+    from brains.ev.walkforward import run
+    from brains.ev.ml.predictor import AnchoredPredictor
+    conn = get_connection(str(tmp_path / "t.db"))
+    apply_migrations(conn, "db/migrations")
+    # empty range -> n=0 but must return the full shape and not raise
+    out = run(MlbRepo(conn), "2026-05-01", "2026-05-02", predictor=AnchoredPredictor())
+    assert out["n"] == 0
+    assert "early" in out and "close" in out
+    assert out["skipped_features"] == 0 and out["skipped_odds"] == 0

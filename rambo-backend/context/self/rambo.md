@@ -94,12 +94,13 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 228 commits:
+Last 14 days — 229 commits:
 
-- `1db8f5c feat(betting): point-in-time features + training-set builder (5 minutes ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (10 minutes ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (13 minutes ago)`
-- `5343cf4 docs(betting): spec learned moneyline model (18 minutes ago)`
+- `99e03ee feat(betting): Anchored + LogReg predictors (5 minutes ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (9 minutes ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (15 minutes ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (18 minutes ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (22 minutes ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (10 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (10 hours ago)`
 - `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (10 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 228 commits:
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (14 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (14 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (16 hours ago)`
-- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (16 hours ago)`
-- … and 208 more
+- … and 209 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
