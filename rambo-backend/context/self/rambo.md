@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 243 commits:
+Last 14 days — 244 commits:
 
-- `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (63 minutes ago)`
-- `42fceec chore(betting): record alt-K calibration backtest result (69 minutes ago)`
-- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (72 minutes ago)`
-- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (78 minutes ago)`
-- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (85 minutes ago)`
-- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (2 hours ago)`
-- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (2 hours ago)`
-- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (2 hours ago)`
-- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (2 hours ago)`
-- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (2 hours ago)`
-- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (2 hours ago)`
-- `070e6e2 chore(betting): record learned-model May backtest vs baseline (5 hours ago)`
-- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (5 hours ago)`
-- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (5 hours ago)`
-- `99e03ee feat(betting): Anchored + LogReg predictors (5 hours ago)`
-- `1db8f5c feat(betting): point-in-time features + training-set builder (5 hours ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (5 hours ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (5 hours ago)`
-- `5343cf4 docs(betting): spec learned moneyline model (5 hours ago)`
-- `6478758 Fix walkforward boundary string normalization and remove unused imports (15 hours ago)`
-- … and 223 more
+- `18de5e9 feat(cmc): render daily Word doc as tables with section headers (2 hours ago)`
+- `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (3 hours ago)`
+- `42fceec chore(betting): record alt-K calibration backtest result (3 hours ago)`
+- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (3 hours ago)`
+- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (3 hours ago)`
+- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (3 hours ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (3 hours ago)`
+- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (3 hours ago)`
+- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (3 hours ago)`
+- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (3 hours ago)`
+- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (4 hours ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (4 hours ago)`
+- `070e6e2 chore(betting): record learned-model May backtest vs baseline (6 hours ago)`
+- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (7 hours ago)`
+- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (7 hours ago)`
+- `99e03ee feat(betting): Anchored + LogReg predictors (7 hours ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (7 hours ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (7 hours ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (7 hours ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (7 hours ago)`
+- … and 224 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

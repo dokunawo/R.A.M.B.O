@@ -185,6 +185,25 @@ try {
         Start-Sleep -Seconds 1   # let the profile lock release before re-checking
     }
 } catch { Log "WARNING: could not check for leftover RAMBO Chrome: $_" }
+
+# Wipe the prior browsing session AFTER the kill (so the dying Chrome can't rewrite
+# it). We force-kill the leftover RAMBO Chrome above, which Chrome records as
+# exit_type="Crashed" — so on the next launch its crash-restore re-opens the
+# previous tab ON TOP OF the fresh ?boot=1 tab, giving TWO overlapping app tabs (a
+# doubled greeting). --restore-last-session=false doesn't fully suppress that path;
+# removing the session files is the only deterministic fix. Dedicated kiosk profile
+# only — the everyday Chrome profile is never touched.
+try {
+    foreach ($s in @(
+        "$prefDir\Sessions",
+        "$prefDir\Current Session", "$prefDir\Current Tabs",
+        "$prefDir\Last Session",    "$prefDir\Last Tabs"
+    )) {
+        if (Test-Path $s) { Remove-Item $s -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    Log "Cleared prior RAMBO browser session (prevents duplicate restore tab)."
+} catch { Log "WARNING: could not clear prior RAMBO session: $_" }
+
 # RAMBO gets its OWN dedicated Chrome profile (--user-data-dir): a separate,
 # isolated instance, so the flags below are honored even if your normal Chrome
 # is already open. Your everyday Chrome is left untouched.
