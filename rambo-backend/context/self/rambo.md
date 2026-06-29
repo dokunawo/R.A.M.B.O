@@ -94,8 +94,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 224 commits:
+Last 14 days — 225 commits:
 
+- `5343cf4 docs(betting): spec learned moneyline model (4 minutes ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (9 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (10 hours ago)`
 - `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (10 hours ago)`
@@ -107,7 +108,7 @@ Last 14 days — 224 commits:
 - `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (10 hours ago)`
 - `b8f6964 docs(betting): implementation plan for walk-forward backtest (10 hours ago)`
 - `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (10 hours ago)`
-- `25769b2 docs(betting): spec walk-forward moneyline backtest (10 hours ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (11 hours ago)`
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (14 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (14 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (15 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 224 commits:
 - `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (16 hours ago)`
 - `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (16 hours ago)`
 - `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (16 hours ago)`
-- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (16 hours ago)`
-- … and 204 more
+- … and 205 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
