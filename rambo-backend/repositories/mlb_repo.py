@@ -234,6 +234,55 @@ class MlbRepo:
             return None
         return 9.0 * er_total / (outs_total / 3.0)
 
+    def team_k_pct_asof(self, team_id: int, season: int,
+                        before_date: str) -> Optional[float]:
+        """Opposing-lineup K rate (SUM strikeOuts / SUM plateAppearances) over the
+        team's hitters' game logs strictly before `before_date`. Leak-free; None if
+        no plate appearances yet."""
+        import json
+        rows = self.conn.execute(
+            "SELECT gl.stats AS stats FROM player_game_logs gl "
+            "JOIN players p ON p.mlb_id = gl.mlb_id "
+            "WHERE p.current_team_id=? AND gl.stat_group='hitting' "
+            "AND gl.game_date < ? "
+            "AND CAST(strftime('%Y', gl.game_date) AS INTEGER)=?",
+            (team_id, before_date, season)).fetchall()
+        so = pa = 0.0
+        for r in rows:
+            stat = (json.loads(r["stats"]).get("stat") or {})
+            try:
+                so += float(stat.get("strikeOuts") or 0)
+                pa += float(stat.get("plateAppearances") or 0)
+            except (TypeError, ValueError):
+                continue
+        return so / pa if pa > 0 else None
+
+    def pitcher_k_aggregate(self, mlb_id: int, season: int, before_date: str,
+                            limit: Optional[int] = None) -> Optional[dict]:
+        """Summed strikeOuts/battersFaced and start count over a pitcher's game logs
+        strictly before `before_date` (season-scoped), newest-first. `limit` caps to
+        the last N starts. None if no rows."""
+        import json
+        q = ("SELECT stats FROM player_game_logs "
+             "WHERE mlb_id=? AND stat_group='pitching' AND game_date < ? "
+             "AND CAST(strftime('%Y', game_date) AS INTEGER)=? "
+             "ORDER BY game_date DESC")
+        params: list = [mlb_id, before_date, season]
+        if limit is not None:
+            q += " LIMIT ?"; params.append(int(limit))
+        rows = self.conn.execute(q, params).fetchall()
+        if not rows:
+            return None
+        k = bf = 0.0
+        for r in rows:
+            stat = (json.loads(r["stats"]).get("stat") or {})
+            try:
+                k += float(stat.get("strikeOuts") or 0)
+                bf += float(stat.get("battersFaced") or 0)
+            except (TypeError, ValueError):
+                continue
+        return {"k": k, "bf": bf, "starts": len(rows)}
+
     def player_recent(self, mlb_id: int, group: str = "hitting",
                       window: str = "L15") -> Optional[dict]:
         """Recent (last-N-day) stat dict, or None if not pulled."""
