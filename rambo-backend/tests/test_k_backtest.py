@@ -45,3 +45,26 @@ def test_k_backtest_skips_starts_without_history(tmp_path):
     repo = MlbRepo(conn)
     out = k_backtest.run(repo, "2026-04-01", "2026-04-30", thresholds=(6,))
     assert out["n_starts"] == 0 and out["skipped"] == 1
+
+
+def test_k_backtest_omits_meaningless_odds_metrics(tmp_path):
+    """Verify that roi and avg_clv are removed from graded thresholds.
+    These metrics are meaningless in pure calibration (sentinel odds=100)."""
+    conn = _conn(tmp_path)
+    # history + graded start
+    for d in ("2026-04-02", "2026-04-09"):
+        _pit_log(conn, 50, d, 8, 25, 200)
+    _pit_log(conn, 50, "2026-05-05", 9, 26, 200)
+    repo = MlbRepo(conn)
+    out = k_backtest.run(repo, "2026-05-01", "2026-05-31", thresholds=(6, 9))
+    # Check that roi and avg_clv are NOT in the metrics dict
+    assert "roi" not in out[6], "roi should be omitted for pure calibration"
+    assert "avg_clv" not in out[6], "avg_clv should be omitted for pure calibration"
+    assert "roi" not in out[9], "roi should be omitted for pure calibration"
+    assert "avg_clv" not in out[9], "avg_clv should be omitted for pure calibration"
+    # Check that honest calibration metrics ARE present
+    assert "brier" in out[6]
+    assert "log_loss" in out[6]
+    assert "calibration" in out[6]
+    assert "n" in out[6]
+    assert "win_rate" in out[6]

@@ -1,6 +1,7 @@
 """Leak-free calibration backtest for the strikeout model. For each historical start
 it builds k_projection as-of the start date and grades P(j+ K) against the real K
-count from the game log. No odds — pure calibration (Brier / log-loss / bins)."""
+count from the game log. No odds — pure calibration (Brier / log-loss / bins).
+(roi/avg_clv are omitted from the output — there are no real odds here)."""
 from __future__ import annotations
 
 import json
@@ -36,5 +37,8 @@ def run(repo, start: str, end: str, thresholds=(6, 7, 8, 9, 10)) -> dict:
                                "win": 1 if int(actual) >= j else 0, "odds": 100})
     out: dict = {"n_starts": n_starts, "skipped": skipped}
     for j in thresholds:
-        out[j] = backtest.evaluate(records[j])
+        m = backtest.evaluate(records[j])
+        m.pop("roi", None)
+        m.pop("avg_clv", None)
+        out[j] = m
     return out
