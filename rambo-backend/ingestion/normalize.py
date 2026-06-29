@@ -36,6 +36,7 @@ from config.the_odds_api import (SOURCE_ID as ODDS_API_SOURCE,
                                  PROPS_SOURCE_ID as ODDS_PROPS_SOURCE,
                                  PROP_MARKET_MAP)
 from config.savant import SOURCE_ID as SAVANT_SOURCE
+from config.prizepicks import STAT_MARKET_MAP, SOURCE_ID as PRIZEPICKS_SOURCE
 
 logger = logging.getLogger("rambo.ingestion.normalize")
 
@@ -471,6 +472,27 @@ def map_props_book(conn, item, scraped_at) -> bool:
     return True
 
 
+def map_prizepicks(conn, item, scraped_at) -> bool:
+    """PrizePicks projection -> prop_lines. Keeps only the 6 mapped stat_types on
+    the STANDARD odds tier; multiplier is NULL (payouts are play-level). mlb_id +
+    game_pk are resolved downstream by the IdResolver / prep."""
+    if (item.get("odds_type") != "standard"
+            or item.get("stat_type") not in STAT_MARKET_MAP):
+        return True  # handled: not a board market / not standard tier
+    line = _as_float(item.get("line"))
+    player = item.get("player_name")
+    if line is None or not player:
+        return False
+    _insert_prop(conn, {
+        "game_pk": None, "mlb_id": None, "book": "prizepicks",
+        "market": STAT_MARKET_MAP[item["stat_type"]], "line": line,
+        "over_price": None, "under_price": None, "multiplier": None,
+        "player_name_raw": player,
+        "captured_at": item.get("start_time") or scraped_at,
+    })
+    return True
+
+
 def map_team_stats(conn, item, scraped_at) -> bool:
     """statsapi team stats item {team_id, season, runs_scored, runs_allowed, ...}
     -> team_season_stats (UPSERT). Feeds the moneyline Pythagorean model."""
@@ -576,6 +598,7 @@ DISPATCH: dict[str, Callable] = {
     SAVANT_SOURCE: map_statcast,
     "seemuapps/sports-odds-scraper": map_odds,
     "zen-studio/draftkings-pick6-player-props": map_props,
+    PRIZEPICKS_SOURCE: map_prizepicks,
 }
 
 
