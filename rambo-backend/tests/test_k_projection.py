@@ -70,3 +70,26 @@ def test_k_projection_opponent_boost_raises_ladder(tmp_path):
 def test_k_projection_none_without_sample(tmp_path):
     conn = _conn(tmp_path)
     assert k_projection(MlbRepo(conn), "2026-05-01", _starter()) is None
+
+
+def test_k_projection_before_date_respects_season_boundary(tmp_path):
+    """Test that k_projection uses before_date to derive season, not date.
+    Seed logs in May 2026 and April 2026 with different K rates.
+    Call with date="2026-06-01" but before_date="2026-05-01" to ensure
+    only pre-May data is used. The projection should reflect pre-May K rate,
+    not the blended post-May data."""
+    conn = _conn(tmp_path)
+    # Pre-cutoff (April): low K rate, 25 BF
+    for d in ("2026-04-01", "2026-04-08", "2026-04-15"):
+        _pit_log(conn, 50, d, 4, 25)  # ~0.16 K rate (low)
+    # Post-cutoff (May): high K rate, 25 BF
+    for d in ("2026-05-01", "2026-05-08", "2026-05-15"):
+        _pit_log(conn, 50, d, 10, 25)  # ~0.40 K rate (high)
+    repo = MlbRepo(conn)
+    # Call with before_date="2026-05-01" should only see April data
+    proj = k_projection(repo, date="2026-06-01", starter=_starter(),
+                        before_date="2026-05-01")
+    assert proj is not None
+    # Pre-cutoff sample has ~0.16 K rate, post-cutoff has ~0.40 K rate.
+    # With before_date in effect, should be closer to 0.16 (pre-May), not blended.
+    assert proj["k_rate"] < 0.25, f"Expected low K rate but got {proj['k_rate']}"

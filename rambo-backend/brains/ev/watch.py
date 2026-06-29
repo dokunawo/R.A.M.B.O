@@ -178,7 +178,7 @@ def _sw_line(r: dict) -> str:
         head += f" ({r['team']} vs {r['opponent']})"
     ladder = " · ".join(f"{j}+ {r[f'p{j}']}%" for j in range(1, 11) if f"p{j}" in r)
     return " — ".join([head, ladder,
-                       f"rate {r['k_rate']} · {r['batters_faced']} BF · proj {r['k_mean']} K"])
+                       f"rate {r['k_rate']} · {int(round(r['batters_faced']))} BF · proj {r['k_mean']} K"])
 
 
 def _sw_prompt(rows: list[dict], as_of, book) -> str:

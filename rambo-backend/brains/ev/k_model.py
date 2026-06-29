@@ -45,7 +45,7 @@ def k_projection(repo, date: str, starter: dict, before_date: str | None = None,
     backtest). Binomial(round(expected BF), expected K rate). None if no sample."""
     from brains.ev.features import _blend
     bd = before_date or date
-    season = int(date[:4])
+    season = int(bd[:4])
     mid = starter["mlb_id"]
     season_agg = repo.pitcher_k_aggregate(mid, season, bd)
     if not season_agg or season_agg["bf"] <= 0 or season_agg["starts"] <= 0:

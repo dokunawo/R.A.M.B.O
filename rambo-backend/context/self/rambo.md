@@ -94,17 +94,18 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 241 commits:
+Last 14 days — 242 commits:
 
-- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (4 minutes ago)`
-- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (10 minutes ago)`
-- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (17 minutes ago)`
-- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (25 minutes ago)`
-- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (32 minutes ago)`
-- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (38 minutes ago)`
-- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (42 minutes ago)`
-- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (46 minutes ago)`
-- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (69 minutes ago)`
+- `42fceec chore(betting): record alt-K calibration backtest result (6 minutes ago)`
+- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (9 minutes ago)`
+- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (15 minutes ago)`
+- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (22 minutes ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (31 minutes ago)`
+- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (37 minutes ago)`
+- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (44 minutes ago)`
+- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (47 minutes ago)`
+- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (51 minutes ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (75 minutes ago)`
 - `070e6e2 chore(betting): record learned-model May backtest vs baseline (4 hours ago)`
 - `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (4 hours ago)`
 - `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (4 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 241 commits:
 - `5343cf4 docs(betting): spec learned moneyline model (4 hours ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (14 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (14 hours ago)`
-- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (14 hours ago)`
-- … and 221 more
+- … and 222 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

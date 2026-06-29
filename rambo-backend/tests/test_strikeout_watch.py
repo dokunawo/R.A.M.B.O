@@ -18,7 +18,7 @@ def _seed_pitcher(conn, mid, name, team_id, k, gs, now):
     k_per_start = k / gs if gs > 0 else 0
     for g in range(gs):
         stat = json.dumps({"stat": {"strikeOuts": int(k_per_start), "battersFaced": bf_per_start}})
-        game_date = f"2026-06-{(1 + g * 7):02d}"  # spread games out by week
+        game_date = f"2026-{4 + (g // 4):02d}-{1 + (g % 4) * 7:02d}"  # spread games out: Apr onward, days 1/8/15/22
         game_pk = 5000 + mid * 100 + g
         # Create dummy game for FK constraint
         conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, scraped_at) "
