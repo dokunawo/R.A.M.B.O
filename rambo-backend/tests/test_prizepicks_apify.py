@@ -80,3 +80,33 @@ def test_fetch_paid_never_raises_on_run_actor_error(monkeypatch):
     monkeypatch.setattr(ppa, "run_actor", _boom)
     res = ppa.fetch_mlb_props_paid()
     assert res.item_count == 0                 # spend-guard breach -> 0, no raise
+
+
+def test_adapted_standard_item_lands_via_map_prizepicks(tmp_path):
+    import sqlite3
+    from db.migrate import get_connection, apply_migrations
+    from ingestion.normalize import map_prizepicks
+
+    conn = get_connection(str(tmp_path / "t.db"))
+    apply_migrations(conn, "db/migrations")
+    adapted = ppa._adapt_item({"id": "p1", "player_name": "Aaron Judge",
+                               "stat_type": "Home Runs", "line": 0.5,
+                               "odds_type": "standard",
+                               "start_time": "2026-06-29T19:00:00-04:00"})
+    assert map_prizepicks(conn, adapted, "2026-06-29T18:00:00Z") is True
+    row = conn.execute("SELECT book, market, line FROM prop_lines").fetchone()
+    assert row["book"] == "prizepicks" and row["market"] == "HR" and row["line"] == 0.5
+
+
+def test_adapted_demon_item_still_skipped(tmp_path):
+    import sqlite3
+    from db.migrate import get_connection, apply_migrations
+    from ingestion.normalize import map_prizepicks
+
+    conn = get_connection(str(tmp_path / "t.db"))
+    apply_migrations(conn, "db/migrations")
+    adapted = ppa._adapt_item({"id": "p2", "player_name": "X",
+                               "stat_type": "Home Runs", "line": 1.5,
+                               "odds_type": "demon"})
+    map_prizepicks(conn, adapted, "2026-06-29T18:00:00Z")
+    assert conn.execute("SELECT COUNT(*) c FROM prop_lines").fetchone()["c"] == 0
