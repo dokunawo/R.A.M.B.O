@@ -362,6 +362,15 @@ class Orchestrator:
                                 + "\n".join(lines))
         except Exception:
             pass
+        # The operator's revenue doctrine — so RAMBO weighs the north-star goal and
+        # operating rules when advising or prioritizing, not just on the brief card.
+        try:
+            from chief_of_staff import north_star_context
+            ns = north_star_context()
+            if ns:
+                sections.append("## Operator's north star (revenue doctrine)\n" + ns)
+        except Exception:
+            pass
         # Adaptive tone + how to address the operator. Always present, even with
         # no memory yet, so RAMBO matches depth to the request and addresses the
         # operator correctly ("sir" by default).

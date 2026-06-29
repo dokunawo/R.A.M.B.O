@@ -321,7 +321,9 @@ async def briefing_boot():
     from system_briefing import gather_briefing, render_full, render_concise, _write_last_boot
     proactive_nudges.mark_active()
     data = await gather_briefing(rambo)
-    card, spoken = render_full(data), render_concise(data)
+    # include_greeting=False: /greeting already greets the operator, and the
+    # frontend speaks both as one utterance — don't double up "Good morning".
+    card, spoken = render_full(data), render_concise(data, include_greeting=False)
     try:
         await rambo._response("architect", card)   # on-screen card (morning-brief channel)
     except Exception:

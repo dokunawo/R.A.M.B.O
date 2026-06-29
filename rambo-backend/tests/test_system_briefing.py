@@ -141,10 +141,21 @@ def test_render_concise_flows_naturally():
     # calendar + pending + uncommitted
     assert "Shoot" in concise and "2 code reviews" in concise
     assert "uncommitted file" in concise
-    # noisy/static sections are NOT spoken (they stay on the card)
-    assert "north star" not in concise.lower() and "CPU" not in concise
+    # north star + a system line ARE spoken now (operator wants them read aloud)
+    assert "north star" in concise.lower() and "$10K by Q4" in concise
+    assert "System check" in concise and "CPU 12 percent" in concise
     # plain text, single line
     assert "**" not in concise and "#" not in concise and "\n" not in concise
+
+
+def test_render_concise_boot_omits_duplicate_greeting():
+    # boot path: /greeting already greets, so include_greeting=False must NOT re-greet
+    concise = sb.render_concise(_full_data(), include_greeting=False)
+    assert not concise.startswith("Good ")          # no second "Good afternoon, Daniel."
+    assert "Good afternoon" not in concise
+    assert concise.startswith("Today is Saturday, June 27th.")
+    # still speaks the north star + system in the boot briefing
+    assert "north star" in concise.lower() and "System check" in concise
 
 
 def test_render_concise_cleans_roadmap_cruft_and_skips_weather_errors():

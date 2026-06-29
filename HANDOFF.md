@@ -39,7 +39,9 @@ Data-only +EV MLB tool integrated into the RAMBO backend. Brand "CMC"; ~$10 flat
 - **Spotify integration** — not built. Requires separate OAuth app at developer.spotify.com.
 
 ### Next action
-**Active thread: a backtested predictive moneyline model** — the betting cluster shipped 06/28 (prop→game link + team confirmation, Pick6 MLB-only filter, moneyline + player-prop line shopping, CLV tracking, and the backtest harness: results backfill + metrics). The model itself + point-in-time features + walk-forward validation is the remaining edge research. Awaiting Daniel's direction.
+**Active thread: alt-K board Phase 2 — FanDuel alt-K odds, per-threshold EV, and a parlay builder.**
+
+Phase 1 shipped + merged (06/29): an opponent-adjusted Expected-K-rate × batters-faced model with the full P(1+…10+) ladder on the Strikeout Watch board, plus a leak-free calibration backtest (634 starts — well-calibrated). The **moneyline thread is DONE** — walk-forward backtest + a learned logistic model both shipped/merged (honest finding: the moneyline market is efficient, the model is ≈ −EV; the real value is line-shopping + honest leans, not beating the book). Phase 2 builds the betting layer on top of the now-trusted K model. Awaiting Daniel's direction.
 
 Also shipped 06/28 (now live): voice self-review (`/betting` aside — "Operator, review the auth module"), dev-lane full-suite test gate, natural-flow spoken briefing, shutdown/standby + task-history dock, push-approval feedback. `cmc-daily.ps1` drives line-shop, prop-shop, and CLV.
 
