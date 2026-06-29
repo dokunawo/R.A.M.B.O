@@ -334,11 +334,18 @@ def post_alt_k_parlay(date: Optional[str] = None, book: str = "best",
     is provided. book in {best, fanduel}."""
     from brains.ev import alt_k
     d = date or datetime.date.today().isoformat()
-    board = alt_k.alt_k_board(d, book=book)
-    legs = (body or {}).get("legs")
-    if legs:
+    try:
+        board = alt_k.alt_k_board(d, book=book)
+        legs = (body or {}).get("legs")
+        if legs:
+            return {"date": d, "book": book,
+                    "parlay": alt_k.manual_parlay(board, legs, book=book)}
+        size_tuple = (tuple(int(s) for s in sizes.split(",") if s.strip()) if sizes and sizes.strip() else (2, 3, 4))
+        if not size_tuple:
+            size_tuple = (2, 3, 4)
         return {"date": d, "book": book,
-                "parlay": alt_k.manual_parlay(board, legs, book=book)}
-    size_tuple = (tuple(int(s) for s in sizes.split(",")) if sizes else (2, 3, 4))
-    return {"date": d, "book": book,
-            "suggestions": alt_k.suggest_parlays(board, sizes=size_tuple, book=book)}
+                "suggestions": alt_k.suggest_parlays(board, sizes=size_tuple, book=book)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"alt_k parlay failed: {e}") from e

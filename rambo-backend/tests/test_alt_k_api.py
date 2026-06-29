@@ -36,6 +36,14 @@ def test_alt_k_parlay_auto(monkeypatch):
     assert body["suggestions"][0]["ev"] == 0.375
 
 
+def test_alt_k_parlay_empty_sizes(monkeypatch):
+    """?sizes= (empty string) must not raise a 500 — falls back to default sizes."""
+    monkeypatch.setattr(alt_k, "alt_k_board", _fake_board)
+    monkeypatch.setattr(alt_k, "suggest_parlays", lambda board, **kw: [])
+    r = client.post("/betting/alt-k/parlay?date=2026-06-29&sizes=")
+    assert r.status_code == 200
+
+
 def test_alt_k_parlay_manual(monkeypatch):
     monkeypatch.setattr(alt_k, "alt_k_board", _fake_board)
     monkeypatch.setattr(alt_k, "manual_parlay",
