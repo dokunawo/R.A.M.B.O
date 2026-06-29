@@ -76,6 +76,13 @@ if ($SkipPrep) {
     try {
         $prep = Get-Json "$Base/betting/prep?date=$Date" "POST"
         Write-Host "Slate prepped." -ForegroundColor Green
+        # DK Pick6 props come from a third-party scraper that can go dark (returns 0).
+        # When it does, the HR/HRR/SB/K boards silently serve stale plays — warn loudly.
+        if ([int]$prep.props -le 0) {
+            Write-Host ("WARNING: DK Pick6 props pulled 0 — the Pick6 source is likely down. " +
+                "Home Runs / H+R+RBI / Stolen Bases / Strikeouts boards will be STALE or EMPTY " +
+                "until it's back.") -ForegroundColor Yellow
+        }
     } catch {
         Write-Host "ERROR pulling slate: $($_.Exception.Message)" -ForegroundColor Red
         exit 1

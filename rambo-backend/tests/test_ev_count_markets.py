@@ -14,19 +14,23 @@ def test_poisson_prob_over():
     assert poisson_prob_over(0.0, 0.5) == 0.0
 
 
-def _seed_batter(conn, mlb_id, name, season_stat):
+def _seed_batter(conn, mlb_id, name, season_stat, group="hitting"):
     now = "2026-06-26T00:00:00Z"
+    # one game on the slate date so props (linked via game_pk) pass the date filter
+    conn.execute("INSERT OR IGNORE INTO games (game_pk, official_date, home_team_id, "
+                 "away_team_id, home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (999,'2026-06-26',147,111,'NYY','BOS',?)", (now,))
     conn.execute("INSERT INTO players (mlb_id, full_name, throws, current_team_id, updated_at) "
                  "VALUES (?,?,'R',147,?)", (mlb_id, name, now))
     stats = {"season": season_stat, "splits": {}}
     conn.execute("INSERT INTO player_season_stats (mlb_id, season, stat_group, stats, source, "
-                 "as_of_date, scraped_at) VALUES (?,2026,'hitting',?,'mlb','2026-06-26',?)",
-                 (mlb_id, json.dumps(stats), now))
+                 "as_of_date, scraped_at) VALUES (?,2026,?,?,'mlb','2026-06-26',?)",
+                 (mlb_id, group, json.dumps(stats), now))
 
 
 def _prop(conn, mlb_id, name, market, line, mult):
     conn.execute("INSERT INTO prop_lines (game_pk, mlb_id, book, market, line, multiplier, "
-                 "player_name_raw, captured_at) VALUES (NULL,?,'dk_pick6',?,?,?,?,"
+                 "player_name_raw, captured_at) VALUES (999,?,'dk_pick6',?,?,?,?,"
                  "'2026-06-26T18:00Z')", (mlb_id, market, line, mult, name))
 
 
@@ -58,6 +62,9 @@ def test_sb_market_builds_pick(tmp_path):
 def test_k_market_builds_pitcher_pick(tmp_path):
     conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
     now = "2026-06-26T00:00:00Z"
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (999,'2026-06-26',147,111,'NYY','BOS',?)", (now,))
     conn.execute("INSERT INTO players (mlb_id, full_name, throws, current_team_id, updated_at) "
                  "VALUES (50,'Ace Pitcher','R',147,?)", (now,))
     stats = {"season": {"strikeOuts": 180, "gamesStarted": 20}, "splits": {}}
