@@ -213,3 +213,28 @@ async def discard(ws: GitWorkspace) -> None:
     await _git(ws.repo_root, "worktree", "remove", "--force", str(ws.worktree_path))
     # Delete the branch (force; it may be unmerged on reject).
     await _git(ws.repo_root, "branch", "-D", ws.branch)
+
+
+async def prune_change(change_id: str, *, branch: str | None = None,
+                       worktree_path: str | Path | None = None,
+                       repo_root: str | Path | None = None) -> None:
+    """Best-effort cleanup of a change's worktree + branch — tolerant of a draft
+    that crashed before recording them in the DB (branch/worktree_path may be
+    None, yet a `rambo/dev-<id>` branch can still exist on disk). Each step is
+    independently guarded; never raises."""
+    root = resolve_repo_root(repo_root)
+    branch = branch or f"rambo/dev-{change_id}"
+    if worktree_path:
+        try:
+            await _git(root, "worktree", "remove", "--force", str(worktree_path))
+        except Exception:
+            pass
+    try:
+        await _git(root, "worktree", "prune")
+    except Exception:
+        pass
+    if branch not in _PROTECTED:
+        try:
+            await _git(root, "branch", "-D", branch)
+        except Exception:
+            pass

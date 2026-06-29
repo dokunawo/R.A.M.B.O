@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 245 commits:
+Last 14 days — 247 commits:
 
-- `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (17 minutes ago)`
+- `da8b4a2 fix(dev-lane): self-heal stuck drafting changes (14 seconds ago)`
+- `08dae9b feat(voice): expand abbreviations before TTS (mph -> miles per hour) (25 minutes ago)`
+- `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (42 minutes ago)`
 - `18de5e9 feat(cmc): render daily Word doc as tables with section headers (2 hours ago)`
 - `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (3 hours ago)`
 - `42fceec chore(betting): record alt-K calibration backtest result (3 hours ago)`
-- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (3 hours ago)`
-- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (3 hours ago)`
-- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (3 hours ago)`
-- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (3 hours ago)`
+- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (4 hours ago)`
+- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (4 hours ago)`
+- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (4 hours ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (4 hours ago)`
 - `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (4 hours ago)`
 - `a330c2a feat(betting): binomial K-distribution model + opponent modifier (4 hours ago)`
 - `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (4 hours ago)`
 - `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (4 hours ago)`
-- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (4 hours ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (5 hours ago)`
 - `070e6e2 chore(betting): record learned-model May backtest vs baseline (7 hours ago)`
 - `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (7 hours ago)`
 - `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (7 hours ago)`
 - `99e03ee feat(betting): Anchored + LogReg predictors (7 hours ago)`
 - `1db8f5c feat(betting): point-in-time features + training-set builder (7 hours ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (7 hours ago)`
-- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (7 hours ago)`
-- … and 225 more
+- … and 227 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

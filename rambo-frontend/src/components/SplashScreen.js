@@ -1318,7 +1318,8 @@ export default function SplashScreen({
       {fading && <div className="phase-flash" />}
 
       {phase === "main" && (
-        <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState} />
+        <VoiceControls micActive={micActive} toggleMic={toggleMic} convState={convState}
+          onPower={() => setShuttingDown(true)} />
       )}
 
       {phase === "main" && <CommandPalette />}
@@ -1375,9 +1376,6 @@ export default function SplashScreen({
           <SoundGate />
           <SettingsPanel />
           <SpotifyWidget />
-
-          <button className="hud-power-btn" onClick={() => setShuttingDown(true)}
-            title='Shut down to standby (or say "shut down")'>⏻</button>
 
           {(Object.keys(responses).length > 0 || result) && (
             <button className="hud-clear-btn" onClick={clearAll}

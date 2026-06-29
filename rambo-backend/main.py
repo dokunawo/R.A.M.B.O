@@ -207,6 +207,9 @@ async def _init_factory():
 async def _init_dev_agent():
     await _dev_repo.init_db()
     rambo.set_dev_agent(_dev_repo)
+    # Self-heal: clear any draft that crashed mid-run on a prior boot so it stops
+    # lingering in the Changes history (prunes its dangling rambo/dev-<id> branch).
+    await dev_session.sweep_stale_drafts(_dev_repo)
 
 
 @app.on_event("startup")
