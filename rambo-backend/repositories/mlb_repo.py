@@ -44,6 +44,18 @@ class MlbRepo:
             "AND home_score IS NOT NULL AND away_score IS NOT NULL "
             "ORDER BY official_date, game_pk", (start, end)))
 
+    def training_games(self, season: int, before_date: str) -> list[dict]:
+        """Full final-game rows strictly before `before_date` (same season) for
+        model training — includes probable-pitcher ids and final scores."""
+        return _dicts(self.conn.execute(
+            "SELECT game_pk, official_date, home_team_id, away_team_id, "
+            "home_probable_pitcher_id, away_probable_pitcher_id, "
+            "home_score, away_score FROM games "
+            "WHERE official_date < ? "
+            "AND CAST(strftime('%Y', official_date) AS INTEGER)=? "
+            "AND home_score IS NOT NULL AND away_score IS NOT NULL "
+            "ORDER BY official_date, game_pk", (before_date, season)))
+
     # -- odds (latest snapshot via the view) ---------------------------------
 
     def odds_history(self, game_pk: int, market: str = "moneyline") -> list[dict]:
