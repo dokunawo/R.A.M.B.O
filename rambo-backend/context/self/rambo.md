@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 286 commits:
+Last 14 days — 287 commits:
 
-- `40f3369 feat(betting): PrizePicks tier board (goblin/standard/demon ladder + P(over)) (4 minutes ago)`
-- `e678187 feat(betting): tier-aware latest_props (standard default, per-tier dedup) (8 minutes ago)`
-- `32ce83d docs(betting): correct tier spec — snapshot_key must include odds_type (9 minutes ago)`
-- `560541e feat(betting): ingest all PrizePicks tiers (goblin/standard/demon) (14 minutes ago)`
-- `b8b6837 feat(betting): add prop_lines.odds_type column; _insert_prop writes it (20 minutes ago)`
-- `0d83704 docs(betting): PrizePicks demon/goblin tier board implementation plan (24 minutes ago)`
-- `23f3d1a docs(betting): PrizePicks demon/goblin tier board design spec (27 minutes ago)`
-- `6f6e97c feat(betting): auto-fallback to paid PrizePicks actor when free pull empty (46 minutes ago)`
-- `59cc3f2 feat(betting): wire prizepicks_paid source; verify normalizer flow-through (51 minutes ago)`
-- `2afa030 feat(betting): fetch_mlb_props_paid — spend-guarded run + never-raise (55 minutes ago)`
-- `ecfc127 feat(betting): defensive adapter for paid PrizePicks actor items (58 minutes ago)`
-- `e96985b feat(betting): env-driven paid PrizePicks Apify actor config (62 minutes ago)`
-- `2284651 docs(betting): PrizePicks paid Apify fallback implementation plan (64 minutes ago)`
-- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (67 minutes ago)`
+- `3980bc3 feat(betting): /betting/prizepicks-tiers endpoint (8 minutes ago)`
+- `40f3369 feat(betting): PrizePicks tier board (goblin/standard/demon ladder + P(over)) (11 minutes ago)`
+- `e678187 feat(betting): tier-aware latest_props (standard default, per-tier dedup) (15 minutes ago)`
+- `32ce83d docs(betting): correct tier spec — snapshot_key must include odds_type (17 minutes ago)`
+- `560541e feat(betting): ingest all PrizePicks tiers (goblin/standard/demon) (22 minutes ago)`
+- `b8b6837 feat(betting): add prop_lines.odds_type column; _insert_prop writes it (28 minutes ago)`
+- `0d83704 docs(betting): PrizePicks demon/goblin tier board implementation plan (31 minutes ago)`
+- `23f3d1a docs(betting): PrizePicks demon/goblin tier board design spec (34 minutes ago)`
+- `6f6e97c feat(betting): auto-fallback to paid PrizePicks actor when free pull empty (54 minutes ago)`
+- `59cc3f2 feat(betting): wire prizepicks_paid source; verify normalizer flow-through (59 minutes ago)`
+- `2afa030 feat(betting): fetch_mlb_props_paid — spend-guarded run + never-raise (63 minutes ago)`
+- `ecfc127 feat(betting): defensive adapter for paid PrizePicks actor items (66 minutes ago)`
+- `e96985b feat(betting): env-driven paid PrizePicks Apify actor config (69 minutes ago)`
+- `2284651 docs(betting): PrizePicks paid Apify fallback implementation plan (71 minutes ago)`
+- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (74 minutes ago)`
 - `ad0a464 fix(betting): default best-leg book to "" not "FanDuel" to avoid mislabel (2 hours ago)`
 - `b27056c test(phase3): force web-search fallback in news/finance skill tests (2 hours ago)`
 - `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (2 hours ago)`
 - `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (2 hours ago)`
 - `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (2 hours ago)`
-- `08d24d6 feat(betting): alt-K slate board (ranked starters + priced thresholds) (2 hours ago)`
-- … and 266 more
+- … and 267 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

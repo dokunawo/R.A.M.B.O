@@ -98,8 +98,7 @@ def test_adapted_standard_item_lands_via_map_prizepicks(tmp_path):
     assert row["book"] == "prizepicks" and row["market"] == "HR" and row["line"] == 0.5
 
 
-def test_adapted_demon_item_still_skipped(tmp_path):
-    import sqlite3
+def test_adapted_demon_item_now_lands(tmp_path):
     from db.migrate import get_connection, apply_migrations
     from ingestion.normalize import map_prizepicks
 
@@ -109,4 +108,5 @@ def test_adapted_demon_item_still_skipped(tmp_path):
                                "stat_type": "Home Runs", "line": 1.5,
                                "odds_type": "demon"})
     map_prizepicks(conn, adapted, "2026-06-29T18:00:00Z")
-    assert conn.execute("SELECT COUNT(*) c FROM prop_lines").fetchone()["c"] == 0
+    row = conn.execute("SELECT odds_type, market FROM prop_lines").fetchone()
+    assert row is not None and row["odds_type"] == "demon" and row["market"] == "HR"
