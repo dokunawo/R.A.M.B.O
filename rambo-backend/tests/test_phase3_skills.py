@@ -27,6 +27,7 @@ def test_phase3_matchers(goal, expected):
 # ── News / finance reuse web_search (Option 1) ───────────────────
 @pytest.mark.asyncio
 async def test_news_skill_uses_web_search(monkeypatch):
+    monkeypatch.delenv("GUARDIAN_API_KEY", raising=False)  # force the web-search fallback path
     captured = {}
     async def _fake(goal, ctx):
         captured["goal"] = goal
@@ -39,6 +40,7 @@ async def test_news_skill_uses_web_search(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_finance_skill_uses_web_search(monkeypatch):
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)  # force the web-search fallback path
     async def _fake(goal, ctx):
         assert "NVDA" in goal
         return "NVDA $X, +2%"

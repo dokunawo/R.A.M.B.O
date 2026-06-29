@@ -10,7 +10,7 @@ import datetime
 import os
 from dataclasses import asdict
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from brains.ev.engine import daily_edge
 from brains.ev.market import REGISTRY
 from brains.ev.slip import build_slip, PRODUCT
@@ -312,3 +312,40 @@ def post_prizepicks_parlay(date: Optional[str] = None, market: str = "HR",
     sizes = (size,) if size else (2, 3, 4, 5, 6)
     return {"market": market.upper(), "date": d,
             "suggestions": suggest_entries(legs, sizes=sizes)}
+
+
+@router.get("/alt-k-board")
+def get_alt_k_board(date: Optional[str] = None) -> dict:
+    """Probable starters ranked by P(9+ K) with FanDuel + best-book alt-strikeout
+    odds and per-threshold EV (+ CMC prompt). Data-only."""
+    from brains.ev import alt_k
+    d = date or datetime.date.today().isoformat()
+    try:
+        return alt_k.alt_k_board(d)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"alt_k_board failed: {e}") from e
+
+
+@router.post("/alt-k/parlay")
+def post_alt_k_parlay(date: Optional[str] = None, book: str = "best",
+                      sizes: Optional[str] = None,
+                      body: Optional[dict] = Body(default=None)) -> dict:
+    """Auto-suggest alt-K parlays, or evaluate a manual leg list when body.legs
+    is provided. book in {best, fanduel}."""
+    from brains.ev import alt_k
+    d = date or datetime.date.today().isoformat()
+    try:
+        board = alt_k.alt_k_board(d, book=book)
+        legs = (body or {}).get("legs")
+        if legs:
+            return {"date": d, "book": book,
+                    "parlay": alt_k.manual_parlay(board, legs, book=book)}
+        size_tuple = (tuple(int(s) for s in sizes.split(",") if s.strip()) if sizes and sizes.strip() else (2, 3, 4))
+        if not size_tuple:
+            size_tuple = (2, 3, 4)
+        return {"date": d, "book": book,
+                "suggestions": alt_k.suggest_parlays(board, sizes=size_tuple, book=book)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"alt_k parlay failed: {e}") from e
