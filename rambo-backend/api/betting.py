@@ -300,6 +300,15 @@ def get_prizepicks_board(market: str, date: Optional[str] = None) -> dict:
     return prizepicks_board(d, market.upper())
 
 
+@router.get("/prizepicks-tiers")
+def get_prizepicks_tiers(market: str, date: Optional[str] = None) -> dict:
+    """PrizePicks goblin/standard/demon line ladder for a market, with model
+    P(over) per line. Data-only; no payout/EV (tiers' payouts aren't published)."""
+    from brains.ev.prizepicks_tiers import prizepicks_tiers
+    d = date or datetime.date.today().isoformat()
+    return prizepicks_tiers(d, market.upper())
+
+
 @router.post("/prizepicks/parlay")
 def post_prizepicks_parlay(date: Optional[str] = None, market: str = "HR",
                            size: Optional[int] = None) -> dict:
