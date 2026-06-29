@@ -156,6 +156,31 @@
   pointer-events: none;
 }
 
+/* Power button, stacked in the voice-bar column directly below the
+   "TAP OR SAY 'OPERATOR'" hint. */
+.vc-power-btn {
+  margin-top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--glass-bg, rgba(14, 15, 19, 0.15));
+  border: 1px solid rgba(232, 177, 90, 0.4);
+  color: var(--accent, #e8b15a);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: var(--glass-blur, blur(14px));
+  transition: background 200ms ease, box-shadow 200ms ease, color 200ms ease;
+}
+.vc-power-btn:hover {
+  color: var(--accent-glow, #ffd98a);
+  background: rgba(232, 177, 90, 0.14);
+  box-shadow: 0 0 20px rgba(232, 177, 90, 0.45);
+}
+
 .vc-hint-error {
   color: #ff8a8a;
   text-shadow: 0 0 8px rgba(255, 91, 91, 0.4);

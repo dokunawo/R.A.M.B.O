@@ -94,8 +94,9 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 246 commits:
+Last 14 days — 247 commits:
 
+- `da8b4a2 fix(dev-lane): self-heal stuck drafting changes (14 seconds ago)`
 - `08dae9b feat(voice): expand abbreviations before TTS (mph -> miles per hour) (25 minutes ago)`
 - `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (42 minutes ago)`
 - `18de5e9 feat(cmc): render daily Word doc as tables with section headers (2 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 246 commits:
 - `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (7 hours ago)`
 - `99e03ee feat(betting): Anchored + LogReg predictors (7 hours ago)`
 - `1db8f5c feat(betting): point-in-time features + training-set builder (7 hours ago)`
-- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (8 hours ago)`
-- … and 226 more
+- … and 227 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

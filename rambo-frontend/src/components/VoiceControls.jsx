@@ -240,7 +240,7 @@ export function usePageVoice({ onCommandCenter } = {}) {
   return { ...voice, voiceText, setVoiceText, speakRef, commandLog, clearCommandLog, executeCommand, busy };
 }
 
-export function VoiceControls({ micActive, toggleMic, convState }) {
+export function VoiceControls({ micActive, toggleMic, convState, onPower }) {
   // Volume now lives in the top-right Settings panel (gear icon). Voice commands
   // ("volume 50", "mute", …) still adjust it via setVolume in tryVolumeCommand.
   const isListening = convState === CONV_STATES.LISTENING;
@@ -293,6 +293,10 @@ export function VoiceControls({ micActive, toggleMic, convState }) {
       ) : !isActive ? (
         <span className="vc-hint">TAP OR SAY 'OPERATOR'</span>
       ) : null}
+      {onPower && (
+        <button className="vc-power-btn" onClick={onPower}
+          title='Shut down to standby (or say "shut down")'>⏻</button>
+      )}
     </div>
   );
 }
