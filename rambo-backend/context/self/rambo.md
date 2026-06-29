@@ -94,9 +94,10 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 225 commits:
+Last 14 days — 226 commits:
 
-- `5343cf4 docs(betting): spec learned moneyline model (4 minutes ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (3 minutes ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (8 minutes ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (9 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (10 hours ago)`
 - `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (10 hours ago)`
@@ -112,11 +113,10 @@ Last 14 days — 225 commits:
 - `b58785a docs: sync HANDOFF/ROADMAP to shipped work; ignore runtime data dir (14 hours ago)`
 - `1231bd3 fix(briefing): spoken briefing flows naturally, drops the garble (14 hours ago)`
 - `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (15 hours ago)`
-- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (15 hours ago)`
+- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (16 hours ago)`
 - `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (16 hours ago)`
 - `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (16 hours ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (16 hours ago)`
-- … and 205 more
+- … and 206 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
