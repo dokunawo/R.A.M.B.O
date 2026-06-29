@@ -94,7 +94,7 @@ def board_to_best_legs(board: dict, *, book: str = "best") -> dict[int, dict]:
         t, pr = max(priced, key=lambda tp: tp[1]["ev"])
         out[row["rank"]] = {
             "name": row["name"], "threshold": t["threshold"], "p": t["model_p"],
-            "price": pr["price"], "book": pr.get("book", "FanDuel"), "ev": pr["ev"]}
+            "price": pr["price"], "book": pr.get("book", ""), "ev": pr["ev"]}
     return out
 
 
@@ -128,7 +128,7 @@ def manual_parlay(board: dict, picks: list[dict], *, book: str = "best") -> dict
                     if pr is not None:
                         leg = {"name": row["name"], "threshold": t["threshold"],
                                "p": t["model_p"], "price": pr["price"],
-                               "book": pr.get("book", "FanDuel"), "ev": pr["ev"]}
+                               "book": pr.get("book", ""), "ev": pr["ev"]}
                     break
         if leg is None:
             missing.append({"name": pick.get("name"), "threshold": pick.get("threshold")})

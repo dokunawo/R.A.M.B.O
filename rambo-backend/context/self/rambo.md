@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 270 commits:
+Last 14 days — 271 commits:
 
-- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (7 minutes ago)`
-- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (12 minutes ago)`
-- `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (16 minutes ago)`
-- `08d24d6 feat(betting): alt-K slate board (ranked starters + priced thresholds) (20 minutes ago)`
-- `07d4729 feat(betting): join k_model ladder to alt-K odds (FanDuel + best book) (26 minutes ago)`
-- `3d2c307 feat(betting): alt-K per-leg + parlay EV math (29 minutes ago)`
-- `28d027b test(betting): verify alt-K event lands per-line SO_ALT prop rows (33 minutes ago)`
-- `cf22a90 feat(betting): pull pitcher_strikeouts_alternate as SO_ALT market (37 minutes ago)`
-- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (40 minutes ago)`
-- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (44 minutes ago)`
-- `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (59 minutes ago)`
-- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (65 minutes ago)`
-- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (71 minutes ago)`
-- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (76 minutes ago)`
-- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (81 minutes ago)`
-- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (87 minutes ago)`
+- `b27056c test(phase3): force web-search fallback in news/finance skill tests (3 minutes ago)`
+- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (10 minutes ago)`
+- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (14 minutes ago)`
+- `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (19 minutes ago)`
+- `08d24d6 feat(betting): alt-K slate board (ranked starters + priced thresholds) (23 minutes ago)`
+- `07d4729 feat(betting): join k_model ladder to alt-K odds (FanDuel + best book) (29 minutes ago)`
+- `3d2c307 feat(betting): alt-K per-leg + parlay EV math (32 minutes ago)`
+- `28d027b test(betting): verify alt-K event lands per-line SO_ALT prop rows (36 minutes ago)`
+- `cf22a90 feat(betting): pull pitcher_strikeouts_alternate as SO_ALT market (40 minutes ago)`
+- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (43 minutes ago)`
+- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (47 minutes ago)`
+- `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (62 minutes ago)`
+- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (68 minutes ago)`
+- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (74 minutes ago)`
+- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (79 minutes ago)`
+- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (84 minutes ago)`
+- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (2 hours ago)`
 - `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (2 hours ago)`
 - `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (2 hours ago)`
 - `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (2 hours ago)`
-- `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (3 hours ago)`
-- … and 250 more
+- … and 251 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
