@@ -94,13 +94,14 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 256 commits:
+Last 14 days — 257 commits:
 
-- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (5 minutes ago)`
-- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (11 minutes ago)`
-- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (16 minutes ago)`
-- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (25 minutes ago)`
-- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (29 minutes ago)`
+- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (5 minutes ago)`
+- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (10 minutes ago)`
+- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (16 minutes ago)`
+- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (21 minutes ago)`
+- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (30 minutes ago)`
+- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (34 minutes ago)`
 - `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (2 hours ago)`
 - `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (2 hours ago)`
 - `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (3 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 256 commits:
 - `d8d1a6f feat(betting): leak-free strikeout calibration backtest (10 hours ago)`
 - `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (10 hours ago)`
 - `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (10 hours ago)`
-- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (10 hours ago)`
-- … and 236 more
+- … and 237 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
