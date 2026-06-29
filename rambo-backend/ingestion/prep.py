@@ -22,6 +22,27 @@ def _has_stats(conn, mlb_id, season, group) -> bool:
         (mlb_id, season, group)).fetchone() is not None
 
 
+def _resolve_prizepicks_game_pks(conn: sqlite3.Connection, date: str) -> int:
+    """Set game_pk on PrizePicks props whose resolved player is on `date`'s slate,
+    so they survive the slate date-filter. Returns the number updated."""
+    rows = conn.execute(
+        "SELECT id, mlb_id FROM prop_lines WHERE book='prizepicks' "
+        "AND game_pk IS NULL AND mlb_id IS NOT NULL").fetchall()
+    updated = 0
+    for r in rows:
+        g = conn.execute(
+            "SELECT g.game_pk FROM games g JOIN players p ON p.mlb_id=? "
+            "WHERE g.official_date=? AND (g.home_team_id=p.current_team_id "
+            "OR g.away_team_id=p.current_team_id) LIMIT 1",
+            (r["mlb_id"], date)).fetchone()
+        if g:
+            conn.execute("UPDATE prop_lines SET game_pk=? WHERE id=?",
+                         (g["game_pk"], r["id"]))
+            updated += 1
+    conn.commit()
+    return updated
+
+
 def prep_slate(conn: sqlite3.Connection, date: str | None = None,
                with_props: bool = True) -> dict:
     """Pull + normalize the full multi-source board for `date`. Returns a summary."""
@@ -43,17 +64,17 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     summary["recent_pitching"] = pull_source(
         conn, "recent_stats", {"group": "pitching", "end_date": d})["items"]
     if with_props:
-        # DK Pick6 props come from a third-party Apify actor that can go down (it
-        # may "succeed" yet return 0). Guard it so a dead source can't abort the
-        # whole slate, and report the count so callers can warn when it's empty.
+        # PrizePicks props from a third-party API that can go down. Guard it so a
+        # dead source can't abort the whole slate, and report the count so callers
+        # can warn when it's empty.
         try:
-            summary["props"] = pull_source(conn, "props", {"overrides": {"maxItems": 100}})["items"]
+            summary["props"] = pull_source(conn, "prizepicks", {})["items"]
         except Exception as exc:
-            logger.warning("DK Pick6 props pull failed: %s", exc)
+            logger.warning("PrizePicks props pull failed: %s", exc)
             summary["props"] = 0
         if not summary["props"]:
-            logger.warning("DK Pick6 props returned 0 — source may be down; "
-                           "Pick6 boards (HR/HRR/SB/K) will be stale or empty.")
+            logger.warning("PrizePicks props returned 0 — source may be down; "
+                           "boards (HR/SO/TB/H/HRR/SB) will be stale or empty.")
     normalize_pending(conn)
 
     # confirmed lineups for each scheduled game
@@ -76,6 +97,7 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     # confirm the player's team is actually playing today), then top up the
     # per-player stats the models need
     summary["resolved"] = IdResolver(conn).run_unresolved_props()
+    summary["pp_game_pks"] = _resolve_prizepicks_game_pks(conn, d)
     from ingestion.link import link_prop_games
     summary["linked"] = link_prop_games(conn, d)
     batters = [r[0] for r in conn.execute(
