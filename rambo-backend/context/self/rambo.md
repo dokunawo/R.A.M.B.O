@@ -94,16 +94,17 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 237 commits:
+Last 14 days — 238 commits:
 
-- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (7 minutes ago)`
-- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (13 minutes ago)`
-- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (17 minutes ago)`
-- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (21 minutes ago)`
-- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (44 minutes ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (8 minutes ago)`
+- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (15 minutes ago)`
+- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (21 minutes ago)`
+- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (25 minutes ago)`
+- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (29 minutes ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (52 minutes ago)`
 - `070e6e2 chore(betting): record learned-model May backtest vs baseline (3 hours ago)`
-- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (3 hours ago)`
-- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (3 hours ago)`
+- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (4 hours ago)`
+- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (4 hours ago)`
 - `99e03ee feat(betting): Anchored + LogReg predictors (4 hours ago)`
 - `1db8f5c feat(betting): point-in-time features + training-set builder (4 hours ago)`
 - `88d6727 feat(betting): pure-Python logistic regression (zero deps) (4 hours ago)`
@@ -111,12 +112,11 @@ Last 14 days — 237 commits:
 - `5343cf4 docs(betting): spec learned moneyline model (4 hours ago)`
 - `6478758 Fix walkforward boundary string normalization and remove unused imports (13 hours ago)`
 - `872843d Fix The Odds API historical endpoint timestamp normalization (13 hours ago)`
-- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (13 hours ago)`
+- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (14 hours ago)`
 - `ece5335 feat(betting): walk-forward moneyline backtest harness (14 hours ago)`
 - `177ec49 feat(betting): two-snapshot historical odds backfill (14 hours ago)`
 - `a5065d5 feat(betting): historical moneyline fetch via The Odds API (14 hours ago)`
-- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (14 hours ago)`
-- … and 217 more
+- … and 218 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

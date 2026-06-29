@@ -12,6 +12,7 @@ from brains.ev.features import (TEMP_PARKS, LG_BARREL, LG_HARD_HIT,
 from brains.ev.hr_model import hr_probability
 from brains.ev.count_model import poisson_prob_over
 from brains.ev.slip import PRODUCT
+from brains.ev.k_model import k_projection
 
 DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
 PLAYER_WATCH_SIZE = 11
@@ -157,27 +158,27 @@ def player_watch(date: str, repo=None, *, count: int = PLAYER_WATCH_SIZE,
             conn.close()
 
 
-# ── Strikeout Watch (alt-K board: P(8+/9+/10+) per probable starter) ────────
-def _sw_row(rank: int, feat, mean: float) -> dict:
-    return {
-        "rank": rank, "name": (feat.name or "").upper(), "team": feat.team_abbr,
-        "opponent": feat.opponent_abbr, "k_mean": round(mean, 1),
-        "p8": round(poisson_prob_over(mean, 8) * 100),
-        "p9": round(poisson_prob_over(mean, 9) * 100),
-        "p10": round(poisson_prob_over(mean, 10) * 100),
-        "form": feat.support,
+# ── Strikeout Watch (alt-K board: full P(1+..10+) ladder per probable starter) ──
+def _sw_row(rank: int, proj: dict) -> dict:
+    row = {
+        "rank": rank, "name": (proj["name"] or "").upper(),
+        "team": proj["team_abbr"], "opponent": proj["opponent_abbr"],
+        "k_rate": round(proj["k_rate"], 3),
+        "batters_faced": round(proj["batters_faced"], 1),
+        "k_mean": round(proj["k_mean"], 1),
     }
+    for j, p in proj["ladder"].items():
+        row[f"p{j}"] = round(p * 100)
+    return row
 
 
 def _sw_line(r: dict) -> str:
     head = f"{r['rank']}. {r['name']}"
     if r["team"] or r["opponent"]:
         head += f" ({r['team']} vs {r['opponent']})"
-    parts = [head, f"8+ {r['p8']}% · 9+ {r['p9']}% · 10+ {r['p10']}%",
-             f"proj {r['k_mean']} K"]
-    if r["form"]:
-        parts.append(r["form"])
-    return " — ".join(parts)
+    ladder = " · ".join(f"{j}+ {r[f'p{j}']}%" for j in range(1, 11) if f"p{j}" in r)
+    return " — ".join([head, ladder,
+                       f"rate {r['k_rate']} · {r['batters_faced']} BF · proj {r['k_mean']} K"])
 
 
 def _sw_prompt(rows: list[dict], as_of, book) -> str:
@@ -192,23 +193,32 @@ def _sw_prompt(rows: list[dict], as_of, book) -> str:
         "dust, a gold crown, gritty brush/graffiti lettering, neon-gold accents. "
         'Big brush title at the top: "STRIKEOUT WATCH". Moody, high-end, premium.\n\n'
         f"LAYOUT: a clean numbered list of {len(rows)} starting pitchers. Each row "
-        "shows the pitcher (team vs opponent), the probabilities of 8+, 9+ and 10+ "
-        "strikeouts, the projected K total, and recent form. Even spacing.\n\n"
-        "KEY: 8+/9+/10+ % = our model's probability of that many strikeouts (Poisson "
-        "on the pitcher's per-start K rate, blended with last-15 form) — pick your "
-        "alt-strikeout line from the arms at the top. These are probabilities, NOT "
-        "guarantees. Figures are model-based.\n\n"
+        "shows the pitcher (team vs opponent), the full ladder of 1+ through 10+ "
+        "strikeout probabilities, the expected K rate, batters faced, and projected K "
+        "total. Even spacing.\n\n"
+        "KEY: N+ % = our model's probability of at least N strikeouts (Binomial on the "
+        "pitcher's K rate x batters faced, opponent-adjusted) — pick your alt-strikeout "
+        "line from the arms at the top. These are probabilities, NOT guarantees.\n\n"
         "CRITICAL: reproduce ALL text below EXACTLY as written — do not change, "
         "abbreviate, reorder, add, or invent any name, team, number, %, or stat.\n\n"
         f"PITCHERS:\n{body}"
     )
 
 
+def _opp_team_id(repo, game_pk: int, pitcher_team_abbr: str) -> int | None:
+    """The opposing team's id for a probable starter (the side the pitcher is NOT on)."""
+    g = repo.game(game_pk) or {}
+    if g.get("home_team_abbr") == pitcher_team_abbr:
+        return g.get("away_team_id")
+    if g.get("away_team_abbr") == pitcher_team_abbr:
+        return g.get("home_team_id")
+    return None
+
+
 def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
                     as_of: str | None = None, book: str | None = None) -> dict:
-    """Top-`count` probable starters ranked by P(9+ strikeouts) — the alt-K board
-    for building strikeout parlays. Scores every probable starter with the Poisson
-    K model (per-start K rate + last-15)."""
+    """Top-`count` probable starters by P(9+ K) — the alt-K board, now with the full
+    P(1+..10+) ladder from the opponent-adjusted rate x batters-faced model."""
     import json as _json
     repo, conn = _open(repo)
     try:
@@ -220,9 +230,6 @@ def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
             if mid in seen:
                 continue
             seen.add(mid)
-            # Skip openers/relievers with too few starts — K ÷ gamesStarted blows up
-            # on a tiny sample (e.g. a reliever with 33 K and 1 start), which would
-            # otherwise pollute the board with fake 30-K projections.
             rows_season = repo.player_season(mid, season, "pitching")
             try:
                 gs = float((_json.loads(rows_season[0]["stats"]).get("season") or {}).get("gamesStarted") or 0)
@@ -230,17 +237,17 @@ def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
                 gs = 0
             if gs < min_starts:
                 continue
-            feat = build_count_features_core(
-                repo, date, mid, s.get("name") or "", stat_keys=["strikeOuts"],
-                label="K", group="pitching", games_key="gamesStarted", use_splits=False)
-            if feat is None or feat.per_game_mean <= 0:
+            starter = {
+                "mlb_id": mid, "name": s.get("name") or "",
+                "team_abbr": s.get("team_abbr", ""), "opponent_abbr": s.get("opponent_abbr", ""),
+                "opponent_team_id": _opp_team_id(repo, s.get("game_pk"), s.get("team_abbr", "")),
+            }
+            proj = k_projection(repo, date, starter)
+            if proj is None or proj["k_mean"] <= 0:
                 continue
-            mean = min(feat.per_game_mean, 13.0)   # sanity clamp — no starter truly averages >13 K/start
-            feat.team_abbr = feat.team_abbr or s.get("team_abbr", "")
-            feat.opponent_abbr = feat.opponent_abbr or s.get("opponent_abbr", "")
-            scored.append((feat, mean))
-        scored.sort(key=lambda t: poisson_prob_over(t[1], 9), reverse=True)
-        rows = [_sw_row(i + 1, f, m) for i, (f, m) in enumerate(scored[:count])]
+            scored.append(proj)
+        scored.sort(key=lambda p: p["ladder"].get(9, 0.0), reverse=True)
+        rows = [_sw_row(i + 1, p) for i, p in enumerate(scored[:count])]
         return {"title": "STRIKEOUT WATCH", "product": "Strikeout model (alt-K)",
                 "count": len(rows), "rows": rows,
                 "prompt": _sw_prompt(rows, as_of, book)}
