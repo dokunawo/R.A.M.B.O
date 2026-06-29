@@ -94,16 +94,17 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 259 commits:
+Last 14 days — 260 commits:
 
-- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (5 minutes ago)`
-- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (11 minutes ago)`
-- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (16 minutes ago)`
-- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (22 minutes ago)`
-- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (28 minutes ago)`
-- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (32 minutes ago)`
-- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (41 minutes ago)`
-- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (45 minutes ago)`
+- `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (15 minutes ago)`
+- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (21 minutes ago)`
+- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (27 minutes ago)`
+- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (32 minutes ago)`
+- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (37 minutes ago)`
+- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (43 minutes ago)`
+- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (47 minutes ago)`
+- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (56 minutes ago)`
+- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (61 minutes ago)`
 - `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (2 hours ago)`
 - `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (2 hours ago)`
 - `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (3 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 259 commits:
 - `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (10 hours ago)`
 - `42fceec chore(betting): record alt-K calibration backtest result (10 hours ago)`
 - `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (10 hours ago)`
-- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (10 hours ago)`
-- … and 239 more
+- … and 240 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
