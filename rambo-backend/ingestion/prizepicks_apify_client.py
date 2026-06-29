@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from config import prizepicks as cfg
-from ingestion.apify_client_wrapper import RunResult
+from ingestion.apify_client_wrapper import RunResult, run_actor
 
 logger = logging.getLogger("rambo.ingestion.prizepicks_apify")
 
@@ -48,3 +48,29 @@ def _adapt_item(raw: dict) -> Optional[dict]:
         "start_time": _first(raw, "start_time", "startTime", "start", "game_time"),
         "game_id": _first(raw, "game_id", "gameId", "game"),
     }
+
+
+def _empty() -> RunResult:
+    """Return an empty RunResult tagged with the SOURCE_ID."""
+    rid = f"{cfg.SOURCE_ID}:paid:empty"
+    return RunResult(actor_id=cfg.SOURCE_ID, run_id=rid, dataset_id=rid,
+                     items=[], item_count=0, estimated_cost_usd=0.0)
+
+
+def fetch_mlb_props_paid(*, client=None) -> RunResult:
+    """Run the env-configured paid PrizePicks actor, adapt items to the free
+    shape, tag actor_id='prizepicks' for map_prizepicks. 0 items if disabled or
+    on any error (never raises)."""
+    ac = cfg.paid_actor_config()
+    if ac is None:
+        return _empty()
+    try:
+        run = run_actor(ac, cfg.paid_actor_input(), client=client)
+        items = [a for a in (_adapt_item(r) for r in run.items) if a is not None]
+        return RunResult(actor_id=cfg.SOURCE_ID, run_id=run.run_id,
+                         dataset_id=run.dataset_id, items=items,
+                         item_count=len(items),
+                         estimated_cost_usd=run.estimated_cost_usd)
+    except Exception:
+        logger.exception("prizepicks paid fallback failed")
+        return _empty()
