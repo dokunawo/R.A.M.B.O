@@ -27,3 +27,21 @@ def test_backtest_endpoint_empty_range_ok(tmp_path, monkeypatch):
     body = r.json()
     assert body["n"] == 0
     assert "early" in body and "close" in body
+
+
+def test_backtest_endpoint_logreg_model_empty_ok(tmp_path, monkeypatch):
+    db = str(tmp_path / "t.db")
+    _seed(db)
+    monkeypatch.setenv("RAMBO_DB_PATH", db)
+    import importlib
+    import api.betting as betting
+    importlib.reload(betting)
+    from fastapi import FastAPI
+    app = FastAPI()
+    app.include_router(betting.router)
+    from fastapi.testclient import TestClient
+    client = TestClient(app)
+    r = client.get("/betting/backtest",
+                   params={"start": "2026-05-01", "end": "2026-05-02", "model": "logreg"})
+    assert r.status_code == 200
+    assert r.json()["n"] == 0

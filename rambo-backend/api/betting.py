@@ -275,14 +275,17 @@ def post_prep(date: Optional[str] = None, with_props: bool = True) -> dict:
 
 
 @router.get("/backtest")
-def backtest_endpoint(start: str, end: str) -> dict:
-    """Walk-forward moneyline backtest over [start,end]: calibration + ROI/CLV at the
-    early and closing line. Data-only; grades historical picks, never places bets."""
+def backtest_endpoint(start: str, end: str, model: str = "anchored") -> dict:
+    """Walk-forward moneyline backtest over [start,end] for `model`
+    ('anchored' = closed-form baseline | 'logreg' = learned). Data-only — grades
+    historical picks, never places bets."""
     from db.migrate import get_connection
     from repositories.mlb_repo import MlbRepo
     from brains.ev.walkforward import run
+    from brains.ev.ml.predictor import AnchoredPredictor, LogRegPredictor
+    predictor = LogRegPredictor() if model == "logreg" else AnchoredPredictor()
     conn = get_connection(_DB)
     try:
-        return run(MlbRepo(conn), start, end)
+        return run(MlbRepo(conn), start, end, predictor=predictor)
     finally:
         conn.close()
