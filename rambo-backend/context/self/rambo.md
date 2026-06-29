@@ -94,19 +94,20 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 262 commits:
+Last 14 days — 263 commits:
 
-- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (3 minutes ago)`
-- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (7 minutes ago)`
-- `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (23 minutes ago)`
-- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (28 minutes ago)`
-- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (34 minutes ago)`
-- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (39 minutes ago)`
-- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (44 minutes ago)`
-- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (50 minutes ago)`
-- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (55 minutes ago)`
-- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (64 minutes ago)`
-- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (68 minutes ago)`
+- `cf22a90 feat(betting): pull pitcher_strikeouts_alternate as SO_ALT market (4 minutes ago)`
+- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (7 minutes ago)`
+- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (11 minutes ago)`
+- `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (26 minutes ago)`
+- `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (32 minutes ago)`
+- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (38 minutes ago)`
+- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (43 minutes ago)`
+- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (48 minutes ago)`
+- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (54 minutes ago)`
+- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (58 minutes ago)`
+- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (68 minutes ago)`
+- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (72 minutes ago)`
 - `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (2 hours ago)`
 - `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (3 hours ago)`
 - `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (3 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 262 commits:
 - `08dae9b feat(voice): expand abbreviations before TTS (mph -> miles per hour) (7 hours ago)`
 - `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (8 hours ago)`
 - `18de5e9 feat(cmc): render daily Word doc as tables with section headers (9 hours ago)`
-- `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (10 hours ago)`
-- … and 242 more
+- … and 243 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
