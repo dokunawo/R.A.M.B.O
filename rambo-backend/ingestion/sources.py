@@ -24,7 +24,7 @@ from ingestion.raw_store import land_raw, pull_and_land
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
 STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats",
                     "lineups", "weather"}
-OTHER_SOURCES = {"odds_api", "odds_props", "statcast", "odds_api_historical", "prizepicks"}   # The Odds API (ml + props + historical) + Baseball Savant + PrizePicks
+OTHER_SOURCES = {"odds_api", "odds_props", "statcast", "odds_api_historical", "prizepicks", "prizepicks_paid"}   # The Odds API (ml + props + historical) + Baseball Savant + PrizePicks + PrizePicks Paid
 SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES | OTHER_SOURCES)
 
 
@@ -109,6 +109,9 @@ def pull_source(conn: sqlite3.Connection, source: str,
     elif source == "prizepicks":
         from ingestion import prizepicks_client as pp
         run = pp.fetch_mlb_props()
+    elif source == "prizepicks_paid":
+        from ingestion import prizepicks_apify_client as ppa
+        run = ppa.fetch_mlb_props_paid()
     else:
         raise KeyError(f"unknown source {source!r} (valid: {SOURCES})")
 

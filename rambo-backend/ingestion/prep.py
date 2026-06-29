@@ -10,10 +10,36 @@ import sqlite3
 
 from ingestion.sources import pull_source
 from ingestion.normalize import normalize_pending
+from config.prizepicks import paid_actor_config
 
 logger = logging.getLogger("rambo.ingestion.prep")
 
 _BATTER_MARKETS = ("HR", "H+R+RBI", "SB", "H")
+
+
+def _pull_props_with_fallback(conn, summary: dict) -> None:
+    """Free PrizePicks pull; auto-fall back to the paid Apify actor when free is
+    0/failed and an actor is configured. Records summary['props_source']."""
+    try:
+        summary["props"] = pull_source(conn, "prizepicks", {})["items"]
+    except Exception as exc:
+        logger.warning("PrizePicks props pull failed: %s", exc)
+        summary["props"] = 0
+    if summary["props"]:
+        summary["props_source"] = "free"
+        return
+    if paid_actor_config() is not None:
+        logger.warning("PrizePicks free pull empty — trying paid Apify fallback.")
+        try:
+            summary["props"] = pull_source(conn, "prizepicks_paid", {})["items"]
+        except Exception as exc:
+            logger.warning("PrizePicks paid fallback failed: %s", exc)
+        summary["props_source"] = "paid" if summary["props"] else "none"
+    else:
+        summary["props_source"] = "none"
+    if not summary["props"]:
+        logger.warning("PrizePicks returned 0 — boards (HR/SO/TB/H/HRR/SB) will be "
+                       "stale or empty.")
 
 
 def _has_stats(conn, mlb_id, season, group) -> bool:
@@ -67,14 +93,7 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
         # PrizePicks props from a third-party API that can go down. Guard it so a
         # dead source can't abort the whole slate, and report the count so callers
         # can warn when it's empty.
-        try:
-            summary["props"] = pull_source(conn, "prizepicks", {})["items"]
-        except Exception as exc:
-            logger.warning("PrizePicks props pull failed: %s", exc)
-            summary["props"] = 0
-        if not summary["props"]:
-            logger.warning("PrizePicks props returned 0 — source may be down; "
-                           "boards (HR/SO/TB/H/HRR/SB) will be stale or empty.")
+        _pull_props_with_fallback(conn, summary)
     normalize_pending(conn)
 
     # confirmed lineups for each scheduled game
