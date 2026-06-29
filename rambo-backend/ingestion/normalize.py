@@ -148,12 +148,13 @@ def _insert_odds(conn: sqlite3.Connection, o: dict) -> None:
 
 
 def _insert_prop(conn: sqlite3.Connection, p: dict) -> None:
+    p.setdefault("odds_type", "standard")
     conn.execute(
         """INSERT INTO prop_lines
              (game_pk, mlb_id, book, market, line, over_price, under_price,
-              multiplier, player_name_raw, captured_at)
+              multiplier, player_name_raw, captured_at, odds_type)
            VALUES (:game_pk,:mlb_id,:book,:market,:line,:over_price,:under_price,
-              :multiplier,:player_name_raw,:captured_at)
+              :multiplier,:player_name_raw,:captured_at,:odds_type)
            ON CONFLICT(snapshot_key) DO NOTHING;""",
         p,
     )
