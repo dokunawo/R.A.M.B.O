@@ -63,6 +63,8 @@ class ElevenLabsTTS:
         if not self.api_key or not self.voice_id:
             return None
         import asyncio
+        from speech_normalize import normalize_for_speech
+        text = normalize_for_speech(text)   # "mph" -> "miles per hour", etc.
         url = _API_URL.format(voice_id=self.voice_id)
         headers = {"xi-api-key": self.api_key, "accept": "audio/mpeg"}
         body = {"text": text, "model_id": self.model}
