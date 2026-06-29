@@ -109,6 +109,18 @@ class DevRepo:
     async def list_pending(self) -> list[dict]:
         return await self._list_status("pending_review")
 
+    async def list_drafting(self) -> list[dict]:
+        return await self._list_status("drafting")
+
+    async def delete(self, change_id: str) -> int:
+        """Remove a change row entirely (used to clear abandoned drafts). Returns
+        the number of rows deleted."""
+        async with aiosqlite.connect(self.db_path) as db:
+            cur = await db.execute(
+                "DELETE FROM code_changes WHERE id=?", (change_id,))
+            await db.commit()
+            return cur.rowcount
+
     async def list_recent(self, limit: int = 50) -> list[dict]:
         """All self-changes across every status, newest first — for the task-
         history panel's 'Changes' tab."""

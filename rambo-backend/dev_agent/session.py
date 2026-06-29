@@ -11,6 +11,7 @@ logic lives in one place.
 """
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import logging
 from pathlib import Path
@@ -123,15 +124,49 @@ async def reject_change(repo: DevRepo, change_id: str) -> dict:
     row = await repo.get(change_id)
     if row is None:
         return {"error": "not found"}
-    if row["status"] != "pending_review":
+    if row["status"] in ("merged", "rejected"):
         return {"error": f"not in rejectable state (is {row['status']})"}
-    ws = _ws_from_row(row)
+    # Prune any worktree/branch this change created. Tolerant of a draft that
+    # crashed before recording them (status still 'drafting', branch/worktree NULL
+    # in the DB yet a rambo/dev-<id> branch left on disk) — so a stuck draft can
+    # finally be rejected instead of lingering forever.
     try:
-        await gw.discard(ws)
+        await gw.prune_change(change_id, branch=row.get("branch"),
+                              worktree_path=row.get("worktree_path"))
     except Exception:
-        logger.exception("worktree cleanup failed on reject for %s", change_id)
+        logger.exception("cleanup failed on reject for %s", change_id)
     await repo.set_status(change_id, "rejected")
     return {"status": "rejected", "id": change_id}
+
+
+async def sweep_stale_drafts(repo: DevRepo, max_age_minutes: int = 60) -> int:
+    """Self-heal: clear `drafting` changes that never advanced (the draft crashed
+    or was interrupted mid-run). Any change still in `drafting` older than
+    `max_age_minutes` has its dangling branch/worktree pruned and its row deleted,
+    so it stops haunting the Changes history. Returns how many were swept.
+    Best-effort — never raises into the caller (e.g. startup)."""
+    try:
+        rows = await repo.list_drafting()
+    except Exception:
+        return 0
+    cutoff = _dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(minutes=max_age_minutes)
+    swept = 0
+    for row in rows:
+        try:
+            updated = _dt.datetime.fromisoformat(row.get("updated_at") or "")
+        except (ValueError, TypeError):
+            updated = None
+        # A fresh draft may be legitimately in flight — only sweep stale ones.
+        if updated is not None and updated > cutoff:
+            continue
+        try:
+            await gw.prune_change(row["id"], branch=row.get("branch"),
+                                  worktree_path=row.get("worktree_path"))
+            await repo.delete(row["id"])
+            swept += 1
+        except Exception:
+            logger.exception("failed to sweep stale draft %s", row.get("id"))
+    return swept
 
 
 async def escalate_change(repo: DevRepo, change_id: str) -> dict:
