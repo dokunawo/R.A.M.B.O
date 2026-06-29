@@ -27,3 +27,33 @@ FLEX = {
     5: {5: 10.0, 4: 2.0, 3: 0.4},
     6: {6: 25.0, 5: 2.0, 4: 0.4},
 }
+
+import json as _json
+import os as _os
+
+
+def paid_actor_input() -> dict:
+    """Apify run input for the paid PrizePicks actor. Bad JSON -> default."""
+    raw = _os.environ.get("PRIZEPICKS_APIFY_INPUT")
+    if not raw:
+        return {"league": "MLB"}
+    try:
+        val = _json.loads(raw)
+        return val if isinstance(val, dict) else {"league": "MLB"}
+    except (ValueError, TypeError):
+        return {"league": "MLB"}
+
+
+def paid_actor_config():
+    """ActorConfig for the env-configured paid PrizePicks Apify actor, or None
+    when PRIZEPICKS_APIFY_ACTOR is unset (fallback disabled)."""
+    actor = _os.environ.get("PRIZEPICKS_APIFY_ACTOR")
+    if not actor:
+        return None
+    from ingestion.apify_client_wrapper import ActorConfig
+    return ActorConfig(
+        actor_id=actor,
+        max_items=int(_os.environ.get("PRIZEPICKS_APIFY_MAX_ITEMS", "2000")),
+        price_per_1k=float(_os.environ.get("PRIZEPICKS_APIFY_PRICE_PER_1K", "0.10")),
+        max_cost_usd=float(_os.environ.get("PRIZEPICKS_APIFY_MAX_COST_USD", "2.00")),
+    )

@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 273 commits:
+Last 14 days — 274 commits:
 
-- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (3 minutes ago)`
-- `ad0a464 fix(betting): default best-leg book to "" not "FanDuel" to avoid mislabel (27 minutes ago)`
-- `b27056c test(phase3): force web-search fallback in news/finance skill tests (30 minutes ago)`
-- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (38 minutes ago)`
-- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (42 minutes ago)`
-- `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (46 minutes ago)`
-- `08d24d6 feat(betting): alt-K slate board (ranked starters + priced thresholds) (50 minutes ago)`
-- `07d4729 feat(betting): join k_model ladder to alt-K odds (FanDuel + best book) (56 minutes ago)`
-- `3d2c307 feat(betting): alt-K per-leg + parlay EV math (60 minutes ago)`
-- `28d027b test(betting): verify alt-K event lands per-line SO_ALT prop rows (63 minutes ago)`
-- `cf22a90 feat(betting): pull pitcher_strikeouts_alternate as SO_ALT market (67 minutes ago)`
-- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (70 minutes ago)`
-- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (74 minutes ago)`
+- `2284651 docs(betting): PrizePicks paid Apify fallback implementation plan (2 minutes ago)`
+- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (5 minutes ago)`
+- `ad0a464 fix(betting): default best-leg book to "" not "FanDuel" to avoid mislabel (29 minutes ago)`
+- `b27056c test(phase3): force web-search fallback in news/finance skill tests (32 minutes ago)`
+- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (40 minutes ago)`
+- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (44 minutes ago)`
+- `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (48 minutes ago)`
+- `08d24d6 feat(betting): alt-K slate board (ranked starters + priced thresholds) (52 minutes ago)`
+- `07d4729 feat(betting): join k_model ladder to alt-K odds (FanDuel + best book) (58 minutes ago)`
+- `3d2c307 feat(betting): alt-K per-leg + parlay EV math (62 minutes ago)`
+- `28d027b test(betting): verify alt-K event lands per-line SO_ALT prop rows (65 minutes ago)`
+- `cf22a90 feat(betting): pull pitcher_strikeouts_alternate as SO_ALT market (69 minutes ago)`
+- `830a898 docs(betting): alt-strikeout parlay builder implementation plan (72 minutes ago)`
+- `5cb1669 docs(betting): alt-strikeout parlay builder design spec (76 minutes ago)`
 - `243b4a3 feat(betting): prep pulls PrizePicks + resolves prop game_pk; retire dead Pick6 (2 hours ago)`
 - `335f0de feat(betting): /betting/prizepicks board + parlay endpoints (2 hours ago)`
 - `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (2 hours ago)`
 - `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (2 hours ago)`
 - `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (2 hours ago)`
 - `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (2 hours ago)`
-- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (2 hours ago)`
-- … and 253 more
+- … and 254 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
