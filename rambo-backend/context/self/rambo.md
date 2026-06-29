@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 250 commits:
+Last 14 days — 251 commits:
 
-- `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (20 minutes ago)`
-- `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (63 minutes ago)`
-- `4997450 feat(ui): move power button below "TAP OR SAY 'OPERATOR'" (5 hours ago)`
-- `da8b4a2 fix(dev-lane): self-heal stuck drafting changes (5 hours ago)`
-- `08dae9b feat(voice): expand abbreviations before TTS (mph -> miles per hour) (5 hours ago)`
-- `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (5 hours ago)`
-- `18de5e9 feat(cmc): render daily Word doc as tables with section headers (7 hours ago)`
-- `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (8 hours ago)`
-- `42fceec chore(betting): record alt-K calibration backtest result (8 hours ago)`
-- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (8 hours ago)`
-- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (8 hours ago)`
-- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (8 hours ago)`
-- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (9 hours ago)`
-- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (9 hours ago)`
-- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (9 hours ago)`
-- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (9 hours ago)`
-- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (9 hours ago)`
-- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (9 hours ago)`
-- `070e6e2 chore(betting): record learned-model May backtest vs baseline (12 hours ago)`
-- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (12 hours ago)`
-- … and 230 more
+- `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (64 minutes ago)`
+- `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (84 minutes ago)`
+- `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (2 hours ago)`
+- `4997450 feat(ui): move power button below "TAP OR SAY 'OPERATOR'" (6 hours ago)`
+- `da8b4a2 fix(dev-lane): self-heal stuck drafting changes (6 hours ago)`
+- `08dae9b feat(voice): expand abbreviations before TTS (mph -> miles per hour) (6 hours ago)`
+- `ee1f19b fix(startup): stop the duplicate R.A.M.B.O tab on boot (6 hours ago)`
+- `18de5e9 feat(cmc): render daily Word doc as tables with section headers (8 hours ago)`
+- `5de319a Fix k_projection correctness, BF rendering, and test date hygiene (9 hours ago)`
+- `42fceec chore(betting): record alt-K calibration backtest result (9 hours ago)`
+- `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (9 hours ago)`
+- `d8d1a6f feat(betting): leak-free strikeout calibration backtest (9 hours ago)`
+- `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (10 hours ago)`
+- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (10 hours ago)`
+- `9d8f998 feat(betting): point-in-time opponent K% + pitcher K/BF reads (10 hours ago)`
+- `a330c2a feat(betting): binomial K-distribution model + opponent modifier (10 hours ago)`
+- `89d6a53 docs(betting): implementation plan for alt-K board phase 1 (10 hours ago)`
+- `d2c4b5f docs(betting): spec alt-K board phase 1 (model + calibration) (10 hours ago)`
+- `4782c70 Apply 6 minor code review fixes: explicit None checks for ERA (0.00 ERA), defensive empty-X guard in logreg.fit, docstring for coefficients standardization note, backtest verdict dict safety, remove redundant TestClient import, and last_fit_date assertion. (10 hours ago)`
+- `070e6e2 chore(betting): record learned-model May backtest vs baseline (13 hours ago)`
+- … and 231 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
