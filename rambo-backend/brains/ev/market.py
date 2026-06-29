@@ -35,7 +35,7 @@ class HRMarket:
     market_key = "hr"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
-        props = [p for p in repo.latest_props(market="HR", resolved_only=True)
+        props = [p for p in repo.latest_props(market="HR", resolved_only=True, official_date=date)
                  if p["line"] == 0.5 and p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:
@@ -62,7 +62,7 @@ class HRRMarket:
     market_key = "hrr"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
-        props = [p for p in repo.latest_props(market="H+R+RBI", resolved_only=True)
+        props = [p for p in repo.latest_props(market="H+R+RBI", resolved_only=True, official_date=date)
                  if p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:
@@ -80,7 +80,7 @@ class SBMarket:
     market_key = "sb"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
-        props = [p for p in repo.latest_props(market="SB", resolved_only=True)
+        props = [p for p in repo.latest_props(market="SB", resolved_only=True, official_date=date)
                  if p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:
@@ -99,7 +99,7 @@ class KMarket:
     market_key = "k"
 
     def raw_picks(self, repo, date: str) -> list[Pick]:
-        props = [p for p in repo.latest_props(market="SO", resolved_only=True)
+        props = [p for p in repo.latest_props(market="SO", resolved_only=True, official_date=date)
                  if p["multiplier"]]
         picks: list[Pick] = []
         for prop in props:

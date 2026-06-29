@@ -99,7 +99,12 @@ class MlbRepo:
 
     def latest_props(self, game_pk: Optional[int] = None,
                      market: Optional[str] = None,
-                     resolved_only: bool = True) -> list[dict]:
+                     resolved_only: bool = True,
+                     official_date: Optional[str] = None) -> list[dict]:
+        # `official_date` restricts to props whose game is on that date — without it
+        # the latest-per-player snapshot leaks STALE props (a player DK no longer
+        # offers keeps their old prop as "latest"), so yesterday's hitters reappear
+        # on today's board even when their team isn't playing.
         q = """
             SELECT p.* FROM prop_lines p
             JOIN (
@@ -120,6 +125,9 @@ class MlbRepo:
             q += " AND p.market=?"; params.append(market)
         if resolved_only:
             q += " AND p.mlb_id IS NOT NULL"
+        if official_date is not None:
+            q += (" AND p.game_pk IN (SELECT game_pk FROM games "
+                  "WHERE official_date=?)"); params.append(official_date)
         q += " ORDER BY p.market, p.player_name_raw"
         return _dicts(self.conn.execute(q, params))
 

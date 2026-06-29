@@ -43,7 +43,17 @@ def prep_slate(conn: sqlite3.Connection, date: str | None = None,
     summary["recent_pitching"] = pull_source(
         conn, "recent_stats", {"group": "pitching", "end_date": d})["items"]
     if with_props:
-        summary["props"] = pull_source(conn, "props", {"overrides": {"maxItems": 100}})["items"]
+        # DK Pick6 props come from a third-party Apify actor that can go down (it
+        # may "succeed" yet return 0). Guard it so a dead source can't abort the
+        # whole slate, and report the count so callers can warn when it's empty.
+        try:
+            summary["props"] = pull_source(conn, "props", {"overrides": {"maxItems": 100}})["items"]
+        except Exception as exc:
+            logger.warning("DK Pick6 props pull failed: %s", exc)
+            summary["props"] = 0
+        if not summary["props"]:
+            logger.warning("DK Pick6 props returned 0 — source may be down; "
+                           "Pick6 boards (HR/HRR/SB/K) will be stale or empty.")
     normalize_pending(conn)
 
     # confirmed lineups for each scheduled game

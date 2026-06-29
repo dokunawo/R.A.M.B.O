@@ -15,7 +15,7 @@ def _seed(conn):
                  "as_of_date, scraped_at) VALUES (592450,2026,'hitting',?,'mlb','2026-06-26',?)",
                  (json.dumps(stats), now))
     conn.execute("INSERT INTO prop_lines (game_pk, mlb_id, book, market, line, multiplier, "
-                 "player_name_raw, captured_at) VALUES (NULL,592450,'dk_pick6','HR',0.5,2.5,"
+                 "player_name_raw, captured_at) VALUES (999,592450,'dk_pick6','HR',0.5,2.5,"
                  "'Aaron Judge','2026-06-26T18:00Z')")
 
 def test_hrmarket_builds_pick(tmp_path):
@@ -34,6 +34,19 @@ def test_hrmarket_builds_pick(tmp_path):
 
 def test_registry_has_hr():
     assert "hr" in REGISTRY and REGISTRY["hr"].market_key == "hr"
+
+def test_stale_prop_from_other_date_excluded(tmp_path):
+    # A player whose LATEST prop is for an earlier game (their team isn't playing
+    # today) must NOT appear on today's board — the stale-prop leak that made
+    # yesterday's home-run names reappear.
+    conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
+    _seed(conn)  # player 592450 + game 999 on 2026-06-26 + a 06-26 HR prop
+    # today's slate is a DIFFERENT date with no game for this player's team
+    conn.execute("INSERT INTO games (game_pk, official_date, home_team_id, away_team_id, "
+                 "home_team_abbr, away_team_abbr, scraped_at) "
+                 "VALUES (1001,'2026-06-27',120,121,'WSH','BAL','2026-06-27T00:00:00Z')")
+    assert HRMarket().raw_picks(MlbRepo(conn), "2026-06-26")  # present on its own date
+    assert HRMarket().raw_picks(MlbRepo(conn), "2026-06-27") == []  # excluded on a later date
 
 def test_null_multiplier_prop_skipped(tmp_path):
     conn = get_connection(str(tmp_path / "t.db")); apply_migrations(conn, "db/migrations")
