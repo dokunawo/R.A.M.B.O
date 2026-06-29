@@ -107,3 +107,35 @@ def evaluate_game(repo, season: int, g: dict) -> dict | None:
         "diff": anchored_home - book_home,
         "home_support": home_support, "away_support": away_support,
     }
+
+
+def evaluate_game_asof(repo, season: int, g: dict, before_date: str) -> dict | None:
+    """Point-in-time twin of evaluate_game: builds team-run and starter-ERA
+    features from data STRICTLY BEFORE `before_date` (no leakage), anchors to the
+    given de-vigged line, and returns the same dict shape. None when as-of team
+    run data is missing. Used by the walk-forward backtest."""
+    hr = repo.team_runs_asof(g["home_team_id"], season, before_date)
+    ar = repo.team_runs_asof(g["away_team_id"], season, before_date)
+    if not hr or not ar:
+        return None
+    home_era = repo.pitcher_era_asof(g["home_probable_pitcher_id"], season, before_date)
+    away_era = repo.pitcher_era_asof(g["away_probable_pitcher_id"], season, before_date)
+    hg, ag = hr["games_played"], ar["games_played"]
+    if home_era and away_era and hg and ag:
+        exp_home = expected_runs(hr["runs_scored"] / hg, away_era)
+        exp_away = expected_runs(ar["runs_scored"] / ag, home_era)
+        model_home = winprob_from_runs(exp_home, exp_away)
+    else:
+        model_home = matchup_winprob(
+            pythag_winpct(hr["runs_scored"], hr["runs_allowed"]),
+            pythag_winpct(ar["runs_scored"], ar["runs_allowed"]))
+    book_home, book_away = devig_two_way(g["home_price"], g["away_price"])
+    anchored_home = market_anchored_prob(model_home, book_home)
+    return {
+        "game_pk": g["game_pk"],
+        "home_abbr": g["home_team_abbr"], "away_abbr": g["away_team_abbr"],
+        "home_price": g["home_price"], "away_price": g["away_price"],
+        "book_home": book_home, "book_away": book_away,
+        "model_home": anchored_home, "model_away": 1.0 - anchored_home,
+        "diff": anchored_home - book_home,
+    }

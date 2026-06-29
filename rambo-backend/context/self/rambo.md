@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 210 commits:
+Last 14 days — 232 commits:
 
-- `0857edf feat(cmc): wire line-shop, prop-shop + CLV into the daily run (71 minutes ago)`
-- `8fb2ebb feat(betting): player-prop line shopping — Pick6 vs sportsbook (Odds API props) (81 minutes ago)`
-- `14c4c61 feat(betting): backtest groundwork — results backfill + eval harness (2 hours ago)`
-- `1d11a02 feat(betting): CLV tracking — grade moneyline leans against the closing line (2 hours ago)`
-- `f4683e2 feat(betting): moneyline line shopping across all books (no new feed) (2 hours ago)`
-- `aa94085 feat(hud): push feedback works for voice-staged/approved pushes too (2 hours ago)`
-- `0be0b91 feat(hud): push-approval feedback — 'Staged' → 'Pushed ✓' then auto-clears (2 hours ago)`
-- `c1ad60d feat(betting): prop→game linking + team confirmation; harden Pick6 MLB filter (3 hours ago)`
-- `baf4ac6 feat(ui): cinematic shutdown/standby sequence + tabbed task-history panel (3 hours ago)`
-- `76d71bd feat(dev-lane): full-suite test gate before a self-change merge (4 hours ago)`
-- `d4331e1 feat(skills): voice self-review — "Operator, review the auth module" (5 hours ago)`
-- `58177b5 feat(briefing): spoken briefing reads every section, not just a terse summary (5 hours ago)`
-- `69fed12 feat(ui): boot briefing fires after Phase 2 cascade, as one spoken sequence (5 hours ago)`
-- `c59b003 feat(ui): /boards page — all four parlay boards on one screen (8 hours ago)`
-- `759d304 feat(ev): Hits & Total Bases Watch — P(1+ hit)/P(2+ TB) board for hits parlays (9 hours ago)`
-- `5dadebe feat(ev): Strikeout Watch — top-11 starters by P(8+/9+/10+ K) for alt-K parlays (9 hours ago)`
-- `5ac5d75 feat(ui): GIT dock — stage push / branch merge / PR merge from the rail (16 hours ago)`
-- `8ffe00a feat(git): operator-approved merges — local branch + GitHub PR (20 hours ago)`
-- `824b59b feat(git): operator-approved GitHub push (commit + push behind a confirm gate) (20 hours ago)`
-- `fc90ed9 feat(builds): auto-generate run.bat/run.sh launchers so builds run without IDLE (20 hours ago)`
-- … and 190 more
+- `070e6e2 chore(betting): record learned-model May backtest vs baseline (3 hours ago)`
+- `a1e5993 feat(betting): model param on /backtest + side-by-side compare CLI (3 hours ago)`
+- `baba5b1 refactor(betting): walkforward.run takes a pluggable predictor (3 hours ago)`
+- `99e03ee feat(betting): Anchored + LogReg predictors (3 hours ago)`
+- `1db8f5c feat(betting): point-in-time features + training-set builder (3 hours ago)`
+- `88d6727 feat(betting): pure-Python logistic regression (zero deps) (3 hours ago)`
+- `ff8e1c6 docs(betting): implementation plan for learned moneyline model (3 hours ago)`
+- `5343cf4 docs(betting): spec learned moneyline model (3 hours ago)`
+- `6478758 Fix walkforward boundary string normalization and remove unused imports (12 hours ago)`
+- `872843d Fix The Odds API historical endpoint timestamp normalization (13 hours ago)`
+- `2384d3c feat(betting): /betting/backtest endpoint + walkforward CLI (13 hours ago)`
+- `ece5335 feat(betting): walk-forward moneyline backtest harness (13 hours ago)`
+- `177ec49 feat(betting): two-snapshot historical odds backfill (13 hours ago)`
+- `a5065d5 feat(betting): historical moneyline fetch via The Odds API (13 hours ago)`
+- `9131a92 feat(betting): evaluate_game_asof — point-in-time moneyline eval (13 hours ago)`
+- `d339260 Fix pitcher_era_asof season filter leak (13 hours ago)`
+- `c28e0be feat(betting): point-in-time team_runs_asof + pitcher_era_asof (13 hours ago)`
+- `b8f6964 docs(betting): implementation plan for walk-forward backtest (13 hours ago)`
+- `ceb2cc7 docs(betting): grade ROI at early + closing line side by side (13 hours ago)`
+- `25769b2 docs(betting): spec walk-forward moneyline backtest (14 hours ago)`
+- … and 212 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

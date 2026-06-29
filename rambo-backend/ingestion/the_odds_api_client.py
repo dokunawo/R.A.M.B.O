@@ -106,3 +106,38 @@ def fetch_moneyline(date: Optional[str] = None, *,
     finally:
         if own:
             client.close()
+
+
+def fetch_moneyline_historical(snapshot_iso: str, *,
+                               client: Optional[httpx.Client] = None) -> RunResult:
+    """Historical MLB moneylines at a past instant. The Odds API wraps events in
+    {timestamp, data:[...]}; we unwrap `data` and stamp each event's _captured_at
+    from the response timestamp so the existing live normalizer handles them
+    verbatim. Costs the historical credit multiplier — logs requests-remaining."""
+    key = cfg.api_key()
+    if not key:
+        raise RuntimeError("THE_ODDS_API_KEY not set in .env")
+    own = client is None
+    client = client or httpx.Client(timeout=DEFAULT_TIMEOUT)
+    try:
+        url = f"{cfg.BASE}/historical/sports/{cfg.SPORT}/odds"
+        # Normalize +00:00 UTC offset to Z form for The Odds API compatibility
+        date_param = snapshot_iso.replace("+00:00", "Z")
+        params = {"apiKey": key, "regions": cfg.REGIONS, "markets": cfg.MARKETS,
+                  "oddsFormat": cfg.ODDS_FORMAT, "date": date_param}
+        resp = client.get(url, params=params)
+        resp.raise_for_status()
+        body = resp.json() or {}
+        snap_ts = body.get("timestamp") or snapshot_iso
+        events = body.get("data") or []
+        for e in events:
+            e["_captured_at"] = snap_ts
+        remaining = resp.headers.get("x-requests-remaining")
+        logger.info("the-odds-api historical %s: %d events (requests remaining: %s)",
+                    snapshot_iso, len(events), remaining)
+        run_id = f"{cfg.SOURCE_ID}:hist:{snap_ts}"
+        return RunResult(actor_id=cfg.SOURCE_ID, run_id=run_id, dataset_id=run_id,
+                         items=events, item_count=len(events), estimated_cost_usd=0.0)
+    finally:
+        if own:
+            client.close()

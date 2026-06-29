@@ -44,6 +44,18 @@ class MlbRepo:
             "AND home_score IS NOT NULL AND away_score IS NOT NULL "
             "ORDER BY official_date, game_pk", (start, end)))
 
+    def training_games(self, season: int, before_date: str) -> list[dict]:
+        """Full final-game rows strictly before `before_date` (same season) for
+        model training — includes probable-pitcher ids and final scores."""
+        return _dicts(self.conn.execute(
+            "SELECT game_pk, official_date, home_team_id, away_team_id, "
+            "home_probable_pitcher_id, away_probable_pitcher_id, "
+            "home_score, away_score FROM games "
+            "WHERE official_date < ? "
+            "AND CAST(strftime('%Y', official_date) AS INTEGER)=? "
+            "AND home_score IS NOT NULL AND away_score IS NOT NULL "
+            "ORDER BY official_date, game_pk", (before_date, season)))
+
     # -- odds (latest snapshot via the view) ---------------------------------
 
     def odds_history(self, game_pk: int, market: str = "moneyline") -> list[dict]:
@@ -175,6 +187,52 @@ class MlbRepo:
             return float(season_stat.get("era"))
         except (TypeError, ValueError):
             return None
+
+    def team_runs_asof(self, team_id: int, season: int,
+                       before_date: str) -> Optional[dict]:
+        """Runs scored/allowed and games played from FINAL games strictly before
+        `before_date` — the leak-free counterpart to team_runs(). None if the team
+        has no completed games yet this season."""
+        row = self.conn.execute(
+            """SELECT
+                 SUM(CASE WHEN home_team_id=? THEN home_score ELSE away_score END) AS rs,
+                 SUM(CASE WHEN home_team_id=? THEN away_score ELSE home_score END) AS ra,
+                 COUNT(*) AS gp
+               FROM games
+               WHERE official_date < ?
+                 AND home_score IS NOT NULL AND away_score IS NOT NULL
+                 AND (home_team_id=? OR away_team_id=?)
+                 AND CAST(strftime('%Y', official_date) AS INTEGER)=?""",
+            (team_id, team_id, before_date, team_id, team_id, season)).fetchone()
+        if not row or not row["gp"]:
+            return None
+        return {"runs_scored": float(row["rs"]), "runs_allowed": float(row["ra"]),
+                "games_played": int(row["gp"])}
+
+    def pitcher_era_asof(self, mlb_id: Optional[int], season: int,
+                         before_date: str) -> Optional[float]:
+        """ERA from pitching game logs strictly before `before_date` — leak-free
+        counterpart to pitcher_era(). Innings via outs/3 (never the '6.1' string).
+        None if no prior innings."""
+        if mlb_id is None:
+            return None
+        import json
+        rows = self.conn.execute(
+            "SELECT stats FROM player_game_logs WHERE mlb_id=? AND stat_group='pitching' "
+            "AND game_date < ? AND CAST(strftime('%Y', game_date) AS INTEGER)=?",
+            (mlb_id, before_date, season)).fetchall()
+        er_total = 0.0
+        outs_total = 0
+        for r in rows:
+            stat = (json.loads(r["stats"]).get("stat") or {})
+            try:
+                er_total += float(stat.get("earnedRuns") or 0)
+                outs_total += int(stat.get("outs") or 0)
+            except (TypeError, ValueError):
+                continue
+        if outs_total <= 0:
+            return None
+        return 9.0 * er_total / (outs_total / 3.0)
 
     def player_recent(self, mlb_id: int, group: str = "hitting",
                       window: str = "L15") -> Optional[dict]:

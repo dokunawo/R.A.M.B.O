@@ -24,7 +24,7 @@ from ingestion.raw_store import land_raw, pull_and_land
 APIFY_SOURCES = set(ACTORS.keys())                       # {'odds', 'props'}
 STATSAPI_SOURCES = {"roster", "schedule", "stats", "team_stats", "recent_stats",
                     "lineups", "weather"}
-OTHER_SOURCES = {"odds_api", "odds_props", "statcast"}   # The Odds API (ml + props) + Baseball Savant
+OTHER_SOURCES = {"odds_api", "odds_props", "statcast", "odds_api_historical"}   # The Odds API (ml + props + historical) + Baseball Savant
 SOURCES = sorted(APIFY_SOURCES | STATSAPI_SOURCES | OTHER_SOURCES)
 
 
@@ -97,6 +97,12 @@ def pull_source(conn: sqlite3.Connection, source: str,
         mx = params.get("max_events")
         run = toa.fetch_props(params.get("date"),
                               max_events=int(mx) if mx is not None else None)
+    elif source == "odds_api_historical":
+        from ingestion import the_odds_api_client as toa
+        snap = params.get("snapshot")
+        if not snap:
+            raise ValueError("odds_api_historical source requires snapshot (ISO 8601)")
+        run = toa.fetch_moneyline_historical(snap)
     elif source == "statcast":
         from ingestion import savant_client as sv
         run = sv.fetch_statcast(_season(params))
