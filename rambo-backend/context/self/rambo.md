@@ -94,14 +94,15 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 257 commits:
+Last 14 days — 258 commits:
 
-- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (5 minutes ago)`
-- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (10 minutes ago)`
-- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (16 minutes ago)`
-- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (21 minutes ago)`
-- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (30 minutes ago)`
-- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (34 minutes ago)`
+- `c1accd9 feat(betting): PrizePicks model-confidence boards (6 markets) (6 minutes ago)`
+- `e97104f feat(betting): Power/Flex parlay EV (Poisson-binomial) (11 minutes ago)`
+- `6c36e4b feat(betting): PrizePicks source route + normalizer (standard tier, 6 markets) (16 minutes ago)`
+- `f0374fe feat(betting): direct PrizePicks API client (JSON:API join, free) (22 minutes ago)`
+- `20e5b50 feat(betting): PrizePicks config — market map + Power/Flex tables (27 minutes ago)`
+- `f9e0e17 docs(betting): implementation plan for PrizePicks boards + parlay EV (36 minutes ago)`
+- `71b1b9d docs(betting): spec PrizePicks boards + Power/Flex parlay EV (40 minutes ago)`
 - `9cbc4ed fix(betting): finish date-filter + warn when Pick6 props pull returns 0 (2 hours ago)`
 - `0433f30 WIP: date-filter latest_props to today's slate (holds; 4 EV tests need seed updates) (2 hours ago)`
 - `cc6b107 fix(briefing): de-dupe greeting, speak north star + system, inject north star into reasoning (3 hours ago)`
@@ -115,8 +116,7 @@ Last 14 days — 257 commits:
 - `a0586c2 fix(betting): omit misleading roi/avg_clv from k_backtest pure calibration (10 hours ago)`
 - `d8d1a6f feat(betting): leak-free strikeout calibration backtest (10 hours ago)`
 - `cf04f2d feat(betting): alt-K board shows full P(1+..10+) ladder (10 hours ago)`
-- `219933e feat(betting): k_projection — opponent-adjusted rate x batters-faced (10 hours ago)`
-- … and 237 more
+- … and 238 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns

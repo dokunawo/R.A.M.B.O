@@ -289,3 +289,26 @@ def backtest_endpoint(start: str, end: str, model: str = "anchored") -> dict:
         return run(MlbRepo(conn), start, end, predictor=predictor)
     finally:
         conn.close()
+
+
+@router.get("/prizepicks")
+def get_prizepicks_board(market: str, date: Optional[str] = None) -> dict:
+    """PrizePicks model-confidence board for a market (HR/SO/TB/H/H+R+RBI/SB).
+    Data-only — model probabilities, not a bet-placement path."""
+    from brains.ev.prizepicks_board import prizepicks_board
+    d = date or datetime.date.today().isoformat()
+    return prizepicks_board(d, market.upper())
+
+
+@router.post("/prizepicks/parlay")
+def post_prizepicks_parlay(date: Optional[str] = None, market: str = "HR",
+                           size: Optional[int] = None) -> dict:
+    """Suggest Power/Flex entries from a market's top board legs."""
+    from brains.ev.prizepicks_board import prizepicks_board
+    from brains.ev.prizepicks_parlay import suggest_entries
+    d = date or datetime.date.today().isoformat()
+    board = prizepicks_board(d, market.upper())
+    legs = [{"name": r["name"], "p": r["model_pct"] / 100.0} for r in board["rows"]]
+    sizes = (size,) if size else (2, 3, 4, 5, 6)
+    return {"market": market.upper(), "date": d,
+            "suggestions": suggest_entries(legs, sizes=sizes)}
