@@ -43,12 +43,15 @@ Add a tier column to `prop_lines`:
 ALTER TABLE prop_lines ADD COLUMN odds_type TEXT NOT NULL DEFAULT 'standard';
 ```
 
-`prop_lines.snapshot_key` is a STORED generated column that already includes
-`line`. Tiers have distinct lines by construction (goblin < standard < demon),
-so two tiers for the same player/market/minute cannot collide on `snapshot_key`.
-We therefore do NOT rebuild the generated column (SQLite cannot ALTER it
-in place). This assumption is documented in the migration comment. Migrations
-are idempotent (`apply_migrations` records applied filenames).
+`prop_lines.snapshot_key` is a STORED generated column that includes `line`.
+**Correction during implementation:** the original assumption that tiers always
+carry distinct lines is false — goblin and standard frequently share a line
+(e.g. both 0.5 HR), so without `odds_type` in the key the second tier is silently
+dropped by `ON CONFLICT DO NOTHING`. Migration `010_prop_snapshot_key_with_odds_type.sql`
+therefore rebuilds `prop_lines` (rename → recreate with `odds_type` in the
+generated `snapshot_key` → copy data → drop old), since SQLite cannot ALTER a
+generated column in place. Data is preserved; migrations are idempotent
+(`apply_migrations` records applied filenames).
 
 ### 2. Ingestion — `ingestion/normalize.py`
 
