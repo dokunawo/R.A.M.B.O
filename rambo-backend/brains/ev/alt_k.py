@@ -77,6 +77,70 @@ def _open(repo):
     return MlbRepo(conn), conn
 
 
+def _leg_price(threshold_row: dict, book: str) -> dict | None:
+    return threshold_row.get("fanduel" if book == "fanduel" else "best")
+
+
+def board_to_best_legs(board: dict, *, book: str = "best") -> dict[int, dict]:
+    out: dict[int, dict] = {}
+    for row in board.get("rows", []):
+        priced = []
+        for t in row.get("thresholds", []):
+            pr = _leg_price(t, book)
+            if pr is not None:
+                priced.append((t, pr))
+        if not priced:
+            continue
+        t, pr = max(priced, key=lambda tp: tp[1]["ev"])
+        out[row["rank"]] = {
+            "name": row["name"], "threshold": t["threshold"], "p": t["model_p"],
+            "price": pr["price"], "book": pr.get("book", "FanDuel"), "ev": pr["ev"]}
+    return out
+
+
+def suggest_parlays(board: dict, *, sizes=(2, 3, 4), book: str = "best") -> list[dict]:
+    legs = sorted(board_to_best_legs(board, book=book).values(),
+                  key=lambda l: l["ev"], reverse=True)
+    out = []
+    for size in sizes:
+        if size > len(legs):
+            continue
+        chosen = legs[:size]
+        res = parlay_ev([{"p": l["p"], "price": l["price"]} for l in chosen])
+        out.append({"size": size,
+                    "legs": [f"{l['name']} {l['threshold']}+" for l in chosen],
+                    "combined_p": res["combined_p"], "payout": res["payout"],
+                    "ev": res["ev"]})
+    out.sort(key=lambda e: e["ev"], reverse=True)
+    return out
+
+
+def manual_parlay(board: dict, picks: list[dict], *, book: str = "best") -> dict:
+    by_name: dict[str, dict] = {r["name"].upper(): r for r in board.get("rows", [])}
+    resolved, missing = [], []
+    for pick in picks:
+        row = by_name.get((pick.get("name") or "").upper())
+        leg = None
+        if row is not None:
+            for t in row.get("thresholds", []):
+                if t["threshold"] == pick.get("threshold"):
+                    pr = _leg_price(t, book)
+                    if pr is not None:
+                        leg = {"name": row["name"], "threshold": t["threshold"],
+                               "p": t["model_p"], "price": pr["price"],
+                               "book": pr.get("book", "FanDuel"), "ev": pr["ev"]}
+                    break
+        if leg is None:
+            missing.append({"name": pick.get("name"), "threshold": pick.get("threshold")})
+        else:
+            resolved.append(leg)
+    if missing:
+        return {"legs": resolved, "missing": missing,
+                "combined_p": None, "payout": None, "ev": None}
+    res = parlay_ev([{"p": l["p"], "price": l["price"]} for l in resolved])
+    return {"legs": resolved, "missing": [], **res}
+
+
 def _alt_prompt(rows: list[dict], as_of, book) -> str:
     stamp = " · ".join(x for x in ("Alt-strikeout model (FanDuel + best book)",
                                    f"as of {as_of}" if as_of else None, book) if x)

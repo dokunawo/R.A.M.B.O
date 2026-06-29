@@ -56,3 +56,46 @@ def test_price_legs_matches_thresholds_and_picks_best_book():
     assert by_t[10]["fanduel"] is None
     assert by_t[10]["best"] is None
     assert by_t[10]["model_p"] == round(binom_prob_over(24, 0.30, 10), 4)
+
+
+def _board():
+    return {"rows": [
+        {"rank": 1, "name": "ACE ONE", "thresholds": [
+            {"threshold": 8, "model_p": 0.55,
+             "fanduel": {"price": 120, "ev": 0.21},
+             "best": {"book": "DK", "price": 150, "ev": 0.375}},
+            {"threshold": 9, "model_p": 0.30,
+             "fanduel": {"price": 200, "ev": -0.10},
+             "best": {"book": "DK", "price": 210, "ev": -0.07}},
+        ]},
+        {"rank": 2, "name": "ARM TWO", "thresholds": [
+            {"threshold": 8, "model_p": 0.45,
+             "fanduel": {"price": 130, "ev": 0.035},
+             "best": {"book": "FD", "price": 130, "ev": 0.035}},
+        ]},
+    ]}
+
+
+def test_board_to_best_legs_picks_highest_ev_threshold():
+    best = alt_k.board_to_best_legs(_board(), book="best")
+    assert best[1]["threshold"] == 8       # ev 0.375 beats 9+ (-0.07)
+    assert best[1]["price"] == 150
+    assert best[2]["threshold"] == 8
+
+
+def test_suggest_parlays_builds_sizes_and_sorts():
+    out = alt_k.suggest_parlays(_board(), sizes=(2,), book="best")
+    assert len(out) == 1
+    assert out[0]["size"] == 2
+    # combined_p = 0.55*0.45 = 0.2475; payout = 2.5*2.3 = 5.75
+    assert out[0]["combined_p"] == 0.2475
+    assert out[0]["payout"] == 5.75
+
+
+def test_manual_parlay_resolves_and_flags_missing():
+    res = alt_k.manual_parlay(
+        _board(),
+        [{"name": "ACE ONE", "threshold": 8}, {"name": "GHOST", "threshold": 9}],
+        book="best")
+    assert res["missing"] == [{"name": "GHOST", "threshold": 9}]
+    assert res["ev"] is None     # not all legs priced
