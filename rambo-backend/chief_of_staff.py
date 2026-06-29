@@ -51,6 +51,27 @@ def _extract_rules(text: str) -> list[str]:
     return [line.lstrip('- ').strip() for line in section.splitlines() if line.strip().startswith('-')]
 
 
+def north_star_context() -> str | None:
+    """Compact north-star doctrine (revenue target + operating rules) as plain text
+    for injection into RAMBO's reasoning context, so it weighs the operator's goal
+    when advising/prioritizing. None when no doctrine doc exists."""
+    p = _find_doctrine()
+    if not p:
+        return None
+    try:
+        text = p.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    fm = _parse_frontmatter(text)
+    if not fm or not fm.get("target"):
+        return None
+    parts = [f"Revenue goal: {fm['target']}."]
+    rules = _extract_rules(text)
+    if rules:
+        parts.append("Operating rules: " + "; ".join(rules) + ".")
+    return " ".join(parts)
+
+
 def _staleness_check(fm: dict) -> str | None:
     reviewed = fm.get('last_reviewed', '')
     cadence = int(fm.get('review_cadence_days', 30))

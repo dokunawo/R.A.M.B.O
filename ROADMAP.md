@@ -156,8 +156,8 @@ Make Champions" (CMC); ~$10 flat units; data-only (Sentinel boundary — no bet 
 - Betting: prop→game link + team confirmation, Pick6 MLB-only filter, moneyline + player-prop line shopping, CLV tracking, backtest groundwork (results backfill + metrics harness).
 
 ### Short term
-- Backtested predictive moneyline model — point-in-time feature store + walk-forward validation (harness shipped; the model itself is the remaining edge research).
-- Echo channels (push/SMS via Twilio); Keeper recall injected into prompt context.
+- Alt-K board Phase 2 — FanDuel alt-strikeout odds → per-threshold EV → parlay builder (Phase 1 shipped: opponent-adjusted Expected-K-rate × batters-faced model, full P(1+…10+) ladder, leak-free calibration backtest).
+- Echo channels (push/SMS via Twilio).
 - Retire remaining stub `execute()` agents or give them real handlers.
 
 ### Mid term

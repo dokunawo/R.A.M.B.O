@@ -337,18 +337,23 @@ def _weather_ok(w: str | None) -> bool:
     return not any(s in low for s in ("couldn't", "could not", "try \"weather", "allow location"))
 
 
-def render_concise(data: dict) -> str:
+def render_concise(data: dict, include_greeting: bool = True) -> str:
     """Spoken briefing — short, natural, flowing. Greeting + 'Today is …', what
     changed, weather (only if real), the single top focus (cleaned of roadmap
-    cruft), calendar, what's waiting, and an uncommitted nudge. Deliberately
-    omits the card header, the noisy system metrics, and the static north-star
-    recitation — those live on the on-screen card, not in the spoken update."""
+    cruft), calendar, what's waiting, an uncommitted nudge, the north-star goal,
+    and a one-line system health readout.
+
+    `include_greeting=False` drops the "{greet}, {name}." opener (keeping just the
+    'Today is …' date phrase) — used by the boot path, where /greeting already
+    greets the operator, so the two utterances don't double up the greeting."""
     out: list[str] = []
 
     greet, name = data.get("greet"), data.get("name")
-    if greet and name:
-        today = _today_phrase(data.get("date"))
+    today = _today_phrase(data.get("date"))
+    if include_greeting and greet and name:
         out.append(f"{greet}, {name}." + (f" {today}" if today else ""))
+    elif today:
+        out.append(today)
 
     changes = data.get("changes") or []
     if changes:
@@ -382,6 +387,21 @@ def render_concise(data: dict) -> str:
     if unc:
         out.append(f"And there {'is' if unc == 1 else 'are'} {unc} uncommitted "
                    f"file{'s' if unc != 1 else ''} in the repo.")
+
+    doc = data.get("doctrine")
+    if doc and doc.get("target"):
+        out.append(f"Your north star: {doc['target']}.")
+
+    h, c = data.get("health"), data.get("cost")
+    if h or c:
+        bits = []
+        if h:
+            bits.append(f"CPU {h['cpu']:.0f} percent, RAM {h['ram']:.0f} percent, "
+                        f"disk {h['disk']:.0f} percent")
+        if c:
+            bits.append(f"${c.get('cost_usd', 0):.2f} of API spend today across "
+                        f"{c.get('call_count', 0)} call{'s' if c.get('call_count', 0) != 1 else ''}")
+        out.append("System check: " + "; ".join(bits) + ".")
 
     return " ".join(out)
 
