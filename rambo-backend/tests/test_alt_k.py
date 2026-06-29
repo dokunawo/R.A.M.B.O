@@ -23,3 +23,36 @@ def test_parlay_ev_two_legs():
 def test_parlay_ev_empty():
     res = alt_k.parlay_ev([])
     assert res == {"combined_p": 0.0, "payout": 0.0, "ev": -1.0}
+
+
+def _proj(bf=24, rate=0.30):
+    return {"batters_faced": bf, "k_rate": rate}
+
+
+def test_price_legs_matches_thresholds_and_picks_best_book():
+    proj = _proj()
+    # line 7.5 -> threshold 8; two books, DraftKings has the better over price
+    odds_rows = [
+        {"line": 7.5, "over_price": 120, "book": "FanDuel"},
+        {"line": 7.5, "over_price": 150, "book": "DraftKings"},
+        {"line": 8.5, "over_price": 200, "book": "FanDuel"},   # threshold 9
+    ]
+    legs = alt_k.price_legs(proj, odds_rows, thresholds=(8, 9, 10))
+    by_t = {l["threshold"]: l for l in legs}
+
+    # threshold 8 present, FanDuel + best (DK +150) priced
+    assert by_t[8]["fanduel"]["price"] == 120
+    assert by_t[8]["best"]["book"] == "DraftKings"
+    assert by_t[8]["best"]["price"] == 150
+    # model_p == binom_prob_over(24, 0.30, 8)
+    from brains.ev.k_model import binom_prob_over
+    assert by_t[8]["model_p"] == round(binom_prob_over(24, 0.30, 8), 4)
+
+    # threshold 9 present from FanDuel only -> best is FanDuel
+    assert by_t[9]["fanduel"]["price"] == 200
+    assert by_t[9]["best"]["price"] == 200
+
+    # threshold 10 has no odds row -> leg still emitted, odds None
+    assert by_t[10]["fanduel"] is None
+    assert by_t[10]["best"] is None
+    assert by_t[10]["model_p"] == round(binom_prob_over(24, 0.30, 10), 4)
