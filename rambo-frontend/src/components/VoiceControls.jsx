@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVoiceReactivity, CONV_STATES, listeningEnabled, voiceTiming } from "./useVoiceReactivity";
+import { isSignoff } from "./signoff";
 import { getVolume, setVolume } from "./audioEngine";
 import { frameForGoal, startShare, stopShare, isSharing, armAutoStart } from "./screenVision";
 import "./VoiceControls.css";
@@ -65,11 +66,15 @@ export function usePageVoice({ onCommandCenter } = {}) {
   const segmentHandlerRef = useRef(null);
   const setFollowUpRef = useRef(null);
   const stopListeningRef = useRef(null);
+  // True once RAMBO has actually replied this conversation — so a clear sign-off is
+  // only honored mid-conversation, never swallowing the very first thing said.
+  const inConvoRef = useRef(false);
   const onCommandCenterRef = useRef(onCommandCenter);
   onCommandCenterRef.current = onCommandCenter;
 
   const executeCommand = useCallback(async (text) => {
     if (!text.trim() || busy) return;
+    inConvoRef.current = true;   // RAMBO is now part of this conversation
     setBusy(true);
     const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: null, status: "processing" };
     setCommandLog(prev => [entry, ...prev].slice(0, 50));
@@ -155,6 +160,7 @@ export function usePageVoice({ onCommandCenter } = {}) {
         }
         const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: resp, status: "complete" };
         setCommandLog(prev => [entry, ...prev].slice(0, 50));
+        inConvoRef.current = true;
         if (speakRef.current) speakRef.current(resp, true);
       })();
       if (voiceSetStateRef.current) voiceSetStateRef.current(CONV_STATES.IDLE);
@@ -179,10 +185,23 @@ export function usePageVoice({ onCommandCenter } = {}) {
       return;
     }
 
+    // Tier 5 — "know when to stop": a clear sign-off ("okay thanks", "sounds good")
+    // mid-conversation ends it in SILENCE rather than grabbing the last word. Only
+    // when RAMBO has already replied this convo (never swallows the first utterance),
+    // and the detector is biased hard toward replying (see signoff.js).
+    if (inConvoRef.current && isSignoff(text)) {
+      inConvoRef.current = false;
+      if (setFollowUpRef.current) setFollowUpRef.current(false);
+      if (stopListeningRef.current) stopListeningRef.current();   // drop to wake-gated, no reply
+      setVoiceText("");
+      return;
+    }
+
     const volResponse = tryVolumeCommand(text);
     if (volResponse) {
       const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), command: text, response: volResponse, status: "complete" };
       setCommandLog(prev => [entry, ...prev].slice(0, 50));
+      inConvoRef.current = true;
       if (speakRef.current) speakRef.current(volResponse, true);
       return;
     }
