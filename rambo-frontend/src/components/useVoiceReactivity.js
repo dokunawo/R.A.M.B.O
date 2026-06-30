@@ -186,10 +186,17 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const stateRef = useRef(CONV_STATES.IDLE);
   const suppressUntilRef = useRef(0);
   const ECHO_COOLDOWN_MS = 1200;
+  // Layered end-of-turn windows. FAST: the recognizer marked the phrase final
+  // (confident "done") — a brief confirm and we take the turn. SLOW: only interim
+  // text so far (trailing off / mid-thought / noisy) — wait the patient window so
+  // slow talkers aren't clipped. SLOW is the ceiling, so we never wait longer than
+  // the old fixed 1000ms. Tune these two numbers to trade snappiness vs. clipping.
+  const EOT_FAST_MS = 350;
+  const EOT_SLOW_MS = 900;
   // After a reply, in follow-up mode we keep listening WITHOUT the wake word. If
   // no speech arrives within this window, drop back to wake-gated so the mic
   // doesn't sit open capturing ambient audio.
-  const FOLLOWUP_TIMEOUT_MS = 15000;
+  const FOLLOWUP_TIMEOUT_MS = 10000;
   const followUpTimerRef = useRef(null);
   const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
@@ -377,6 +384,17 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
           return;
         }
       } else {
+        // Layered end-of-turn: a finalized phrase is a confident "done" → take the
+        // turn after the short FAST window; interim-only text (still mid-utterance)
+        // falls back to the patient SLOW window. A final result re-arms over a pending
+        // slow timer (clear-then-arm), downgrading slow→fast. Ceiling = EOT_SLOW_MS.
+        const armEndOfTurn = (fast) => {
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = setTimeout(() => {
+            const finalCmd = commandBufferRef.current.trim();
+            if (finalCmd) { voiceTiming.mark("eot"); onFinalTranscriptRef.current?.(finalCmd); }
+          }, fast ? EOT_FAST_MS : EOT_SLOW_MS);
+        };
         if (finalText) {
           let cmd = finalText.trim();
           const lower = cmd.toLowerCase();
@@ -386,11 +404,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             commandBufferRef.current = cmd;
             setTranscript(cmd);
             onTranscriptRef.current?.(cmd);
-            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-            silenceTimerRef.current = setTimeout(() => {
-              const finalCmd = commandBufferRef.current.trim();
-              if (finalCmd) { voiceTiming.mark("eot"); onFinalTranscriptRef.current?.(finalCmd); }
-            }, 1000);
+            armEndOfTurn(true);     // recognizer says final → fast confirm
           }
         } else if (interim) {
           let cmd = interim.trim();
@@ -402,11 +416,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             setTranscript(cmd);
             onTranscriptRef.current?.(cmd);
           }
-          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = setTimeout(() => {
-            const finalCmd = commandBufferRef.current.trim();
-            if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
-          }, 1000);
+          armEndOfTurn(false);      // still mid-utterance → patient window
         }
       }
     };
