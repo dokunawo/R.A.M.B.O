@@ -4,8 +4,38 @@ import { setVoiceDuck } from "./spotifyEngine";
 // Backend base — same origin the rest of the app talks to.
 const API = "http://localhost:8000";
 
+// Lightweight turn-timing probe (Tier 1). Off by default; enable in the console
+// with: localStorage.setItem('rambo_voice_timing','1'). Marks the five points of
+// a turn and prints the gaps so each later tuning can prove a number moved.
+export const voiceTiming = {
+  t: {},
+  on() { try { return localStorage.getItem("rambo_voice_timing") === "1"; } catch { return false; } },
+  mark(name) {
+    if (!this.on()) return;
+    if (name === "eot") this.t = {};        // new turn resets the slate
+    if (this.t[name] == null) this.t[name] = performance.now();
+  },
+  report() {
+    if (!this.on()) return;
+    const t = this.t;
+    if (t.eot == null || t.audio == null) return;
+    const d = (a, b) => (t[a] != null && t[b] != null) ? Math.round(t[b] - t[a]) : "—";
+    // stop talking -> send -> first audio segment -> first sound out
+    console.log(
+      `[voice-timing] stop→send ${d("eot", "sent")}ms · send→1st-seg ${d("sent", "seg")}ms · `
+      + `seg→1st-audio ${d("seg", "audio")}ms · TOTAL stop→1st-sound ${d("eot", "audio")}ms`);
+  },
+};
+
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
+// Barge-in tuning (module scope so the RAF tick stays a stable closure). Driven by
+// the echo-cancelled mic energy, never the transcript, so half-duplex command
+// suppression is unaffected — a false trigger only cuts a reply short. Kill switch:
+// set BARGE_IN_ENABLED = false.
+const BARGE_IN_ENABLED = true;
+const BARGE_RMS = 0.06;          // mic energy (0..1) that counts as talking over TTS
+const BARGE_SUSTAIN_MS = 300;    // must hold above threshold this long (ignore blips)
 const WAKE_WORD   = "operator";
 // Wake word: "operator" — recognized far more reliably than "Rambo". Accept a
 // couple of close variants just in case.
@@ -74,6 +104,12 @@ let ttsCtx = null;
 let ttsAnalyser = null;
 export const ttsLevel = { value: 0 };
 
+// The currently-playing TTS buffer source, so a barge-in can cut it off mid-word.
+let currentTtsSource = null;
+function stopCurrentTtsSource() {
+  if (currentTtsSource) { try { currentTtsSource.stop(); } catch {} currentTtsSource = null; }
+}
+
 function ensureTtsCtx() {
   if (typeof window === "undefined") return null;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -102,7 +138,7 @@ function playAudioSegment(b64) {
     const ctx = ensureTtsCtx();
     if (!ctx) { resolve(false); return; }
     let settled = false;
-    const done = (ok) => { if (!settled) { settled = true; ttsLevel.value = 0; resolve(ok); } };
+    const done = (ok) => { if (!settled) { settled = true; ttsLevel.value = 0; currentTtsSource = null; resolve(ok); } };
     try {
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
       ctx.decodeAudioData(base64ToArrayBuffer(b64), (buf) => {
@@ -122,7 +158,9 @@ function playAudioSegment(b64) {
           raf = requestAnimationFrame(sample);
         };
         src.onended = () => { cancelAnimationFrame(raf); done(true); };
+        currentTtsSource = src;
         src.start();
+        voiceTiming.mark("audio"); voiceTiming.report();   // first sound out
         sample();
       }, () => done(false));
     } catch {
@@ -162,10 +200,21 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
   const stateRef = useRef(CONV_STATES.IDLE);
   const suppressUntilRef = useRef(0);
   const ECHO_COOLDOWN_MS = 1200;
+  // Layered end-of-turn windows. FAST: the recognizer marked the phrase final
+  // (confident "done") — a brief confirm and we take the turn. SLOW: only interim
+  // text so far (trailing off / mid-thought / noisy) — wait the patient window so
+  // slow talkers aren't clipped. SLOW is the ceiling, so we never wait longer than
+  // the old fixed 1000ms. Tune these two numbers to trade snappiness vs. clipping.
+  const EOT_FAST_MS = 350;
+  const EOT_SLOW_MS = 900;
+  // Barge-in state (tuning consts are module-scope above).
+  const bargeStartRef = useRef(0);
+  const abortedTurnRef = useRef(null);
+  const abortPlaybackRef = useRef(null);
   // After a reply, in follow-up mode we keep listening WITHOUT the wake word. If
   // no speech arrives within this window, drop back to wake-gated so the mic
   // doesn't sit open capturing ambient audio.
-  const FOLLOWUP_TIMEOUT_MS = 15000;
+  const FOLLOWUP_TIMEOUT_MS = 10000;
   const followUpTimerRef = useRef(null);
   const [state, setState]         = useState(CONV_STATES.IDLE);
   const [micActive, setMicActive] = useState(false);
@@ -198,6 +247,26 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
     const rms = Math.sqrt(sum / data.length) / 255;
     const prev = levelRef.current;
+
+    // Barge-in: while RAMBO is speaking, watch the (echo-cancelled) mic for the
+    // operator talking over it. Sustained energy above BARGE_RMS → cut the reply
+    // and listen. Transcript is untouched, so half-duplex command suppression is
+    // unaffected; a false trigger just stops the reply early.
+    if (BARGE_IN_ENABLED && stateRef.current === CONV_STATES.SPEAKING) {
+      if (rms > BARGE_RMS) {
+        if (bargeStartRef.current === 0) bargeStartRef.current = performance.now();
+        else if (performance.now() - bargeStartRef.current >= BARGE_SUSTAIN_MS) {
+          bargeStartRef.current = 0;
+          console.log(`[voice] barge-in (mic rms ${rms.toFixed(3)})`);
+          abortPlaybackRef.current?.();
+        }
+      } else {
+        bargeStartRef.current = 0;
+      }
+    } else {
+      bargeStartRef.current = 0;
+    }
+
     // While RAMBO is speaking, drive the orb from its own voice instead of mic.
     if (ttsLevel.value > 0) {
       levelRef.current = levelRef.current + 0.3 * (ttsLevel.value - levelRef.current);
@@ -250,6 +319,9 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     playingSegmentRef.current = true;
     await speakSegment(seg);
     playingSegmentRef.current = false;
+    // If a barge-in aborted this turn while the segment was playing, abortPlayback
+    // already moved us to LISTENING — don't pump more or run finishTurn.
+    if (seg.base_turn_id === abortedTurnRef.current) return;
     if (segmentQueueRef.current.length > 0) {
       pumpQueue();
     } else if (seg.is_final) {
@@ -257,7 +329,29 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
     }
   }, [finishTurn]);
 
+  // Barge-in: cut the current reply and listen. The operator is talking over us, so
+  // we drop straight to LISTENING with NO echo-suppression window (we want their
+  // voice), staying in command mode (mid-conversation, no wake word needed).
+  const abortPlayback = useCallback(() => {
+    stopCurrentTtsSource();
+    segmentQueueRef.current = [];
+    if (activeBaseTurnRef.current) abortedTurnRef.current = activeBaseTurnRef.current;
+    activeBaseTurnRef.current = null;
+    playingSegmentRef.current = false;
+    ttsLevel.value = 0;
+    bargeStartRef.current = 0;
+    onSpeakEndRef.current?.();
+    suppressUntilRef.current = 0;
+    commandBufferRef.current = "";
+    wakeDetectedRef.current = true;
+    setState(CONV_STATES.LISTENING);
+    if (followUpRef.current) armFollowUpTimeout();
+  }, [armFollowUpTimeout]);
+  useEffect(() => { abortPlaybackRef.current = abortPlayback; }, [abortPlayback]);
+
   const handleSpeakSegment = useCallback((msg) => {
+    // Drop late segments from a turn the operator barged in on.
+    if (msg.base_turn_id === abortedTurnRef.current) return;
     if (activeBaseTurnRef.current === null && segmentQueueRef.current.length === 0 && !playingSegmentRef.current) {
       // Another voice listener (from a remount) already claimed this reply — skip
       // so it isn't spoken twice.
@@ -267,6 +361,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
         globalSpokenTurns.delete(globalSpokenTurns.values().next().value);
       }
       activeBaseTurnRef.current = msg.base_turn_id;
+      voiceTiming.mark("seg");        // first speak_segment of this turn arrived
       setState(CONV_STATES.SPEAKING);
       onSpeakStartRef.current?.();
     } else if (msg.base_turn_id !== activeBaseTurnRef.current) {
@@ -352,6 +447,17 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
           return;
         }
       } else {
+        // Layered end-of-turn: a finalized phrase is a confident "done" → take the
+        // turn after the short FAST window; interim-only text (still mid-utterance)
+        // falls back to the patient SLOW window. A final result re-arms over a pending
+        // slow timer (clear-then-arm), downgrading slow→fast. Ceiling = EOT_SLOW_MS.
+        const armEndOfTurn = (fast) => {
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = setTimeout(() => {
+            const finalCmd = commandBufferRef.current.trim();
+            if (finalCmd) { voiceTiming.mark("eot"); onFinalTranscriptRef.current?.(finalCmd); }
+          }, fast ? EOT_FAST_MS : EOT_SLOW_MS);
+        };
         if (finalText) {
           let cmd = finalText.trim();
           const lower = cmd.toLowerCase();
@@ -361,11 +467,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             commandBufferRef.current = cmd;
             setTranscript(cmd);
             onTranscriptRef.current?.(cmd);
-            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-            silenceTimerRef.current = setTimeout(() => {
-              const finalCmd = commandBufferRef.current.trim();
-              if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
-            }, 1000);
+            armEndOfTurn(true);     // recognizer says final → fast confirm
           }
         } else if (interim) {
           let cmd = interim.trim();
@@ -377,11 +479,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             setTranscript(cmd);
             onTranscriptRef.current?.(cmd);
           }
-          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = setTimeout(() => {
-            const finalCmd = commandBufferRef.current.trim();
-            if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
-          }, 1000);
+          armEndOfTurn(false);      // still mid-utterance → patient window
         }
       }
     };
