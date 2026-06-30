@@ -47,13 +47,13 @@ function Get-Json([string]$Uri, [string]$Method = "GET") {
     [System.Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json
 }
 
-# market key -> display label (ordered so the doc reads HR..ML)
+# market key -> display label. The DK Pick6 +EV markets (HR / H+R+RBI / Stolen
+# Bases / Strikeouts) are RETIRED — the Pick6 source is dead, so they always
+# returned 0 plays. Those stats now live in the PrizePicks Confidence/Tiers +
+# Player Watch / Strikeout Watch boards below. Only Moneyline still has a live
+# +EV/lean source here.
 $markets = [ordered]@{
-    hr  = "Home Runs"
-    hrr = "H+R+RBI"
-    sb  = "Stolen Bases"
-    k   = "Strikeouts"
-    ml  = "Moneyline"
+    ml = "Moneyline"
 }
 
 # PrizePicks board markets (distinct taxonomy from the EV markets above). Keys are
@@ -512,8 +512,16 @@ foreach ($b in @(
 }
 
 # wdFormatDocumentDefault = 16  (.docx). SaveAs2 takes plain args (avoids the
-# PS 5.1 [ref] PSObject-cast bug).
-$doc.SaveAs2([string]$outPath, [int]16)
+# PS 5.1 [ref] PSObject-cast bug). If today's doc is open in Word the save is
+# blocked, so fall back to a timestamped name rather than throwing away the run.
+$savedPath = $outPath
+try {
+    $doc.SaveAs2([string]$outPath, [int]16)
+} catch {
+    $savedPath = Join-Path $Repo ("CMC_Daily_{0}_{1}.docx" -f $Date, (Get-Date -Format "HHmm"))
+    Write-Host ("NOTE: {0} is open/locked — saving to {1} instead. Close the open copy to overwrite the main file next time." -f (Split-Path $outPath -Leaf), (Split-Path $savedPath -Leaf)) -ForegroundColor Yellow
+    $doc.SaveAs2([string]$savedPath, [int]16)
+}
 $doc.Close()
 $word.Quit()
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($sel)  | Out-Null
@@ -521,5 +529,5 @@ $word.Quit()
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($word) | Out-Null
 [GC]::Collect(); [GC]::WaitForPendingFinalizers()
 
-Write-Host "Done. Saved: $outPath" -ForegroundColor Green
-if ($Open) { Start-Process $outPath }
+Write-Host "Done. Saved: $savedPath" -ForegroundColor Green
+if ($Open) { Start-Process $savedPath }
