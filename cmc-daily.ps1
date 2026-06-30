@@ -475,7 +475,8 @@ foreach ($mk in $ppMarkets.Keys) {
 
 # --- PrizePicks Tiers (goblin / standard / demon ladder) ----------------------
 Add-Line ""
-Add-Header "PRIZEPICKS TIERS — goblin (safer/lower line) / standard / demon (swing/higher line); model % to go OVER. No payout/EV — PrizePicks doesn't publish tier multipliers."
+Add-Header "PRIZEPICKS TIERS"
+Add-Line "LEGEND: each player can be offered at up to three lines for the same stat. GOBLIN = easier (lower line, more likely to hit, pays LESS). STANDARD = the normal line. DEMON = harder (higher line, less likely, pays MORE). The % shown is our model's probability the player goes OVER that line. Probabilities only — no payout/EV (PrizePicks doesn't publish the goblin/demon multipliers)."
 foreach ($mk in $ppMarkets.Keys) {
     $b = $ppTiers[$mk]
     Add-Line ""
