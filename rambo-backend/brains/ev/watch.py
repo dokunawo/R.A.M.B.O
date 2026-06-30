@@ -214,15 +214,17 @@ def _opp_team_id(repo, game_pk: int, pitcher_team_abbr: str) -> int | None:
     return None
 
 
-def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
+def strikeout_watch(date: str, repo=None, *, count: int | None = STRIKEOUT_WATCH_SIZE,
+                    min_starts: int | None = None,
                     as_of: str | None = None, book: str | None = None) -> dict:
-    """Top-`count` probable starters by P(9+ K) — the alt-K board, now with the full
-    P(1+..10+) ladder from the opponent-adjusted rate x batters-faced model."""
+    """Probable starters by P(9+ K) with the full P(1+..10+) ladder. `count=None`
+    returns EVERY projectable starter (no cap). `min_starts` overrides the env gate
+    (RAMBO_K_MIN_STARTS, default 5); pass 0 to include low-sample starters."""
     import json as _json
     repo, conn = _open(repo)
     try:
         season = int(date[:4])
-        min_starts = int(os.environ.get("RAMBO_K_MIN_STARTS", "5"))
+        mn = min_starts if min_starts is not None else int(os.environ.get("RAMBO_K_MIN_STARTS", "5"))
         scored, seen = [], set()
         for s in repo.probable_starters(date):
             mid = s["mlb_id"]
@@ -234,7 +236,7 @@ def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
                 gs = float((_json.loads(rows_season[0]["stats"]).get("season") or {}).get("gamesStarted") or 0)
             except Exception:
                 gs = 0
-            if gs < min_starts:
+            if gs < mn:
                 continue
             starter = {
                 "mlb_id": mid, "name": s.get("name") or "",
@@ -246,7 +248,8 @@ def strikeout_watch(date: str, repo=None, *, count: int = STRIKEOUT_WATCH_SIZE,
                 continue
             scored.append(proj)
         scored.sort(key=lambda p: p["ladder"].get(9, 0.0), reverse=True)
-        rows = [_sw_row(i + 1, p) for i, p in enumerate(scored[:count])]
+        chosen = scored if count is None else scored[:count]
+        rows = [_sw_row(i + 1, p) for i, p in enumerate(chosen)]
         return {"title": "STRIKEOUT WATCH", "product": "Strikeout model (alt-K)",
                 "count": len(rows), "rows": rows,
                 "prompt": _sw_prompt(rows, as_of, book)}

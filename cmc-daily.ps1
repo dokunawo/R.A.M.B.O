@@ -134,7 +134,7 @@ foreach ($m in $markets.Keys) {
 # Boards (read already-pulled data; free under -SkipPrep)
 $playerWatch    = Get-Json "$Base/betting/player-watch?date=$Date"
 $moneylineBoard = Get-Json "$Base/betting/moneyline-board?date=$Date"
-$strikeoutWatch = Get-Json "$Base/betting/strikeout-watch?date=$Date"
+$strikeoutWatch = Get-Json "$Base/betting/strikeout-watch?date=$Date&limit=0&min_starts=0"  # every starter
 $hitsTbWatch    = Get-Json "$Base/betting/hits-tb-watch?date=$Date"
 
 # New: line shopping (best ML price per book, FREE), Pick6-vs-book prop shop, and
@@ -293,7 +293,21 @@ function Add-Header([string]$text) {
 # Insert a real Word table at the end of the document. $Headers is a string[];
 # $Rows is an array of rows, each row a string[] of the same length as $Headers.
 # The header row is bold; the table has borders and fits to the page width.
-function Add-Table([string[]]$Headers, $Rows) {
+# Green heatmap: shade a cell by the percentage it contains (near-white at 0%,
+# deep green at 100%), white text on the darkest cells. No %, no shading.
+function Set-HeatShade($cell, [string]$text) {
+    if ($text -notmatch '(\d+(?:\.\d+)?)\s*%') { return }
+    $t = [double]$matches[1] / 100.0
+    if ($t -lt 0) { $t = 0.0 } elseif ($t -gt 1) { $t = 1.0 }
+    $R = [int][math]::Round(235 * (1 - $t))
+    $G = [int][math]::Round(247 - 138 * $t)
+    $B = [int][math]::Round(235 - 191 * $t)
+    $cell.Shading.BackgroundPatternColor = $R + ($G * 256) + ($B * 65536)   # VBA RGB order
+    if ($t -gt 0.55) { $cell.Range.Font.Color = 16777215 }                  # wdColorWhite
+}
+
+# $HeatCols = 1-based column numbers whose cells get the green probability heatmap.
+function Add-Table([string[]]$Headers, $Rows, [int[]]$HeatCols = @()) {
     $rowsArr = @($Rows)
     $nCols = $Headers.Count
     if ($rowsArr.Count -eq 0) { Add-Line "(none)"; return }
@@ -316,7 +330,9 @@ function Add-Table([string[]]$Headers, $Rows) {
         $cells = @($rowsArr[$r])
         for ($c = 0; $c -lt $nCols; $c++) {
             $v = if ($c -lt $cells.Count -and $null -ne $cells[$c]) { [string]$cells[$c] } else { "" }
-            $table.Cell($r + 2, $c + 1).Range.Text = $v
+            $cell = $table.Cell($r + 2, $c + 1)
+            $cell.Range.Text = $v
+            if ($HeatCols -contains ($c + 1)) { Set-HeatShade $cell $v }
         }
     }
     $table.AutoFitBehavior(2)              # wdAutoFitWindow — fit to page width
@@ -350,12 +366,12 @@ foreach ($r in $results) {
             $rows = foreach ($p in $r.Slip.players) {
                 ,@($p.rank, $p.team, $p.opponent, $p.pick, "$($p.model_pct)%", "$($p.edge_pct)%")
             }
-            Add-Table @("#","Team","Opp","Pick","Model","Lean") $rows
+            Add-Table @("#","Team","Opp","Pick","Model","Lean") $rows @(5)
         } else {
             $rows = foreach ($p in $r.Slip.players) {
                 ,@($p.rank, $p.name, $p.team, $p.opponent, $p.pick, "$($p.model_pct)%", "$($p.edge_pct)%")
             }
-            Add-Table @("#","Player","Team","Opp","Pick","Model","Edge") $rows
+            Add-Table @("#","Player","Team","Opp","Pick","Model","Edge") $rows @(6)
         }
     } else {
         Add-Line "(no plays available today)"
@@ -370,7 +386,7 @@ if ($playerWatch.rows.Count -gt 0) {
         $nm = if ($x.is_lean) { "$($x.name) *" } else { $x.name }
         ,@($x.rank, $nm, $x.team, $x.pitcher, "$($x.hr_pct)%", $x.venue, ("{0:+0;-0;0}" -f [int]$x.env_pct) + "%", $x.form)
     }
-    Add-Table @("#","Player (*=CMC lean)","Team","vs SP","HR%","Venue","Env","Form") $rows
+    Add-Table @("#","Player (*=CMC lean)","Team","vs SP","HR%","Venue","Env","Form") $rows @(5)
 } else { Add-Line "(no home-run board available today)" }
 
 # --- Moneyline Board ----------------------------------------------------------
@@ -382,19 +398,19 @@ if ($moneylineBoard.rows.Count -gt 0) {
         ,@($x.rank, $x.away, (Fmt-Odds $x.away_price), $x.home, (Fmt-Odds $x.home_price),
            "$($x.model_home_pct)%", "$($x.model_away_pct)%", $lean)
     }
-    Add-Table @("#","Away","Away ML","Home","Home ML","Mdl Home","Mdl Away","Lean") $rows
+    Add-Table @("#","Away","Away ML","Home","Home ML","Mdl Home","Mdl Away","Lean") $rows @(6,7)
 } else { Add-Line "(no moneyline board available today)" }
 
 # --- Strikeout Watch (full 1+..10+ ladder) ------------------------------------
 Add-Line ""
-Add-Header ("STRIKEOUT WATCH — top {0} starters (alt-K ladder)" -f $strikeoutWatch.count)
+Add-Header ("STRIKEOUT WATCH — all {0} probable starters (alt-K ladder, ranked by P(9+ K))" -f $strikeoutWatch.count)
 if ($strikeoutWatch.rows.Count -gt 0) {
     $rows = foreach ($x in $strikeoutWatch.rows) {
         $ladder = for ($j = 1; $j -le 10; $j++) { "$($x."p$j")%" }
         ,(@($x.rank, $x.name, $x.team, $x.opponent, $x.k_rate, [math]::Round([double]$x.batters_faced), $x.k_mean) + $ladder)
     }
     $hdr = @("#","Pitcher","Team","Opp","K Rate","BF","Proj") + (1..10 | ForEach-Object { "$_+" })
-    Add-Table $hdr $rows
+    Add-Table $hdr $rows (8..17)
 } else { Add-Line "(no probable starters available yet)" }
 
 # --- Hits & Total Bases -------------------------------------------------------
@@ -404,7 +420,7 @@ if ($hitsTbWatch.rows.Count -gt 0) {
     $rows = foreach ($x in $hitsTbWatch.rows) {
         ,@($x.rank, $x.name, $x.team, $x.opponent, "$($x.p_hit)%", "$($x.p_tb2)%", $x.hit_mean, $x.tb_mean, $x.form)
     }
-    Add-Table @("#","Player","Team","Opp","1+ Hit","2+ TB","Hit Mean","TB Mean","Form") $rows
+    Add-Table @("#","Player","Team","Opp","1+ Hit","2+ TB","Hit Mean","TB Mean","Form") $rows @(5,6)
 } else { Add-Line "(no hits/TB board available today)" }
 
 # --- Moneyline line shopping --------------------------------------------------
@@ -451,7 +467,7 @@ foreach ($mk in $ppMarkets.Keys) {
         $rows = foreach ($x in $b.rows) {
             ,@($x.rank, $x.name, $x.team, $x.opponent, $x.side.ToUpper(), $x.line, "$($x.model_pct)%")
         }
-        Add-Table @("#","Player","Team","Opp","Side","Line","Model") $rows
+        Add-Table @("#","Player","Team","Opp","Side","Line","Model") $rows @(7)
     } else { Add-Line "(no PrizePicks props for this market today)" }
 }
 
@@ -470,7 +486,7 @@ foreach ($mk in $ppMarkets.Keys) {
             }
             ,@($x.name, $x.team, $x.opponent, (& $cell "goblin"), (& $cell "standard"), (& $cell "demon"))
         }
-        Add-Table @("Player","Team","Opp","Goblin","Standard","Demon") $rows
+        Add-Table @("Player","Team","Opp","Goblin","Standard","Demon") $rows @(4,5,6)
     } else { Add-Line "(no PrizePicks tier props for this market today)" }
 }
 
