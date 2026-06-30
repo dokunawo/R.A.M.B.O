@@ -148,12 +148,13 @@ def _insert_odds(conn: sqlite3.Connection, o: dict) -> None:
 
 
 def _insert_prop(conn: sqlite3.Connection, p: dict) -> None:
+    p.setdefault("odds_type", "standard")
     conn.execute(
         """INSERT INTO prop_lines
              (game_pk, mlb_id, book, market, line, over_price, under_price,
-              multiplier, player_name_raw, captured_at)
+              multiplier, player_name_raw, captured_at, odds_type)
            VALUES (:game_pk,:mlb_id,:book,:market,:line,:over_price,:under_price,
-              :multiplier,:player_name_raw,:captured_at)
+              :multiplier,:player_name_raw,:captured_at,:odds_type)
            ON CONFLICT(snapshot_key) DO NOTHING;""",
         p,
     )
@@ -473,12 +474,11 @@ def map_props_book(conn, item, scraped_at) -> bool:
 
 
 def map_prizepicks(conn, item, scraped_at) -> bool:
-    """PrizePicks projection -> prop_lines. Keeps only the 6 mapped stat_types on
-    the STANDARD odds tier; multiplier is NULL (payouts are play-level). mlb_id +
-    game_pk are resolved downstream by the IdResolver / prep."""
-    if (item.get("odds_type") != "standard"
-            or item.get("stat_type") not in STAT_MARKET_MAP):
-        return True  # handled: not a board market / not standard tier
+    """PrizePicks projection -> prop_lines. Keeps the 6 mapped stat_types across
+    ALL tiers (standard | demon | goblin); the tier is stored in odds_type.
+    multiplier is NULL (payouts are play-level). mlb_id + game_pk resolved downstream."""
+    if item.get("stat_type") not in STAT_MARKET_MAP:
+        return True  # handled: not a board market
     line = _as_float(item.get("line"))
     player = item.get("player_name")
     if line is None or not player:
@@ -489,6 +489,7 @@ def map_prizepicks(conn, item, scraped_at) -> bool:
         "over_price": None, "under_price": None, "multiplier": None,
         "player_name_raw": player,
         "captured_at": item.get("start_time") or scraped_at,
+        "odds_type": item.get("odds_type") or "standard",
     })
     return True
 

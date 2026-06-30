@@ -24,8 +24,8 @@ def test_mapped_standard_prop_lands(tmp_path):
     assert row["player_name_raw"] == "Aaron Judge"
 
 
-def test_unmapped_stat_or_alt_tier_skipped(tmp_path):
+def test_unmapped_stat_skipped_all_tiers(tmp_path):
     conn = _conn(tmp_path)
     map_prizepicks(conn, _item(stat="Pitches Thrown"), "2026-06-29T18:00:00Z")
-    map_prizepicks(conn, _item(odds="demon"), "2026-06-29T18:00:00Z")
+    map_prizepicks(conn, _item(stat="Pitches Thrown", odds="demon"), "2026-06-29T18:00:00Z")
     assert conn.execute("SELECT COUNT(*) FROM prop_lines").fetchone()[0] == 0

@@ -100,20 +100,25 @@ class MlbRepo:
     def latest_props(self, game_pk: Optional[int] = None,
                      market: Optional[str] = None,
                      resolved_only: bool = True,
-                     official_date: Optional[str] = None) -> list[dict]:
+                     official_date: Optional[str] = None,
+                     odds_type: Optional[str] = "standard") -> list[dict]:
         # `official_date` restricts to props whose game is on that date — without it
         # the latest-per-player snapshot leaks STALE props (a player DK no longer
         # offers keeps their old prop as "latest"), so yesterday's hitters reappear
         # on today's board even when their team isn't playing.
+        # `odds_type` defaults to 'standard' (existing boards unchanged); pass None
+        # to get all tiers. The dedup is always per-tier so goblin/standard/demon
+        # don't collapse.
         q = """
             SELECT p.* FROM prop_lines p
             JOIN (
-                SELECT book, market,
+                SELECT book, market, odds_type,
                        COALESCE(CAST(mlb_id AS TEXT), player_name_raw) AS pkey,
                        MAX(captured_at) AS mx
-                FROM prop_lines GROUP BY book, market, pkey
+                FROM prop_lines GROUP BY book, market, odds_type, pkey
             ) last
               ON p.book=last.book AND p.market=last.market
+             AND p.odds_type=last.odds_type
              AND COALESCE(CAST(p.mlb_id AS TEXT), p.player_name_raw)=last.pkey
              AND p.captured_at=last.mx
             WHERE 1=1
@@ -123,6 +128,8 @@ class MlbRepo:
             q += " AND p.game_pk=?"; params.append(game_pk)
         if market:
             q += " AND p.market=?"; params.append(market)
+        if odds_type is not None:
+            q += " AND p.odds_type=?"; params.append(odds_type)
         if resolved_only:
             q += " AND p.mlb_id IS NOT NULL"
         if official_date is not None:
