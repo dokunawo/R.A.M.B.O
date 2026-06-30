@@ -113,12 +113,17 @@ def get_moneyline_board(date: Optional[str] = None) -> dict:
 
 
 @router.get("/strikeout-watch")
-def get_strikeout_watch(date: Optional[str] = None) -> dict:
-    """Top-11 probable starters by P(9+ K) for alt-strikeout parlays (+ prompt)."""
+def get_strikeout_watch(date: Optional[str] = None, limit: Optional[int] = None,
+                        min_starts: Optional[int] = None) -> dict:
+    """Probable starters by P(9+ K) for alt-strikeout parlays (+ prompt). Default
+    caps at 11; pass limit<=0 for EVERY projectable starter. min_starts overrides
+    the data-quality gate (default 5); pass 0 to include low-sample starters."""
     d = date or datetime.date.today().isoformat()
+    count = None if (limit is not None and limit <= 0) else (limit or 11)
     try:
         prov, as_of, _ = _provenance("k")
-        board = strikeout_watch(d, as_of=as_of, book=None)
+        board = strikeout_watch(d, count=count, min_starts=min_starts,
+                                as_of=as_of, book=None)
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"strikeout_watch failed: {e}") from e
     return {"date": d, **board, "provenance": prov}
