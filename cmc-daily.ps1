@@ -54,6 +54,17 @@ $markets = [ordered]@{
     ml  = "Moneyline"
 }
 
+# PrizePicks board markets (distinct taxonomy from the EV markets above). Keys are
+# the API market codes; "H+R+RBI" must be URL-encoded (+ means space in a query).
+$ppMarkets = [ordered]@{
+    HR        = "Home Runs"
+    SO        = "Strikeouts"
+    TB        = "Total Bases"
+    H         = "Hits"
+    "H+R+RBI" = "H+R+RBI"
+    SB        = "Stolen Bases"
+}
+
 function Test-Backend {
     try { Invoke-WebRequest -Uri "$Base/betting/daily-edge?market=hr" -TimeoutSec 5 -UseBasicParsing | Out-Null; return $true }
     catch { return $false }
@@ -76,11 +87,13 @@ if ($SkipPrep) {
     try {
         $prep = Get-Json "$Base/betting/prep?date=$Date" "POST"
         Write-Host "Slate prepped." -ForegroundColor Green
-        # DK Pick6 props come from a third-party scraper that can go dark (returns 0).
-        # When it does, the HR/HRR/SB/K boards silently serve stale plays — warn loudly.
+        # PrizePicks props come from the free public API, with a paid Apify actor as an
+        # auto-fallback (when PRIZEPICKS_APIFY_ACTOR is set). If both yield 0, the prop
+        # boards (HR/HRR/SB/K + PrizePicks confidence/tiers) serve stale/empty — warn loudly.
         if ([int]$prep.props -le 0) {
-            Write-Host ("WARNING: DK Pick6 props pulled 0 — the Pick6 source is likely down. " +
-                "Home Runs / H+R+RBI / Stolen Bases / Strikeouts boards will be STALE or EMPTY " +
+            Write-Host ("WARNING: PrizePicks props pulled 0 — the source is likely down " +
+                "(free API + paid fallback both empty). Prop boards (Home Runs / H+R+RBI / " +
+                "Stolen Bases / Strikeouts + PrizePicks confidence/tiers) will be STALE or EMPTY " +
                 "until it's back.") -ForegroundColor Yellow
         }
     } catch {
@@ -129,6 +142,18 @@ $hitsTbWatch    = Get-Json "$Base/betting/hits-tb-watch?date=$Date"
 $lineShop = Get-Json "$Base/betting/line-shop?date=$Date"
 $propShop = Get-Json "$Base/betting/prop-shop?date=$Date"
 $clv      = Get-Json "$Base/betting/clv?date=$Date"
+
+# PrizePicks boards (model-confidence + goblin/standard/demon tiers) per market.
+# Read-only over already-pulled PrizePicks props — free, and work under -SkipPrep.
+$ppConfidence = [ordered]@{}
+$ppTiers      = [ordered]@{}
+foreach ($mk in $ppMarkets.Keys) {
+    $enc = [uri]::EscapeDataString([string]$mk)        # "H+R+RBI" -> "H%2BR%2BRBI"
+    try { $ppConfidence[$mk] = Get-Json "$Base/betting/prizepicks?market=$enc&date=$Date" }
+    catch { $ppConfidence[$mk] = $null; Write-Host ("WARN prizepicks {0}: {1}" -f $mk, $_.Exception.Message) -ForegroundColor Yellow }
+    try { $ppTiers[$mk] = Get-Json "$Base/betting/prizepicks-tiers?market=$enc&date=$Date" }
+    catch { $ppTiers[$mk] = $null; Write-Host ("WARN prizepicks-tiers {0}: {1}" -f $mk, $_.Exception.Message) -ForegroundColor Yellow }
+}
 
 # 3) Print to console ----------------------------------------------------------
 foreach ($r in $results) {
@@ -197,6 +222,34 @@ if ($clv.summary.graded -gt 0) {
         $clv.summary.graded, $clv.summary.beat_close, $clv.summary.beat_close_rate, $clv.summary.avg_clv_pts)
 } else {
     Write-Host "  (no graded leans yet — CLV fills in once closing lines are captured)" -ForegroundColor DarkGray
+}
+
+# 3c) PrizePicks confidence + tiers -------------------------------------------
+Write-Host ""
+Write-Host "===== PrizePicks Confidence =====" -ForegroundColor Yellow
+foreach ($mk in $ppMarkets.Keys) {
+    $b = $ppConfidence[$mk]
+    Write-Host ("----- {0} ({1}) — {2} legs -----" -f $ppMarkets[$mk], $mk, ($(if ($b) { $b.count } else { 0 }))) -ForegroundColor Cyan
+    if ($b -and $b.rows.Count -gt 0) {
+        foreach ($x in ($b.rows | Select-Object -First 11)) {
+            Write-Host ("  {0}. {1} ({2} vs {3}) — {4} {5} — {6}%" -f $x.rank, $x.name, $x.team, $x.opponent, $x.side.ToUpper(), $x.line, $x.model_pct)
+        }
+    } else { Write-Host "  (none)" -ForegroundColor DarkGray }
+}
+
+Write-Host ""
+Write-Host "===== PrizePicks Tiers (goblin / standard / demon) =====" -ForegroundColor Yellow
+foreach ($mk in $ppMarkets.Keys) {
+    $b = $ppTiers[$mk]
+    Write-Host ("----- {0} ({1}) — {2} players -----" -f $ppMarkets[$mk], $mk, ($(if ($b) { $b.count } else { 0 }))) -ForegroundColor Cyan
+    if ($b -and $b.rows.Count -gt 0) {
+        foreach ($x in ($b.rows | Select-Object -First 11)) {
+            $segs = foreach ($t in @("goblin","standard","demon")) {
+                if ($x.tiers.$t) { "{0} {1} ({2}%)" -f $t, $x.tiers.$t.line, $x.tiers.$t.model_pct }
+            }
+            Write-Host ("  {0} ({1} vs {2}) — {3}" -f $x.name, $x.team, $x.opponent, ($segs -join "  ·  "))
+        }
+    } else { Write-Host "  (none)" -ForegroundColor DarkGray }
 }
 
 # 4) Export to a Word document (tables + headers) ------------------------------
@@ -386,6 +439,40 @@ if ($clv.summary.graded -gt 0) {
         ,@($s.graded, $s.beat_close, $s.beat_close_rate, $s.avg_clv_pts)
     )
 } else { Add-Line "(no graded leans yet — CLV fills in once closing lines are captured over the day)" }
+
+# --- PrizePicks Confidence (per-market subtables) -----------------------------
+Add-Line ""
+Add-Header "PRIZEPICKS CONFIDENCE — model probability per pick (favored side)"
+foreach ($mk in $ppMarkets.Keys) {
+    $b = $ppConfidence[$mk]
+    Add-Line ""
+    Add-Line ("{0} ({1}) — {2} legs" -f $ppMarkets[$mk], $mk, ($(if ($b) { $b.count } else { 0 }))) $true
+    if ($b -and $b.rows.Count -gt 0) {
+        $rows = foreach ($x in $b.rows) {
+            ,@($x.rank, $x.name, $x.team, $x.opponent, $x.side.ToUpper(), $x.line, "$($x.model_pct)%")
+        }
+        Add-Table @("#","Player","Team","Opp","Side","Line","Model") $rows
+    } else { Add-Line "(no PrizePicks props for this market today)" }
+}
+
+# --- PrizePicks Tiers (goblin / standard / demon ladder) ----------------------
+Add-Line ""
+Add-Header "PRIZEPICKS TIERS — goblin (safer/lower line) / standard / demon (swing/higher line); model % to go OVER. No payout/EV — PrizePicks doesn't publish tier multipliers."
+foreach ($mk in $ppMarkets.Keys) {
+    $b = $ppTiers[$mk]
+    Add-Line ""
+    Add-Line ("{0} ({1}) — {2} players" -f $ppMarkets[$mk], $mk, ($(if ($b) { $b.count } else { 0 }))) $true
+    if ($b -and $b.rows.Count -gt 0) {
+        $rows = foreach ($x in $b.rows) {
+            $cell = {
+                param($t)
+                if ($x.tiers.$t) { "{0} ({1}%)" -f $x.tiers.$t.line, $x.tiers.$t.model_pct } else { "—" }
+            }
+            ,@($x.name, $x.team, $x.opponent, (& $cell "goblin"), (& $cell "standard"), (& $cell "demon"))
+        }
+        Add-Table @("Player","Team","Opp","Goblin","Standard","Demon") $rows
+    } else { Add-Line "(no PrizePicks tier props for this market today)" }
+}
 
 # --- Appendix: ChatGPT image prompts ------------------------------------------
 $sel.InsertBreak(7)                        # wdPageBreak

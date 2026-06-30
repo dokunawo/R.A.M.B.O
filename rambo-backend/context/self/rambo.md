@@ -94,29 +94,29 @@ open-ended research.
 ## Recent Activity
 
 <!-- AUTO-START: recent_activity -->
-Last 14 days — 287 commits:
+Last 14 days — 288 commits:
 
-- `3980bc3 feat(betting): /betting/prizepicks-tiers endpoint (8 minutes ago)`
-- `40f3369 feat(betting): PrizePicks tier board (goblin/standard/demon ladder + P(over)) (11 minutes ago)`
-- `e678187 feat(betting): tier-aware latest_props (standard default, per-tier dedup) (15 minutes ago)`
-- `32ce83d docs(betting): correct tier spec — snapshot_key must include odds_type (17 minutes ago)`
-- `560541e feat(betting): ingest all PrizePicks tiers (goblin/standard/demon) (22 minutes ago)`
-- `b8b6837 feat(betting): add prop_lines.odds_type column; _insert_prop writes it (28 minutes ago)`
-- `0d83704 docs(betting): PrizePicks demon/goblin tier board implementation plan (31 minutes ago)`
-- `23f3d1a docs(betting): PrizePicks demon/goblin tier board design spec (34 minutes ago)`
-- `6f6e97c feat(betting): auto-fallback to paid PrizePicks actor when free pull empty (54 minutes ago)`
-- `59cc3f2 feat(betting): wire prizepicks_paid source; verify normalizer flow-through (59 minutes ago)`
-- `2afa030 feat(betting): fetch_mlb_props_paid — spend-guarded run + never-raise (63 minutes ago)`
-- `ecfc127 feat(betting): defensive adapter for paid PrizePicks actor items (66 minutes ago)`
-- `e96985b feat(betting): env-driven paid PrizePicks Apify actor config (69 minutes ago)`
-- `2284651 docs(betting): PrizePicks paid Apify fallback implementation plan (71 minutes ago)`
-- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (74 minutes ago)`
-- `ad0a464 fix(betting): default best-leg book to "" not "FanDuel" to avoid mislabel (2 hours ago)`
-- `b27056c test(phase3): force web-search fallback in news/finance skill tests (2 hours ago)`
-- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (2 hours ago)`
-- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (2 hours ago)`
-- `065e0d6 feat(betting): alt-K parlay auto-suggest + manual assembly (2 hours ago)`
-- … and 267 more
+- `2d2e394 fix: resolve DB_PATH at call time + update demon test for new tier behavior (10 hours ago)`
+- `3980bc3 feat(betting): /betting/prizepicks-tiers endpoint (10 hours ago)`
+- `40f3369 feat(betting): PrizePicks tier board (goblin/standard/demon ladder + P(over)) (10 hours ago)`
+- `e678187 feat(betting): tier-aware latest_props (standard default, per-tier dedup) (10 hours ago)`
+- `32ce83d docs(betting): correct tier spec — snapshot_key must include odds_type (10 hours ago)`
+- `560541e feat(betting): ingest all PrizePicks tiers (goblin/standard/demon) (11 hours ago)`
+- `b8b6837 feat(betting): add prop_lines.odds_type column; _insert_prop writes it (11 hours ago)`
+- `0d83704 docs(betting): PrizePicks demon/goblin tier board implementation plan (11 hours ago)`
+- `23f3d1a docs(betting): PrizePicks demon/goblin tier board design spec (11 hours ago)`
+- `6f6e97c feat(betting): auto-fallback to paid PrizePicks actor when free pull empty (11 hours ago)`
+- `59cc3f2 feat(betting): wire prizepicks_paid source; verify normalizer flow-through (11 hours ago)`
+- `2afa030 feat(betting): fetch_mlb_props_paid — spend-guarded run + never-raise (11 hours ago)`
+- `ecfc127 feat(betting): defensive adapter for paid PrizePicks actor items (11 hours ago)`
+- `e96985b feat(betting): env-driven paid PrizePicks Apify actor config (11 hours ago)`
+- `2284651 docs(betting): PrizePicks paid Apify fallback implementation plan (11 hours ago)`
+- `0ca00f5 docs(betting): PrizePicks paid Apify fallback design spec (11 hours ago)`
+- `ad0a464 fix(betting): default best-leg book to "" not "FanDuel" to avoid mislabel (12 hours ago)`
+- `b27056c test(phase3): force web-search fallback in news/finance skill tests (12 hours ago)`
+- `06b91fd fix(betting): guard post_alt_k_parlay against board failures and empty sizes (12 hours ago)`
+- `06d27a5 feat(betting): /alt-k-board + /alt-k/parlay endpoints (12 hours ago)`
+- … and 268 more
 <!-- AUTO-END: recent_activity -->
 
 ## Open Questions / Unknowns
