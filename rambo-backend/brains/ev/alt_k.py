@@ -11,7 +11,6 @@ from brains.ev import k_model
 from brains.ev.k_model import binom_prob_over
 from brains.ev.line_shop import american_to_decimal
 
-DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
 ALT_K_BOARD_SIZE = 11
 
 
@@ -73,7 +72,7 @@ def _open(repo):
         return repo, None
     from db.migrate import get_connection
     from repositories.mlb_repo import MlbRepo
-    conn = get_connection(DB_PATH)
+    conn = get_connection(os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db"))
     return MlbRepo(conn), conn
 
 

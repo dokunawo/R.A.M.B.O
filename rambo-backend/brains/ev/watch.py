@@ -14,7 +14,6 @@ from brains.ev.count_model import poisson_prob_over
 from brains.ev.slip import PRODUCT
 from brains.ev.k_model import k_projection
 
-DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
 PLAYER_WATCH_SIZE = 11
 STRIKEOUT_WATCH_SIZE = 11
 
@@ -24,7 +23,7 @@ def _open(repo):
         return repo, None
     from db.migrate import get_connection
     from repositories.mlb_repo import MlbRepo
-    conn = get_connection(DB_PATH)
+    conn = get_connection(os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db"))
     return MlbRepo(conn), conn
 
 

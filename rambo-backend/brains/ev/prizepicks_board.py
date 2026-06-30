@@ -10,7 +10,6 @@ from brains.ev.hr_model import hr_probability
 from brains.ev.count_model import poisson_prob_over
 from brains.ev import k_model
 
-DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
 BOARD_SIZE = 11
 
 # market -> (stat label, count-model stat_keys / None for HR & SO which use their own model)
