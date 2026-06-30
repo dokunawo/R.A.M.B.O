@@ -8,7 +8,6 @@ import os
 
 from brains.ev.prizepicks_board import _p_over
 
-DB_PATH = os.environ.get("RAMBO_DB_PATH", "data/mlb_ingest.db")
 BOARD_SIZE = 11
 _TIER_ORDER = ("goblin", "standard", "demon")
 
