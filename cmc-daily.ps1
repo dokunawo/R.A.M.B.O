@@ -40,7 +40,9 @@ try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 # Windows PowerShell 5.1's Invoke-RestMethod mis-decodes UTF-8 JSON (em-dashes ->
 # mojibake). Fetch raw bytes and decode as UTF-8 ourselves.
 function Get-Json([string]$Uri, [string]$Method = "GET") {
-    $resp = Invoke-WebRequest -Uri $Uri -Method $Method -TimeoutSec 60 -UseBasicParsing
+    # 300s: the Strikeout Watch board projects every probable starter and can take
+    # 60-90s on a full ~15-game slate; 60s was too tight and aborted the whole run.
+    $resp = Invoke-WebRequest -Uri $Uri -Method $Method -TimeoutSec 300 -UseBasicParsing
     $bytes = $resp.RawContentStream.ToArray()
     [System.Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json
 }
