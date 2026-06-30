@@ -4,6 +4,29 @@ import { setVoiceDuck } from "./spotifyEngine";
 // Backend base — same origin the rest of the app talks to.
 const API = "http://localhost:8000";
 
+// Lightweight turn-timing probe (Tier 1). Off by default; enable in the console
+// with: localStorage.setItem('rambo_voice_timing','1'). Marks the five points of
+// a turn and prints the gaps so each later tuning can prove a number moved.
+export const voiceTiming = {
+  t: {},
+  on() { try { return localStorage.getItem("rambo_voice_timing") === "1"; } catch { return false; } },
+  mark(name) {
+    if (!this.on()) return;
+    if (name === "eot") this.t = {};        // new turn resets the slate
+    if (this.t[name] == null) this.t[name] = performance.now();
+  },
+  report() {
+    if (!this.on()) return;
+    const t = this.t;
+    if (t.eot == null || t.audio == null) return;
+    const d = (a, b) => (t[a] != null && t[b] != null) ? Math.round(t[b] - t[a]) : "—";
+    // stop talking -> send -> first audio segment -> first sound out
+    console.log(
+      `[voice-timing] stop→send ${d("eot", "sent")}ms · send→1st-seg ${d("sent", "seg")}ms · `
+      + `seg→1st-audio ${d("seg", "audio")}ms · TOTAL stop→1st-sound ${d("eot", "audio")}ms`);
+  },
+};
+
 const SMOOTH_UP   = 0.35;
 const SMOOTH_DOWN = 0.08;
 const WAKE_WORD   = "operator";
@@ -123,6 +146,7 @@ function playAudioSegment(b64) {
         };
         src.onended = () => { cancelAnimationFrame(raf); done(true); };
         src.start();
+        voiceTiming.mark("audio"); voiceTiming.report();   // first sound out
         sample();
       }, () => done(false));
     } catch {
@@ -267,6 +291,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
         globalSpokenTurns.delete(globalSpokenTurns.values().next().value);
       }
       activeBaseTurnRef.current = msg.base_turn_id;
+      voiceTiming.mark("seg");        // first speak_segment of this turn arrived
       setState(CONV_STATES.SPEAKING);
       onSpeakStartRef.current?.();
     } else if (msg.base_turn_id !== activeBaseTurnRef.current) {
@@ -364,7 +389,7 @@ export function useVoiceReactivity({ onTranscript, onFinalTranscript, onSpeakSta
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = setTimeout(() => {
               const finalCmd = commandBufferRef.current.trim();
-              if (finalCmd) onFinalTranscriptRef.current?.(finalCmd);
+              if (finalCmd) { voiceTiming.mark("eot"); onFinalTranscriptRef.current?.(finalCmd); }
             }, 1000);
           }
         } else if (interim) {

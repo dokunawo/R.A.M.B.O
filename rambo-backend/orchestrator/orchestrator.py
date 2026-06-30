@@ -1284,8 +1284,12 @@ class Orchestrator:
                 messages=messages,
                 max_tokens=1024,
             ) as stream:
+                first_token = True
                 async for event in stream:
                     if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                        if first_token:
+                            first_token = False
+                            print(f"[stream] first_token t_since_start={time.monotonic() - t0:.2f}s")
                         token_buf += event.delta.text
                         while True:
                             sentence, token_buf = self._split_sentence(token_buf)
