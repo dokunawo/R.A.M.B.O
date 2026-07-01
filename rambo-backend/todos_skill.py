@@ -56,8 +56,6 @@ def detect_intent(goal: str) -> str | None:
         return "list"
     if _ADD_RE.search(g):
         return "add"
-    if _LIST_RE.search(g):
-        return "list"
     return None
 
 
