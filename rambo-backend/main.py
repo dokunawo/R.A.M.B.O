@@ -27,6 +27,7 @@ from transcript_repo import TranscriptRepo
 from morning_brief import brief_scheduler, run_brief
 from reflection import reflection_scheduler, run_reflection
 from calendar_watch import calendar_watch_scheduler, check_once as calendar_check_once
+from todos_watch import todos_watch_scheduler
 import seeker_watch
 import proactive_nudges
 from usage_capture import set_usage_repo
@@ -163,6 +164,7 @@ async def _init_todos():
 _brief_task = None
 _reflection_task = None
 _calendar_watch_task = None
+_todos_watch_task = None
 
 
 @app.on_event("startup")
@@ -181,6 +183,12 @@ async def _start_reflection():
 async def _start_calendar_watch():
     global _calendar_watch_task
     _calendar_watch_task = asyncio.create_task(calendar_watch_scheduler(rambo))
+
+
+@app.on_event("startup")
+async def _start_todos_watch():
+    global _todos_watch_task
+    _todos_watch_task = asyncio.create_task(todos_watch_scheduler(rambo))
 
 
 _seeker_watch_task = None
