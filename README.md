@@ -6,7 +6,7 @@
 
 **A multi-agent AI orchestration system with a living, cinematic command-center interface.**
 
-`MK III` · React 19 + Three.js front end · FastAPI multi-agent back end · Dockerized
+`MK V` · React 19 + Three.js front end · FastAPI multi-agent back end · Dockerized
 
 </div>
 
@@ -79,6 +79,9 @@ agent's status.
 - **🎬 Two-phase splash sequence** — scripted boot experience with sequential scans, then a live console.
 - **🐳 Fully Dockerized** — backend, production frontend, and hot-reload dev frontend orchestrated with Docker Compose.
 - **🎛️ PowerShell control panel** — boot animations, health scans, force-rebuild, and one-key browser launch.
+- **✅ To-do / task manager** — voice add/list/complete/delete with priority, due dates, and recurrence (daily/weekdays/weekly/monthly); surfaced in the Chief-of-Staff brief and as due-today/overdue spoken nudges; kiosk `TodosPanel`.
+- **🎰 PrizePicks + alt-K betting boards** — a PrizePicks data path (parlay builder + goblin/standard/demon tiers) replaces the dead DK Pick6 props feed; a FanDuel alt-strikeout board (per-threshold EV + parlay builder) builds on the Strikeout Watch model.
+- **🗣️ Conversational voice-loop smoothing** — layered fast/slow end-of-turn detection (down from a flat 1000ms wait) + a shorter 10s follow-up window, a deterministic sign-off detector that keeps RAMBO quiet on a clear "thanks, that's all," and energy-based barge-in so talking over it stops playback instantly.
 
 ---
 
@@ -240,6 +243,12 @@ R.A.M.B.O/
 │   ├── websocket/              # ConnectionManager (broadcast)
 │   ├── personality.py          # system prompt assembly + voice cues
 │   ├── skills.py               # skill registry (weather, calendar, drive, chief-of-staff)
+│   ├── todos_repo.py            # to-do CRUD + recurrence roll (aiosqlite)
+│   ├── todos_skill.py           # voice parsing: intent, priority, due, recurrence
+│   ├── todos_watch.py           # due-today/overdue nudge scheduler (mirrors calendar_watch)
+│   ├── signoff.py               # voice-loop Tier 4 — deterministic sign-off detector
+│   ├── api/
+│   │   └── todos.py             # GET/POST /todos, complete, delete
 │   ├── self_knowledge/         # self-knowledge system
 │   │   ├── parser.py           # AUTO block parser (parse/serialize/render)
 │   │   ├── renderer.py         # wires generators to blocks
@@ -264,7 +273,9 @@ R.A.M.B.O/
 │   │       ├── SharedHUD.js/css       # persistent HUD: stat bars, command input, activity feed
 │   │       ├── AgentPage.js/css      # per-agent detail pages
 │   │       ├── RoundTable.js/css     # council view — orbiting agents
-│   │       └── LearningLog.js/css    # system learning log (side-panel layout)
+│   │       ├── LearningLog.js/css    # system learning log (side-panel layout)
+│   │       ├── TodosPanel.js/css     # kiosk to-do list dock
+│   │       └── signoff.js            # voice-loop sign-off detector (frontend mirror)
 │   ├── public/
 │   ├── package.json
 │   ├── Dockerfile  Dockerfile.dev
@@ -391,6 +402,15 @@ npm start          # serves on http://localhost:3000
 | `GET` | `/betting/moneyline-board` | `?date=` | Every game in game-time order (book odds + model %) + prompt |
 | `GET` | `/betting/strikeout-watch` | `?date=` | Top-11 probable starters by P(8+/9+/10+ K) + prompt |
 | `GET` | `/betting/hits-tb-watch` | `?date=` | Top-11 hitters by P(2+ TB) / P(1+ hit) + prompt |
+| `GET` | `/betting/prizepicks` | `?market=` | PrizePicks props (paid Apify fallback, replaces dead DK Pick6) |
+| `POST` | `/betting/prizepicks/parlay` | — | Build a PrizePicks parlay slip |
+| `GET` | `/betting/prizepicks-tiers` | `?market=` | Goblin/standard/demon difficulty tiers |
+| `GET` | `/betting/alt-k-board` | — | FanDuel alt-strikeout board, per-threshold EV |
+| `POST` | `/betting/alt-k/parlay` | — | Build an alt-strikeout parlay slip |
+| `GET` | `/todos` | — | List open to-do items |
+| `POST` | `/todos` | `{ "text", "priority"?, "due"?, "recurrence"? }` | Create a to-do item |
+| `POST` | `/todos/{id}/complete` | — | Complete a to-do (rolls forward if recurring) |
+| `DELETE` | `/todos/{id}` | — | Delete a to-do item |
 | `WS` | `/ws/activity` | — | Live activity + `STATUS:<agent>:<state>` feed |
 
 **Example — run a goal:**
@@ -459,15 +479,19 @@ curl -X POST http://localhost:8000/rambo/execute \
 See [`ROADMAP.md`](ROADMAP.md) — the single consolidated roadmap (supersedes all the
 dated `ROADMAP_*` files). Highlights:
 
-- **Live now:** cosmic console (6-tier orb), ElevenLabs neural voice, LLM SmartRouter +
-  6-tier orchestration, connected agents (Seeker/Keeper/Link/Echo), cost dashboard + prompt
-  caching, Factory sub-agent spawner, the **self-coding lane** (RAMBO edits its own code on
-  isolated git worktrees, operator-merged), recurring morning brief, and the **MLB betting
-  edge engine** (data-only ingestion + 5-market EV brain + the Chances Make Champions card).
-- **Short term:** voice/self-review polish, full-suite dev-lane tests, operator greeting +
-  shutdown, Echo push/SMS, Keeper recall-in-context.
+- **Live now:** cosmic console (6-tier orb), ElevenLabs neural voice with layered
+  fast/slow end-of-turn detection + sign-off silence + energy-based barge-in, LLM
+  SmartRouter + 6-tier orchestration, connected agents (Seeker/Keeper/Link/Echo), cost
+  dashboard + prompt caching, Factory sub-agent spawner, the **self-coding lane** (RAMBO
+  edits its own code on isolated git worktrees, operator-merged), recurring morning brief,
+  a **to-do / task manager** (voice CRUD, due dates, recurrence, brief + nudge surfacing,
+  kiosk panel), and the **MLB betting edge engine** (data-only ingestion + 5-market EV
+  brain + PrizePicks parlay/tiers + alt-K board + the Chances Make Champions card).
+- **Short term:** a working DK Pick6 replacement actor (or retiring Pick6 for PrizePicks
+  entirely), Echo push/SMS, Keeper recall-in-context, tuning alt-K/PrizePicks-tier
+  thresholds against real slates.
 - **Mid term:** Alembic migrations, persist HITL queues to SQLite, theme presets + modular
-  HUD, mobile layout, betting line-shopping/CLV.
+  HUD, mobile layout, multi-book line-shopping/CLV tracking.
 - **Long term:** secure login, CLI companion, native wake word + AEC, plugin system,
   cloud-hosted personal digital twin (north-star vision).
 
@@ -476,6 +500,49 @@ dated `ROADMAP_*` files). Highlights:
 ## Changelog
 
 Running log of splash-screen / UI changes, newest first. Each entry is labeled by area.
+
+### 2026-06-30 — To-do / task manager
+- **[Backend · todos]** New `todos_repo.py` (aiosqlite CRUD + recurrence roll: daily/
+  weekdays/weekly/monthly), `todos_skill.py` (deterministic voice parsing — intent,
+  priority, due date via `resolve_temporal`, recurrence), `api/todos.py` (`GET/POST /todos`,
+  `POST /todos/{id}/complete`, `DELETE /todos/{id}`), `todos_watch.py` (due-today/overdue
+  spoken nudge scheduler mirroring `calendar_watch.py`).
+- **[Backend · brief]** Chief-of-Staff brief now has an **OPEN TASKS** section (top items by
+  priority then due date, plus a count).
+- **[Frontend · TodosPanel]** New kiosk dock — open tasks grouped by priority with due/
+  overdue badges and a recurrence mark; refetches on a `tasks_changed` WS event.
+- **[Tests]** 75 todos-specific tests; full suite now **757 pass**.
+
+### 2026-06-29–06-30 — Voice-loop smoothing (5 tiers)
+- **[Tier 1 · instrumentation]** Turn-timing marks (end-of-turn → POST → first segment →
+  first audio) logged on request, gated behind a flag — no behavior change.
+- **[Tier 2 · end-of-turn]** Replaced the flat 1000ms end-of-turn wait with a layered
+  fast path (~350ms on a final STT result) / slow path (~900ms on interim-only text);
+  `FOLLOWUP_TIMEOUT_MS` 15s → 10s.
+- **[Tier 4 · sign-off]** New `signoff.py` (backend) — a deterministic, pre-LLM check that
+  stays silent on a clear farewell ("thanks, that's all") while still replying to
+  questions, commands, and continuations ("okay so the revenue is up"). Frontend mirror in
+  `signoff.js`. Never fires on the first utterance of a session.
+- **[Tier 3 · barge-in]** Energy-based barge-in — sustained mic RMS above threshold while
+  RAMBO is speaking aborts playback and hands control back to the recognizer; the wake
+  word is a reliable fallback trigger. Gated behind a flag, biased conservative to avoid
+  false interrupts from room noise.
+
+### 2026-06-28–06-30 — PrizePicks pivot + alt-K parlay board Phase 2
+- **[Backend · betting]** DK Pick6's Apify actor (`zen-studio`) has returned 0 items since
+  06/27 — HR/H+R+RBI/SB/K prop boards had no fresh data. Added date-filtered props + an
+  explicit warn-on-0 so the outage is visible, not silent.
+- **[Backend · PrizePicks]** New paid-Apify PrizePicks data path as the props replacement:
+  `GET /betting/prizepicks?market=`, a parlay builder (`POST /betting/prizepicks/parlay`),
+  and **goblin/standard/demon difficulty tiers** (`GET /betting/prizepicks-tiers?market=`).
+- **[Backend · alt-K]** Alt-strikeout board Phase 2 — FanDuel odds, per-threshold EV, and a
+  full parlay builder (`GET /betting/alt-k-board`, `POST /betting/alt-k/parlay`), built on
+  Phase 1's opponent-adjusted Expected-K-rate model.
+- **[Backend · moneyline]** Walk-forward backtest + a learned logistic regression model
+  both confirm the moneyline model is **−EV** (May sample, ROI −0.70) — thread closed, no
+  further model work planned; value stays line-shopping + honest leans.
+- **[Fix]** Fixed a latent `RAMBO_DB_PATH` bug that silently pointed some scripts at the
+  wrong SQLite file. `cmc-daily.ps1` now also drives the PrizePicks confidence/tiers boards.
 
 ### 2026-06-28 — Parlay Boards page (`/boards`)
 - **[UI]** New `/boards` page (`cmc/ParlayBoards.js` + `parlay.css`, CMC brand) showing all four parlay boards on one screen — Player Watch (HR), Strikeout Watch, Hits & Total Bases, Moneyline Board — as ranked tables with the headline probability highlighted. Fetches the `/betting/*-watch` + `/betting/moneyline-board` endpoints; refresh + links to Daily Edge / Console. Routed in `index.js`.

@@ -16,7 +16,7 @@ R.A.M.B.O (Responsive Autonomous Multi-Brain Operator) is a cinematic multi-agen
 - **Phase 2 main console** — full orb + agent roster + system parameters + command input + WebSocket activity feed + stat bars.
 - **Round Table** — 10 agents orbiting orb as clickable nodes, AgentConstellation in 3D.
 - **Tier 5/6** — dispatch beams, processing helix, WebSocket-driven animations, performance mode (battery/visibility/prefers-reduced-motion).
-- **Git state**: on `main`, up to date with `origin/main`. Latest commit `cef4135` (EV weather modifier + temp-park guard, Phase 2B). Working tree only lightly dirty: modified `rambo-frontend/package-lock.json`, untracked `rambo-frontend/public/cmc/plate.png`. The Spotify/startup fixes from the 2026-06-25 session are **committed**.
+- **Git state**: on `main`, up to date with `origin/main`. Latest commit `d0afd58` (merge PR #38, to-do manager). Test suite: **757 pass**.
 
 ## 2a. MLB betting edge engine — "Chances Make Champions" (CURRENT ACTIVE THREAD, 06/26–06/27)
 
@@ -27,7 +27,12 @@ Data-only +EV MLB tool integrated into the RAMBO backend. Brand "CMC"; ~$10 flat
 - **Recent (06/27):** multi-source recency-aware data layer (Phase 1); Baseball Savant barrel%/hard-hit% → HR power modifier (Phase 2A); weather modifier + temp-park guard for HR model (Phase 2B). New: `config/savant.py`, `config/the_odds_api.py`, `ingestion/savant_client.py`, `ingestion/the_odds_api_client.py`, `db/migrations/008_weather.sql`.
 - **Durable finding:** single DK Pick6 legs are structurally −EV (multipliers carry the house margin). The tool's value is **−EV avoidance + honest leans + line shopping**, not pretending to beat the book.
 - **CMC cards:** web dashboard at `/edge`; downloadable poster at `/card/:market` (`html-to-image` PNG, real headshots, procedural smoke/gold/grunge textures in `public/cmc/`, auto-detected branded `plate.png`).
-- **Next (betting):** prop→game link + team confirmation; Pick6 MLB-only filter; line shopping across books (needs multi-book odds) + CLV tracking; a genuinely backtested predictive moneyline model.
+- **Next (betting):** the DK Pick6 Apify actor (`zen-studio`) has returned 0 items since
+  06/27 — **PrizePicks now covers the props gap** (paid Apify fallback, goblin/standard/demon
+  tiers, parlay builder). Alt-K board Phase 2 (FanDuel odds + per-threshold EV + parlay
+  builder) shipped 06/29–06/30. Moneyline backtest is **closed** (confirmed −EV, no further
+  model work planned). Remaining: multi-book line shopping + CLV tracking, and either a
+  working Pick6 replacement actor or fully retiring Pick6.
 
 ### Half-built
 - **Personality engine** — `personality.py`, `conversation.py`, `AGENT.md` all exist and are wired into the orchestrator's `_speak()` method. Falls back gracefully to raw results when no API key is set. **Not yet live** because Daniel hasn't set `ANTHROPIC_API_KEY`.
@@ -39,15 +44,28 @@ Data-only +EV MLB tool integrated into the RAMBO backend. Brand "CMC"; ~$10 flat
 - **Spotify integration** — not built. Requires separate OAuth app at developer.spotify.com.
 
 ### Next action
-**Active thread: alt-K board Phase 2 — FanDuel alt-K odds, per-threshold EV, and a parlay builder.**
+**Active thread just closed (06/30): the to-do / task manager, merged via PR #38 (`d0afd58`).**
+Full voice CRUD (add/list/complete/delete), priority, due dates, recurrence, surfaced in the
+Chief-of-Staff brief + due-today/overdue spoken nudges, plus a kiosk `TodosPanel`. Awaiting
+Daniel's direction on what's next — candidates: Gmail/Spotify quota work, a Pick6 replacement
+actor, or further alt-K/PrizePicks-tier tuning.
 
-Phase 1 shipped + merged (06/29): an opponent-adjusted Expected-K-rate × batters-faced model with the full P(1+…10+) ladder on the Strikeout Watch board, plus a leak-free calibration backtest (634 starts — well-calibrated). The **moneyline thread is DONE** — walk-forward backtest + a learned logistic model both shipped/merged (honest finding: the moneyline market is efficient, the model is ≈ −EV; the real value is line-shopping + honest leans, not beating the book). Phase 2 builds the betting layer on top of the now-trusted K model. Awaiting Daniel's direction.
+Shipped 06/29–06/30 (now live): **PrizePicks pivot** — with DK Pick6's Apify actor dead since
+06/27, added a PrizePicks data path (paid fallback), a parlay builder, and
+goblin/standard/demon difficulty tiers as the new props source. **Alt-K board Phase 2** —
+FanDuel alt-strikeout odds, per-threshold EV, parlay builder (Phase 1's Expected-K-rate model
+was the foundation). **Moneyline thread closed** — backtest + learned logreg both confirm
+−EV, no further model work planned. **Voice-loop smoothing** — turn-timing instrumentation,
+faster layered end-of-turn detection + 10s follow-up window, a deterministic sign-off
+detector (stays silent on "thanks, that's all"), and energy-based barge-in (talking over
+RAMBO stops it and hands back to the mic). Fixed a latent `RAMBO_DB_PATH` bug in
+`cmc-daily.ps1`'s wiring.
 
-Also shipped 06/28 (now live): voice self-review (`/betting` aside — "Operator, review the auth module"), dev-lane full-suite test gate, natural-flow spoken briefing, shutdown/standby + task-history dock, push-approval feedback. `cmc-daily.ps1` drives line-shop, prop-shop, and CLV.
+Also shipped 06/28 (still live): voice self-review (`/betting` aside — "Operator, review the auth module"), dev-lane full-suite test gate, natural-flow spoken briefing, shutdown/standby + task-history dock, push-approval feedback. `cmc-daily.ps1` drives line-shop, prop-shop, CLV, and now PrizePicks confidence/tiers boards.
 
-Already-shipped initiatives in maintenance: **self-coding lane** (`rambo-backend/dev_agent/` — drafts changes on an isolated git worktree → TDD red→green → impact report → lands on `main` only on explicit operator merge; endpoints `/dev/*`); **Factory** sub-agent spawner; **morning brief** scheduler; cost tracking + `/usage` dashboard. Test suite: **557 pass**.
+Already-shipped initiatives in maintenance: **self-coding lane** (`rambo-backend/dev_agent/` — drafts changes on an isolated git worktree → TDD red→green → impact report → lands on `main` only on explicit operator merge; endpoints `/dev/*`); **Factory** sub-agent spawner; **morning brief** scheduler; cost tracking + `/usage` dashboard. Test suite: **757 pass**.
 
-Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar/drive skills through the voice interface.
+Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar/drive skills through the voice interface, a working DK Pick6 Apify actor (or retiring Pick6 for PrizePicks entirely).
 
 ## 3. Decisions Made (and Why)
 
@@ -106,6 +124,8 @@ Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar
 | `audioEngine.js` | Boot chime + ambient hum. Hum gain 0.006, LFO 0.001. |
 | `RoundTable.js` / `.css` | Council page — orbiting agent nodes + constellation. |
 | `LearningLog.js` / `.css` | Learning log page — displays system learnings from backend. |
+| `TodosPanel.js` / `.css` | Kiosk to-do list dock — fetches `GET /todos`, refetches on `tasks_changed` WS event. |
+| `signoff.js` | Tier 5 voice-loop smoothing — `isSignoff()`, a deterministic sign-off/no-reply detector. |
 
 ### Backend (`rambo-backend/`)
 
@@ -128,6 +148,8 @@ Other pending threads: visual polish, Gmail/Spotify quota work, testing calendar
 | `agent_tracker.py` | Per-agent stats, activity, learnings tracking. |
 | `sentinel_queue.py` | UUID-tracked approval queue for Sentinel agent. |
 | `agents/` | 10 agent modules (architect, engineer, seeker, analyst, sentinel, steward, link, keeper, echo, pilot). Currently deterministic stubs. |
+| `todos_repo.py` / `todos_skill.py` / `todos_watch.py` / `api/todos.py` | To-do manager — aiosqlite CRUD + recurrence, voice parsing, due-today/overdue nudge scheduler, REST endpoints. |
+| `signoff.py` | Deterministic sign-off detector (voice-loop Tier 4) — short-circuits the LLM call and returns a silent reply on a clear farewell. |
 
 ### Legacy files (not used)
 - `RamboOrb3D.jsx` / `RamboOrbShaders.js` — old orb, replaced by `CosmicOrb.jsx` + `CosmicOrbShaders.js`.

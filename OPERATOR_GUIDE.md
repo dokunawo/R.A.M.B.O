@@ -85,6 +85,19 @@ After changing `.env`, **restart the backend** so it re-reads them: `docker comp
 - The glowing **cosmic orb** is the interface centerpiece; it pulses to RAMBO's own voice.
 - Handy voice commands: **"command center"** (opens the console), **"clear everything"** (clears responses), **"stop listening"** (pauses the mic; resumes when you say the wake word again), **"remember X is Y"**, **"email me X"**.
 - Mic control: a **hard-off button** (stays off across refreshes) and the soft "stop listening" pause.
+- **Faster to respond, faster to stop listening:** end-of-turn detection now uses a quick
+  ~350ms confirm window on a clean final result (was a flat 1000ms every time), falling back
+  to a slower ~900ms window for trailing-off or noisy speech. The follow-up window (how long
+  RAMBO waits for your next line before dropping the mic) is now **10 seconds** (was 15).
+- **It knows when you're done talking, not just done speaking:** a clear sign-off — "thanks",
+  "got it", "sounds good", "that's all" — ends the turn quietly instead of getting one more
+  reply out of RAMBO. Questions, commands, and "okay so..." continuations still get answered
+  normally; this is deliberately biased toward replying, so it only stays silent on genuinely
+  clear goodbyes.
+- **You can talk over it:** if you start speaking while RAMBO is mid-reply, it detects the
+  interruption (mic energy while it's speaking) and stops itself within about 300ms, then
+  listens — no need to wait for it to finish. Saying "Operator" always interrupts it too, as
+  a reliable fallback.
 
 ### The agents (who does what)
 RAMBO routes your request to the right capability automatically:
@@ -95,8 +108,25 @@ RAMBO routes your request to the right capability automatically:
 - **Sentinel** — a security gate; risky actions get held for your approval.
 - Plus the **Factory** (below) and the **self-coding lane** (section 5).
 
+### To-do list (voice)
+A real to-do list, separate from the calendar/watchlist "keep an eye on X" reminders:
+- **Add:** "add a task to call the vet tomorrow, important" / "remind me to renew the permit"
+  / "put pick up dry cleaning on my list" — priority (urgent/important/high priority → high;
+  low priority/whenever/someday → low), due dates ("tomorrow", "Friday", etc.), and
+  recurrence ("every day", "every weekday", "every Monday", "monthly") are all picked up
+  automatically if you say them.
+- **List:** "what's on my list" / "my tasks" / "what do I need to do".
+- **Complete:** "mark call the vet as done" / "I did the permit thing" / "finished X" —
+  fuzzy-matches against your open items; if it's ambiguous, RAMBO reads back the candidates
+  and asks which one.
+- **Delete:** "remove the vet task from my list" / "delete that task".
+- Open tasks show up in the **morning brief** (an OPEN TASKS section) and RAMBO will
+  proactively nudge you on **due-today / overdue** items. A kiosk **`TodosPanel`** dock shows
+  the list grouped by priority with due/overdue badges.
+- Endpoints: `GET/POST /todos`, `POST /todos/{id}/complete`, `DELETE /todos/{id}`.
+
 ### Morning brief
-A daily scheduler composes a brief (date + today's calendar + priorities) and both shows it on screen and emails it. Trigger on demand: `POST /brief/run`. Schedule via `MORNING_BRIEF_TIME` / `MORNING_BRIEF_TZ`.
+A daily scheduler composes a brief (date + today's calendar + priorities + open tasks) and both shows it on screen and emails it. Trigger on demand: `POST /brief/run`. Schedule via `MORNING_BRIEF_TIME` / `MORNING_BRIEF_TZ`.
 
 ### Boot briefing + "catch me up"
 - **At boot**, after the spoken greeting, RAMBO drops a **System Briefing card** in the roster and speaks a short summary. It covers: today's date/time, **recent changes since you were last here** (read from its own git history), suggested next targets (from `ROADMAP.md` / `HANDOFF.md`), the weather, what's waiting on you (Factory/Confirm/Handoff/Code-Review docks), an uncommitted-changes warning, today's calendar, your north-star, and system health + API cost. Endpoint: `GET /briefing/boot`. "Since last boot" is tracked in `rambo-backend/data/boot_state.json`.
@@ -227,6 +257,14 @@ prompt to the console, and (3) writes a readable **Word doc** to the repo root:
   also showing **P(1+ hit)** + projected hits/TB. For hits / total-base parlays: use
   1+ hit as floor legs, 2+ TB as power legs. Say **"hits and total bases"** / "hits
   watch" / "total bases board", or `GET /betting/hits-tb-watch`.
+- **PrizePicks board** — the DK Pick6 props feed (`zen-studio` Apify actor) has been dead
+  (returning 0 items) since 06/27, so **PrizePicks is now the props source**: pull props
+  (`GET /betting/prizepicks?market=`), build a parlay (`POST /betting/prizepicks/parlay`),
+  or pull by **goblin/standard/demon** difficulty tier (`GET /betting/prizepicks-tiers?market=`)
+  — mirroring PrizePicks' own tiering.
+- **Alt-K board (Phase 2)** — FanDuel alt-strikeout odds with per-threshold EV and a full
+  parlay builder, built on top of the Strikeout Watch model: `GET /betting/alt-k-board`,
+  `POST /betting/alt-k/parlay`.
 
 ### 6.3 Where to read / use the picks
 - **Parlay Boards page:** `http://localhost:3000/boards` — all four parlay boards on
@@ -284,13 +322,21 @@ the slips, boards, dashboard, posters) reads already-pulled data for free.
 | `GET /betting/slip?market=&date=` | Fixed-size slip roster + a ChatGPT image prompt. |
 | `GET /betting/player-watch?date=` | Top-11 HR board (leans pinned) + prompt. |
 | `GET /betting/moneyline-board?date=` | Every game in game-time order + prompt. |
+| `GET /betting/strikeout-watch?date=` | Top-11 starters by P(8+/9+/10+ K), for alt-K parlays. |
+| `GET /betting/hits-tb-watch?date=` | Top-11 hitters by P(2+ TB)/P(1+ hit). |
+| `GET /betting/prizepicks?market=` | PrizePicks props (paid Apify — replaces dead DK Pick6). |
+| `POST /betting/prizepicks/parlay` | Build a PrizePicks parlay slip. |
+| `GET /betting/prizepicks-tiers?market=` | Goblin/standard/demon difficulty tiers. |
+| `GET /betting/alt-k-board` | FanDuel alt-strikeout board, per-threshold EV. |
+| `POST /betting/alt-k/parlay` | Build an alt-strikeout parlay slip. |
 
 ---
 
 ## 7. Running the tests
 
-From `rambo-backend/`: `python -m pytest -q`  (360+ tests, incl. the EV brain + the
-Player Watch / Moneyline Board suites). The self-coding lane uses this same command
+From `rambo-backend/`: `python -m pytest -q`  (757 tests, incl. the EV brain, the
+Player Watch / Moneyline / Strikeout / Hits-TB boards, PrizePicks + alt-K, the to-do
+manager, and the voice-loop smoothing tiers). The self-coding lane uses this same command
 internally to verify its own changes.
 
 > On this machine, run pytest with the project venv:
