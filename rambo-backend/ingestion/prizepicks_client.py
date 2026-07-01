@@ -4,6 +4,7 @@ items. Never raises — returns 0 items on any error so prep can warn and move o
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
@@ -58,6 +59,12 @@ def fetch_mlb_props(*, client: Optional[httpx.Client] = None) -> RunResult:
     finally:
         if own:
             client.close()
-    rid = f"{cfg.SOURCE_ID}:mlb"
+    # `run_id` must be unique per pull: raw_ingest has a UNIQUE(run_id, item_index)
+    # idempotency constraint (see raw_store.land_raw). A fixed "prizepicks:mlb" id
+    # made every pull after the first collide with already-landed rows and get
+    # silently skipped (inserted: 0) — today's projections never made it past
+    # raw_ingest. Stamping the id with the pull time (like the paid actor's Apify
+    # run_id) makes each pull a genuinely new run.
+    rid = f"{cfg.SOURCE_ID}:mlb:{datetime.now(timezone.utc).isoformat()}"
     return RunResult(actor_id=cfg.SOURCE_ID, run_id=rid, dataset_id=rid,
                      items=items, item_count=len(items), estimated_cost_usd=0.0)
