@@ -162,3 +162,84 @@ def test_find_match_ambiguous_multiple_substring_hits():
     match, candidates = find_match("call", _tasks())
     assert match is None
     assert {c["id"] for c in candidates} == {1, 3}
+
+
+import pytest
+import pytest_asyncio
+import todos_skill
+from todos_repo import TodosRepo
+
+
+@pytest_asyncio.fixture
+async def wired_repo(tmp_path):
+    r = TodosRepo(db_path=tmp_path / "skill_todos.db")
+    await r.init_db()
+    todos_skill.set_repo(r)
+    yield r
+    todos_skill.set_repo(None)
+
+
+@pytest.mark.asyncio
+async def test_skill_add_reports_fields(wired_repo):
+    out = await todos_skill.todos_skill(
+        "add a task to call the vet tomorrow, urgent", {})
+    assert "call the vet" in out.lower()
+    assert "high" in out.lower() or "urgent" in out.lower()
+    rows = await wired_repo.list_open()
+    assert len(rows) == 1
+    assert rows[0]["text"] == "call the vet"
+    assert rows[0]["priority"] == "high"
+    assert rows[0]["due_date"] is not None
+
+
+@pytest.mark.asyncio
+async def test_skill_list_empty(wired_repo):
+    out = await todos_skill.todos_skill("what's on my list", {})
+    assert "nothing" in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_skill_list_shows_open_tasks(wired_repo):
+    await wired_repo.add("call the vet")
+    await wired_repo.add("buy milk")
+    out = await todos_skill.todos_skill("what's on my list", {})
+    assert "call the vet" in out.lower()
+    assert "buy milk" in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_skill_complete_single_match(wired_repo):
+    await wired_repo.add("call the vet")
+    out = await todos_skill.todos_skill("mark call the vet as done", {})
+    assert "done" in out.lower() or "call the vet" in out.lower()
+    assert await wired_repo.list_open() == []
+
+
+@pytest.mark.asyncio
+async def test_skill_complete_no_match(wired_repo):
+    out = await todos_skill.todos_skill("mark clean the garage as done", {})
+    assert "don't see" in out.lower() or "not" in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_skill_complete_ambiguous_asks(wired_repo):
+    await wired_repo.add("call the vet")
+    await wired_repo.add("call mom about the trip")
+    out = await todos_skill.todos_skill("mark call as done", {})
+    assert "which" in out.lower()
+    assert len(await wired_repo.list_open()) == 2  # nothing completed on ambiguity
+
+
+@pytest.mark.asyncio
+async def test_skill_delete_removes_task(wired_repo):
+    await wired_repo.add("old idea")
+    out = await todos_skill.todos_skill("delete the old idea task", {})
+    assert "removed" in out.lower() or "old idea" in out.lower()
+    assert await wired_repo.list_open() == []
+
+
+@pytest.mark.asyncio
+async def test_skill_no_repo_configured_is_graceful():
+    todos_skill.set_repo(None)
+    out = await todos_skill.todos_skill("what's on my list", {})
+    assert isinstance(out, str) and out  # never raises, always says something

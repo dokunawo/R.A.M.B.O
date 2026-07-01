@@ -167,3 +167,80 @@ def find_match(spoken: str, open_tasks: list[dict]) -> tuple[dict | None, list[d
     if len(matches) == 1:
         return matches[0], []
     return None, matches
+
+
+_REPO = None  # set at startup by main.py
+
+
+def set_repo(repo) -> None:
+    global _REPO
+    _REPO = repo
+
+
+def get_repo():
+    return _REPO
+
+
+def _format_task_line(i: int, t: dict) -> str:
+    parts = [f"{i}. {t['text']}"]
+    if t["priority"] != "normal":
+        parts.append(f"({t['priority']})")
+    if t["due_date"]:
+        parts.append(f"— due {t['due_date']}")
+    return " ".join(parts)
+
+
+async def todos_skill(goal: str, ctx: dict) -> str:
+    repo = get_repo()
+    if repo is None:
+        return "The to-do list isn't available right now."
+
+    intent = detect_intent(goal)
+
+    if intent == "list":
+        open_tasks = await repo.list_open()
+        if not open_tasks:
+            return "Nothing on your to-do list."
+        return "Here's your list: " + " ".join(
+            _format_task_line(i, t) for i, t in enumerate(open_tasks, 1))
+
+    if intent == "add":
+        priority = extract_priority(goal)
+        due, due_phrase = extract_due(goal)
+        recurrence = extract_recurrence(goal)
+        priority_phrase = None
+        for rx in (_HIGH_RE, _LOW_RE):
+            m = rx.search(goal)
+            if m:
+                priority_phrase = m.group(0)
+                break
+        text = clean_task_text("add", goal, due_phrase=due_phrase,
+                               priority_phrase=priority_phrase)
+        if not text:
+            return "I didn't catch what to add — try 'add a task to <what you need to do>'."
+        row = await repo.add(text, priority=priority, due=due, recurrence=recurrence)
+        parts = [f"Added: {row['text']}."]
+        if priority != "normal":
+            parts.append(f"Priority: {priority}.")
+        if due:
+            parts.append(f"Due {due}.")
+        if recurrence:
+            parts.append(f"Repeats {recurrence}.")
+        return " ".join(parts)
+
+    if intent in ("complete", "delete"):
+        open_tasks = await repo.list_open()
+        spoken = extract_target_phrase(intent, goal)
+        match, candidates = find_match(spoken, open_tasks)
+        if match is None and candidates:
+            names = "; ".join(c["text"] for c in candidates)
+            return f"Which one — {names}?"
+        if match is None:
+            return "I don't see a task like that on your list."
+        if intent == "complete":
+            done = await repo.complete(match["id"])
+            return f"Done: {done['text']}."
+        await repo.delete(match["id"])
+        return f"Removed: {match['text']}."
+
+    return "I didn't catch a to-do command there."
