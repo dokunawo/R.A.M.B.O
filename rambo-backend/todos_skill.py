@@ -16,6 +16,12 @@ _ADD_RE = re.compile(
     r"\b(add a task(?: to)?|add task(?: to)?|new task(?: to)?|remind me to|"
     r"i need to|i have to|i've got to|ive got to|put .+ on my (?:to-?do )?list)\b",
     re.IGNORECASE)
+# "put X on my (to-do )?list" is an unambiguous ADD trigger, but its own trailing
+# "...list" text also satisfies _LIST_RE's bare "to-?do list"/"task list"
+# alternatives (e.g. "put call mom on my to-do list"). Checked FIRST, before the
+# general complete/delete/list/add order below, so this one phrasing never loses
+# to the general LIST check.
+_PUT_ADD_RE = re.compile(r"^put\s+.+\s+on my (?:to-?do )?list\b", re.IGNORECASE)
 _LIST_RE = re.compile(
     r"\b(what'?s on my list|my tasks|task list|to-?do list|what do i need to do|"
     r"what'?s on my to-?do list)\b", re.IGNORECASE)
@@ -37,20 +43,17 @@ _MONTHLY_RE = re.compile(r"\b(every ?month|monthly)\b", re.IGNORECASE)
 
 def detect_intent(goal: str) -> str | None:
     g = goal or ""
+    if _PUT_ADD_RE.search((g or "").strip()):
+        return "add"
+    # Complete/delete/list are checked before add: "add" triggers are broader and
+    # some phrasing overlaps ("i need to" vs "i did"), so the more specific,
+    # action-on-existing-item intents win first.
     if _COMPLETE_RE.search(g):
         return "complete"
     if _DELETE_RE.search(g):
         return "delete"
-
-    # If the goal starts with "what", give LIST priority. This ensures queries like
-    # "what do i need to do" are recognized as LIST, not ADD (since the ADD regex
-    # contains the standalone "i need to" pattern).
-    if g.strip().lower().startswith("what"):
-        if _LIST_RE.search(g):
-            return "list"
-
-    # ADD is checked before general LIST to handle "put X on my list" correctly,
-    # which would otherwise match the list regex's "to-do list" pattern.
+    if _LIST_RE.search(g):
+        return "list"
     if _ADD_RE.search(g):
         return "add"
     if _LIST_RE.search(g):
@@ -156,6 +159,9 @@ def find_match(spoken: str, open_tasks: list[dict]) -> tuple[dict | None, list[d
     if len(contains) > 1:
         return None, contains
     texts = [t["text"] for t in open_tasks]
+    # 0.5 lets "clean the garage" fuzzy-match "call the vet" (actual SequenceMatcher
+    # ratio 0.571 > 0.5) — a real false positive, confirmed by running difflib
+    # directly, not by hand-estimating the ratio. 0.6 is the verified-correct value.
     close = difflib.get_close_matches(spoken, texts, n=3, cutoff=0.6)
     matches = [t for t in open_tasks if t["text"] in close]
     if len(matches) == 1:

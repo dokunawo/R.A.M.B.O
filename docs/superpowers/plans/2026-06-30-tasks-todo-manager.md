@@ -606,6 +606,13 @@ _ADD_RE = re.compile(
     r"\b(add a task(?: to)?|add task(?: to)?|new task(?: to)?|remind me to|"
     r"i need to|i have to|i've got to|ive got to|put .+ on my (?:to-?do )?list)\b",
     re.IGNORECASE)
+# "put X on my (to-do )?list" is an unambiguous ADD trigger, but its own trailing
+# "...list" text also satisfies _LIST_RE's bare "to-?do list"/"task list"
+# alternatives (e.g. "put call mom on my to-do list" would otherwise resolve to
+# LIST). Checked FIRST in detect_intent, before the general order below, so this
+# one phrasing never loses to the general LIST check. (Found via execution during
+# Task 2's implementation — not caught by hand-tracing during planning.)
+_PUT_ADD_RE = re.compile(r"^put\s+.+\s+on my (?:to-?do )?list\b", re.IGNORECASE)
 _LIST_RE = re.compile(
     r"\b(what'?s on my list|my tasks|task list|to-?do list|what do i need to do|"
     r"what'?s on my to-?do list)\b", re.IGNORECASE)
@@ -627,6 +634,8 @@ _MONTHLY_RE = re.compile(r"\b(every ?month|monthly)\b", re.IGNORECASE)
 
 def detect_intent(goal: str) -> str | None:
     g = goal or ""
+    if _PUT_ADD_RE.search(g.strip()):
+        return "add"
     # Complete/delete/list are checked before add: "add" triggers are broader and
     # some phrasing overlaps ("i need to" vs "i did"), so the more specific,
     # action-on-existing-item intents win first.
@@ -739,7 +748,10 @@ def find_match(spoken: str, open_tasks: list[dict]) -> tuple[dict | None, list[d
     if len(contains) > 1:
         return None, contains
     texts = [t["text"] for t in open_tasks]
-    close = difflib.get_close_matches(spoken, texts, n=3, cutoff=0.5)
+    # 0.5 lets "clean the garage" fuzzy-match "call the vet" (actual
+    # SequenceMatcher ratio 0.571 > 0.5 — verified by running difflib directly,
+    # not by hand-estimating); 0.6 is the smallest cutoff that excludes it.
+    close = difflib.get_close_matches(spoken, texts, n=3, cutoff=0.6)
     matches = [t for t in open_tasks if t["text"] in close]
     if len(matches) == 1:
         return matches[0], []
