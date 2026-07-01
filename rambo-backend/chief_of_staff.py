@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 from datetime import datetime, date
 
+import todos_skill
+
 NORTH_STAR_PATHS = [
     Path(__file__).parent / "north-star.md",
     Path.home() / ".claude" / "north-star.md",
@@ -131,6 +133,21 @@ async def chief_of_staff_skill(goal: str, ctx: dict) -> str:
         brief_parts.append("\n**Operating rules in effect:**")
         for r in rules:
             brief_parts.append(f"  - {r}")
+
+    try:
+        repo = todos_skill.get_repo()
+        open_tasks = await repo.list_open() if repo else []
+    except Exception:
+        open_tasks = []
+    if open_tasks:
+        brief_parts.append("\n## OPEN TASKS")
+        for t in open_tasks[:10]:
+            line = f"  - {t['text']}"
+            if t["priority"] != "normal":
+                line += f" ({t['priority']})"
+            if t["due_date"]:
+                line += f" — due {t['due_date']}"
+            brief_parts.append(line)
 
     brief_parts.append(f"\n---\nDoctrine: {doc_path}  ·  Last reviewed: {fm.get('last_reviewed', 'unknown')}")
 

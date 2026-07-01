@@ -27,6 +27,7 @@ from transcript_repo import TranscriptRepo
 from morning_brief import brief_scheduler, run_brief
 from reflection import reflection_scheduler, run_reflection
 from calendar_watch import calendar_watch_scheduler, check_once as calendar_check_once
+from todos_watch import todos_watch_scheduler
 import seeker_watch
 import proactive_nudges
 from usage_capture import set_usage_repo
@@ -44,6 +45,8 @@ from dev_agent import builds as builds_mod
 from spotify_repo import SpotifyRepo
 from spotify_client import SpotifyClient, SCOPES
 import spotify_client as spotify_mod
+from todos_repo import TodosRepo
+import todos_skill
 from fastapi.responses import RedirectResponse, HTMLResponse
 
 try:
@@ -65,6 +68,7 @@ _tts_usage_repo = TTSUsageRepo()
 _keeper_repo = KeeperRepo()
 _conversation_repo = ConversationRepo()
 _transcript_repo = TranscriptRepo()
+_todos_repo = TodosRepo()
 _factory_repo = FactoryRepo()
 _tool_registry = build_default_registry()
 _pipeline: SpawnPipeline | None = None
@@ -92,6 +96,12 @@ try:
     app.include_router(_betting_router)
 except Exception as _betting_err:  # pragma: no cover
     print(f"[rambo] betting router not mounted: {_betting_err}")
+
+try:
+    from api.todos import router as _todos_router
+    app.include_router(_todos_router)
+except Exception as _todos_err:  # pragma: no cover
+    print(f"[rambo] todos router not mounted: {_todos_err}")
 
 # Frontend readiness handshake for the AHK boot gesture: the UI POSTs /ui/ready
 # once it has loaded (screen-share auto-start listener armed), and the helper
@@ -145,9 +155,16 @@ async def _init_transcript():
     rambo.set_transcript_repo(_transcript_repo)
 
 
+@app.on_event("startup")
+async def _init_todos():
+    await _todos_repo.init_db()
+    todos_skill.set_repo(_todos_repo)
+
+
 _brief_task = None
 _reflection_task = None
 _calendar_watch_task = None
+_todos_watch_task = None
 
 
 @app.on_event("startup")
@@ -166,6 +183,12 @@ async def _start_reflection():
 async def _start_calendar_watch():
     global _calendar_watch_task
     _calendar_watch_task = asyncio.create_task(calendar_watch_scheduler(rambo))
+
+
+@app.on_event("startup")
+async def _start_todos_watch():
+    global _todos_watch_task
+    _todos_watch_task = asyncio.create_task(todos_watch_scheduler(rambo))
 
 
 _seeker_watch_task = None

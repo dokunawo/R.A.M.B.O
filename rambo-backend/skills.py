@@ -27,6 +27,8 @@ except ImportError:
 from chief_of_staff import chief_of_staff_skill as _cos_skill
 from codebase_skill import codebase_skill as _codebase_skill
 from code_review_skill import code_review_skill as _code_review_skill, match_code_review as _match_code_review
+import todos_skill
+from todos_skill import todos_skill as _todos_skill
 
 
 async def system_update_skill(goal: str, ctx: dict) -> str:
@@ -477,8 +479,8 @@ if _HAS_GCAL:
         "agent": "pilot",
         "match": lambda g: any(w in g.lower() for w in (
             "calendar", "schedule", "event", "meeting", "appointment",
-            "what's on my", "what do i have", "my day", "my week",
-            "book a", "set up a meeting", "add to my calendar",
+            "what's on my calendar", "whats on my calendar", "what do i have",
+            "my day", "my week", "book a", "set up a meeting", "add to my calendar",
         )),
         "run": _calendar_skill,
     })
@@ -494,6 +496,19 @@ if _HAS_GDRIVE:
         )),
         "run": _drive_skill,
     })
+
+SKILLS.append({
+    "name": "todos",
+    "agent": "keeper",
+    "match": lambda g: any(w in g.lower() for w in (
+        "add a task", "add task", "new task", "remind me to", "i need to",
+        "i have to", "on my list", "on my to-do list", "what's on my list",
+        "whats on my list", "my tasks", "task list", "to-do list", "todo list",
+        "what do i need to do", "mark", "complete", "finished", "check off",
+        "i did", "remove the", "delete the", "drop the",
+    )) and todos_skill.detect_intent(g) is not None,
+    "run": _todos_skill,
+})
 
 SKILLS.append({
     "name": "chief-of-staff",

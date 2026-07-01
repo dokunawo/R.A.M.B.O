@@ -19,6 +19,7 @@ import {
 } from "./audioEngine";
 import { startShare, stopShare, isSharing, onShareChange, frameForGoal } from "./screenVision";
 import SpotifyWidget from "./SpotifyWidget";
+import TodosPanel from "./TodosPanel";
 import "./SplashScreen.css";
 
 /* ------------------------------------------------------------------ */
@@ -1371,6 +1372,7 @@ export default function SplashScreen({
             <ProactiveDock />
             <HistoryDock />
             <TaskHistoryDock />
+            <TodosPanel />
           </div>
           <ActiveTaskBar />
           <SoundGate />

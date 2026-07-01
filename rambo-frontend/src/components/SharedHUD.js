@@ -12,7 +12,7 @@ const WS_URL = "ws://localhost:8000/ws/activity";
 // [isOpen, toggle]; toggling one closes whichever other was open.
 let _openDock = null;
 const _openDockListeners = new Set();
-function useDockOpen(id) {
+export function useDockOpen(id) {
   const [, force] = useState(0);
   useEffect(() => {
     const fn = () => force(n => n + 1);
