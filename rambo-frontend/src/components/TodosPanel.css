@@ -1,0 +1,47 @@
+/* rambo-frontend/src/components/TodosPanel.css */
+.tp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 12px;
+  color: #d8d8d8;
+}
+
+.tp-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #6b7280;
+}
+
+.tp-prio-high .tp-dot { background: #ff4466; }
+.tp-prio-normal .tp-dot { background: var(--accent, #e8b15a); }
+.tp-prio-low .tp-dot { background: #6b7280; }
+
+.tp-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tp-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.tp-badge-due { color: #9ca3af; }
+.tp-badge-overdue { color: #ff4466; border-color: rgba(255, 68, 102, 0.4); }
+.tp-badge-recur { color: var(--accent-glow, #ffd98a); }
