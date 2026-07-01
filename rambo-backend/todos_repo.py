@@ -119,9 +119,10 @@ class TodosRepo:
                 "UPDATE todos SET status='done', completed_at=? WHERE id=?",
                 (now, task_id))
             await db.commit()
-        if task["recurrence"] and task["due_date"]:
+        if task["recurrence"]:
+            prior_due = task["due_date"] or date.today().isoformat()
             await self.add(task["text"], priority=task["priority"],
-                           due=next_due(task["due_date"], task["recurrence"]),
+                           due=next_due(prior_due, task["recurrence"]),
                            recurrence=task["recurrence"], source=task["source"])
         return await self.get(task_id)
 

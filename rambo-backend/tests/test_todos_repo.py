@@ -98,6 +98,27 @@ async def test_complete_recurring_inserts_next_occurrence(repo):
 
 
 @pytest.mark.asyncio
+async def test_complete_recurring_weekly_named_day(repo):
+    # 2026-07-01 is a Wednesday; weekly:friday should roll to 2026-07-03
+    row = await repo.add("team sync", recurrence="weekly:friday", due="2026-07-01")
+    await repo.complete(row["id"])
+    open_rows = await repo.list_open()
+    assert len(open_rows) == 1
+    assert open_rows[0]["due_date"] == "2026-07-03"
+    assert open_rows[0]["recurrence"] == "weekly:friday"
+
+
+@pytest.mark.asyncio
+async def test_complete_recurring_monthly(repo):
+    row = await repo.add("pay rent", recurrence="monthly", due="2026-01-31")
+    await repo.complete(row["id"])
+    open_rows = await repo.list_open()
+    assert len(open_rows) == 1
+    assert open_rows[0]["due_date"] == "2026-02-28"  # clamped, 2026 not a leap year
+    assert open_rows[0]["recurrence"] == "monthly"
+
+
+@pytest.mark.asyncio
 async def test_delete_removes_task(repo):
     row = await repo.add("to be deleted")
     assert await repo.delete(row["id"]) is True
